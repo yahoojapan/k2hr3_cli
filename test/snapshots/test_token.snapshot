@@ -1,0 +1,27 @@
+TEST CASE : (1) Normal : Create Unscoped Token from credential
+TEST_TOKEN_UNSCOPED_FOR_USER_test
+
+TEST CASE : (2) Normal : Create Unscoped Token from openstack token
+TEST_TOKEN_UNSCOPED_FOR_OPENSTACK_TEST_OPENSTACK_TOKEN_DUMMY
+
+TEST CASE : (3) Normal : Create Scoped Token from credential
+TEST_TOKEN_SCOPED_FOR_TENANT_test_UNSCOPED_TEST_TOKEN_UNSCOPED_FOR_USER_test
+
+TEST CASE : (4) Normal : Create Scoped Token from unscoped token
+TEST_TOKEN_SCOPED_FOR_TENANT_test_UNSCOPED_TEST_TOKEN_UNSCOPED_DUMMY
+
+TEST CASE : (5) Normal : Create Scoped Token from openstack token
+TEST_TOKEN_SCOPED_FOR_TENANT_test_UNSCOPED_TEST_TOKEN_UNSCOPED_FOR_OPENSTACK_TEST_OPENSTACK_TOKEN_DUMMY
+
+TEST CASE : (6) Normal : Show tenant list from unscoped token
+[{"name":"test1","display":"test1"},{"name":"test2","display":"test2"}]
+
+TEST CASE : (7) Normal : Show tenant list from scoped token
+[{"name":"test1","display":"test1"}]
+
+TEST CASE : (8) Normal : Check user unscoped token
+K2HR3 Unscoped token is VALID : TOKEN="TEST_TOKEN_UNSCOPED_DUMMY"
+
+TEST CASE : (9) Normal : Check user scoped token
+K2HR3 Scoped token is VALID : TOKEN="TEST_TOKEN_SCOPED_DUMMY"
+

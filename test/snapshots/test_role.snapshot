@@ -1,0 +1,26 @@
+TEST CASE : (1) Normal : Create role
+Succeed : Create "test_role" Role
+
+TEST CASE : (2) Normal : Show role
+{"policies":["yrn:yahoo:::demo:policy:test_sub_policy","yrn:yahoo:::demo:policy:test_policy"]}
+TEST CASE : (3) Normal : Delete role
+Succeed : Delete "test_role" Role
+
+TEST CASE : (4) Normal : Add role host
+Succeed : Add "localhost" to "test_role" member
+
+TEST CASE : (5) Normal : Delete role host
+Succeed : Delete "localhost" from "test_role" member
+
+TEST CASE : (6) Normal : Create role token
+{"token":"TEST_TOKEN_ROLE_test_role_EXPIRE_600","registerpath":"TEST_REGISTERPATH_ROLE_test_role_EXPIRE_600"}
+TEST CASE : (7) Normal : Delete role token
+Succeed : Delete Role Token : "test_role"
+
+TEST CASE : (8) Normal : Check role token
+Succeed : Role Token "TEST_TOKEN_ROLE1" for "test_role" Role
+
+TEST CASE : (9) Normal : Get role token list without expand
+["TEST_TOKEN_ROLE_TEST1","TEST_TOKEN_ROLE_TEST2"]
+TEST CASE : (10) Normal : Get role token list with expand
+{"TEST_TOKEN_ROLE_TEST1":{"date":"2030-01-01T00:00+0000","expire":"2030-01-01T00:00+0000","user":"TEST","hostname":"localhost","ip":"","port":80,"cuk":"TEST_CUK","registerpath":"TEST_REGISTERPATH_ROLE_TOKEN1"},"TEST_TOKEN_ROLE_TEST2":{"date":"2030-01-01T00:00+0000","expire":"2030-01-01T00:00+0000","user":"TEST","hostname":"localhost2","ip":"","port":8000,"cuk":"TEST_CUK2","registerpath":"TEST_REGISTERPATH_ROLE_TOKEN2"}}

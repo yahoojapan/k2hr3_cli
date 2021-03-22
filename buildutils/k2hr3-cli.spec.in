@@ -1,0 +1,133 @@
+#
+# K2HR3 Utilities - Command Line Interface
+#
+# Copyright 2021 Yahoo! Japan Corporation.
+#
+# K2HR3 is K2hdkc based Resource and Roles and policy Rules, gathers
+# common management information for the cloud.
+# K2HR3 can dynamically manage information as "who", "what", "operate".
+# These are stored as roles, resources, policies in K2hdkc, and the
+# client system can dynamically read and modify these information.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Mon Feb 15 2021
+# REVISION:
+#
+
+#
+# Local macros/define
+#
+%if %{undefined package_revision}
+%global package_revision 1
+%endif
+
+%if %{undefined make_build}
+%global make_build %{__make} %{?_smp_mflags}
+%endif
+
+%if %{undefined autosetup}
+%global autosetup %setup -q
+%endif
+
+%global gittag v@VERSION@
+
+%if %{undefined make_check}
+%global make_check 1
+%endif
+
+#
+# main package
+#
+Summary: @SHORTDESC@
+Name: @PACKAGE_NAME@
+Version: @VERSION@
+Release: %{package_revision}%{?dist}
+License: @PKGLICENSE@
+@RPMPKG_GROUP@
+URL: https://@GIT_DOMAIN@/@GIT_ORG@/@PACKAGE_NAME@
+Source0: https://@GIT_DOMAIN@/@GIT_ORG@/@PACKAGE_NAME@/archive/%{gittag}/%{name}-%{version}.tar.gz
+BuildRequires: git-core make
+BuildArch: noarch
+
+%description
+@LONGDESC@
+
+%prep
+%autosetup -n %{name}-%{version}
+
+%build
+./autogen.sh
+%configure --disable-static @CONFIGUREWITHOPT@
+make build
+
+%install
+%make_install
+install -D -m 555 src/k2hr3                           %{buildroot}/usr/bin/k2hr3
+install -D -m 444 src/libexec/common/CREDIT           %{buildroot}/usr/libexec/k2hr3/common/CREDIT
+install -D -m 444 src/libexec/common/VERSION          %{buildroot}/usr/libexec/k2hr3/common/VERSION
+install -D -m 444 src/libexec/common/k2hr3.config     %{buildroot}/usr/libexec/k2hr3/common/k2hr3.config
+install -D -m 444 src/libexec/common/configuration.sh %{buildroot}/usr/libexec/k2hr3/common/configuration.sh
+install -D -m 444 src/libexec/common/depends.sh       %{buildroot}/usr/libexec/k2hr3/common/depends.sh
+install -D -m 444 src/libexec/common/help.sh          %{buildroot}/usr/libexec/k2hr3/common/help.sh
+install -D -m 444 src/libexec/common/interactive.sh   %{buildroot}/usr/libexec/k2hr3/common/interactive.sh
+install -D -m 444 src/libexec/common/jsonparser.sh    %{buildroot}/usr/libexec/k2hr3/common/jsonparser.sh
+install -D -m 444 src/libexec/common/message.sh       %{buildroot}/usr/libexec/k2hr3/common/message.sh
+install -D -m 444 src/libexec/common/modelist.sh      %{buildroot}/usr/libexec/k2hr3/common/modelist.sh
+install -D -m 444 src/libexec/common/option.sh        %{buildroot}/usr/libexec/k2hr3/common/option.sh
+install -D -m 444 src/libexec/common/request.sh       %{buildroot}/usr/libexec/k2hr3/common/request.sh
+install -D -m 444 src/libexec/common/requestutil.sh   %{buildroot}/usr/libexec/k2hr3/common/requestutil.sh
+install -D -m 444 src/libexec/common/strings.sh       %{buildroot}/usr/libexec/k2hr3/common/strings.sh
+install -D -m 444 src/libexec/config/help.sh          %{buildroot}/usr/libexec/k2hr3/config/help.sh
+install -D -m 444 src/libexec/config/summary.sh       %{buildroot}/usr/libexec/k2hr3/config/summary.sh
+install -D -m 444 src/libexec/config/command.sh       %{buildroot}/usr/libexec/k2hr3/config/command.sh
+install -D -m 444 src/libexec/acr/help.sh             %{buildroot}/usr/libexec/k2hr3/acr/help.sh
+install -D -m 444 src/libexec/acr/summary.sh          %{buildroot}/usr/libexec/k2hr3/acr/summary.sh
+install -D -m 444 src/libexec/acr/command.sh          %{buildroot}/usr/libexec/k2hr3/acr/command.sh
+install -D -m 444 src/libexec/extdata/help.sh         %{buildroot}/usr/libexec/k2hr3/extdata/help.sh
+install -D -m 444 src/libexec/extdata/summary.sh      %{buildroot}/usr/libexec/k2hr3/extdata/summary.sh
+install -D -m 444 src/libexec/extdata/command.sh      %{buildroot}/usr/libexec/k2hr3/extdata/command.sh
+install -D -m 444 src/libexec/list/help.sh            %{buildroot}/usr/libexec/k2hr3/list/help.sh
+install -D -m 444 src/libexec/list/summary.sh         %{buildroot}/usr/libexec/k2hr3/list/summary.sh
+install -D -m 444 src/libexec/list/command.sh         %{buildroot}/usr/libexec/k2hr3/list/command.sh
+install -D -m 444 src/libexec/policy/help.sh          %{buildroot}/usr/libexec/k2hr3/policy/help.sh
+install -D -m 444 src/libexec/policy/summary.sh       %{buildroot}/usr/libexec/k2hr3/policy/summary.sh
+install -D -m 444 src/libexec/policy/command.sh       %{buildroot}/usr/libexec/k2hr3/policy/command.sh
+install -D -m 444 src/libexec/resource/help.sh        %{buildroot}/usr/libexec/k2hr3/resource/help.sh
+install -D -m 444 src/libexec/resource/summary.sh     %{buildroot}/usr/libexec/k2hr3/resource/summary.sh
+install -D -m 444 src/libexec/resource/command.sh     %{buildroot}/usr/libexec/k2hr3/resource/command.sh
+install -D -m 444 src/libexec/role/help.sh            %{buildroot}/usr/libexec/k2hr3/role/help.sh
+install -D -m 444 src/libexec/role/summary.sh         %{buildroot}/usr/libexec/k2hr3/role/summary.sh
+install -D -m 444 src/libexec/role/command.sh         %{buildroot}/usr/libexec/k2hr3/role/command.sh
+install -D -m 444 src/libexec/service/help.sh         %{buildroot}/usr/libexec/k2hr3/service/help.sh
+install -D -m 444 src/libexec/service/summary.sh      %{buildroot}/usr/libexec/k2hr3/service/summary.sh
+install -D -m 444 src/libexec/service/command.sh      %{buildroot}/usr/libexec/k2hr3/service/command.sh
+install -D -m 444 src/libexec/token/help.sh           %{buildroot}/usr/libexec/k2hr3/token/help.sh
+install -D -m 444 src/libexec/token/summary.sh        %{buildroot}/usr/libexec/k2hr3/token/summary.sh
+install -D -m 444 src/libexec/token/command.sh        %{buildroot}/usr/libexec/k2hr3/token/command.sh
+install -D -m 444 src/libexec/token/library.sh        %{buildroot}/usr/libexec/k2hr3/token/library.sh
+install -D -m 444 src/libexec/userdata/help.sh        %{buildroot}/usr/libexec/k2hr3/userdata/help.sh
+install -D -m 444 src/libexec/userdata/summary.sh     %{buildroot}/usr/libexec/k2hr3/userdata/summary.sh
+install -D -m 444 src/libexec/userdata/command.sh     %{buildroot}/usr/libexec/k2hr3/userdata/command.sh
+install -D -m 444 src/libexec/version/help.sh         %{buildroot}/usr/libexec/k2hr3/version/help.sh
+install -D -m 444 src/libexec/version/summary.sh      %{buildroot}/usr/libexec/k2hr3/version/summary.sh
+install -D -m 444 src/libexec/version/command.sh      %{buildroot}/usr/libexec/k2hr3/version/command.sh
+install -D -m 644 src/libexec/common/k2hr3.config     %{buildroot}/etc/antpickax/k2hr3.config
+
+%if %{make_check}
+%check
+%{__make} check
+%endif
+
+%files
+%license COPYING
+%doc README AUTHORS ChangeLog
+%{_mandir}/man1/*
+/usr/bin/k2hr3
+/usr/libexec/k2hr3/*
+/etc/antpickax/*
+
+%changelog
+@RPMCHANGELOG@

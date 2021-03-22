@@ -1,0 +1,39 @@
+TEST CASE : (1) Normal : Create service with object
+Succeed : Create "test_service" Service
+
+TEST CASE : (2) Normal : Create service with verify object
+Succeed : Create "test_service" Service
+
+TEST CASE : (3) Normal : Create service with verify url
+Succeed : Create "test_service" Service
+
+TEST CASE : (4) Normal : Create service with verify false
+Succeed : Create "test_service" Service
+
+TEST CASE : (5) Normal : Show service
+{"name":"test_service","owner":"test_tenant","verify":[{"name":"test_service_resouce_string","type":"string","data":null}],"tenant":["yrn:yahoo:::test_tenant","yrn:yahoo:::test_service_member","yrn:yahoo:::test_service_member1"]}
+
+TEST CASE : (6) Normal : Delete service
+Succeed : Delete "test_service" Service
+
+TEST CASE : (7) Normal : Add service tenant
+Succeed : Add "test_service_member" tenant to "test_service" Service
+
+TEST CASE : (8) Normal : Check service tenant
+Succeed : "test_service_member" is "test_service" Service member
+
+TEST CASE : (9) Normal : Delete service tenant(owner operation)
+Succeed : Delete "test_service_member" from "test_service" Service
+
+TEST CASE : (10) Normal : Delete service tenant with clear(owner operation)
+Succeed : Delete "test_service_member" from "test_service" Service
+
+TEST CASE : (11) Normal : Update service verify url
+Succeed : Update "http://localhost/" verify url in "test_service" Service
+
+TEST CASE : (12) Normal : Update service verify object
+Succeed : Update "[{"name":"test_service_resouce_string","type":"string","data":null}]" verify url in "test_service" Service
+
+TEST CASE : (13) Normal : Delete tenant member service
+Succeed : Clear "test_service_member" member Service(test_service)
+

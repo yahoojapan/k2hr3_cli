@@ -1,0 +1,62 @@
+.TH k2hr3 "1" "March 2021" "k2hr3" "K2HR3"
+.SH NAME
+k2hr3 \- K2HR3 Command Line Interface.
+.PP
+.SH COMMAND
+.TP 0
+\fBk2hr3 [command] [options]
+.SH DESCRIPTION
+.TP 0
+K2HR3(K2Hdkc based Resource and Roles and policy Rules) is one of extended RBAC (Role Based Access Control) system.
+K2HR3 works as RBAC in cooperation with OpenStack which is one of IaaS(Infrastructure as a Service), and also provides useful functions for using RBAC.
+.br
+K2HR3 is a system that defines and controls HOW(policy Rule), WHO(Role), WHAT(Resource), as RBAC.
+Users of K2HR3 can define Role(WHO) groups to access freely defined Resource(WHAT) and control access by policy Rule(HOW).
+By defining the information and assets required for any system as a Resource(WHAT), K2HR3 system can give the opportunity to provide access control in every situation.
+.br
+K2HR3 provides +SERVICE feature, it strongly supports user system, function and information linkage.
+.PP
+.SH COMMAND
+.IP \fBconfig\fR 15
+This is an operation command for outputting and reading the settings for the k2hr3 command to the configuration file.
+.IP \fBversion\fR 15
+This is the command for the K2HR3 VERSION API.
+.IP \fBtoken\fR 15
+This is the command for the K2HR3 TOKEN API.
+.IP \fBlist\fR 15
+This is the command for the K2HR3 LIST API.
+.IP \fBrole\fR 15
+This is the command for the K2HR3 ROLE API.
+.IP \fBpolicy\fR 15
+This is the command for the K2HR3 POLICY API.
+.IP \fBresource\fR 15
+This is the command for the K2HR3 RESOURCE API.
+.IP \fBservice\fR 15
+This is the command for the K2HR3 SERVICE API.
+.IP \fBacr\fR 15
+This is the command for the K2HR3 ACR(ACCESS CROSS ROLE) API.
+.IP \fBuserdata\fR 15
+This is the command for the K2HR3 USERDATA API.
+.IP \fBextdata\fR 15
+This is the command for the K2HR3 EXTDATA API.
+.PP
+.SH OPTION
+.IP \fB\--help(-h)\fR 15
+Specify the help of k2hr3 or each command of k2hr3 to display the help of each command.
+.IP \fBother options\fR 15
+Check with the --help (-h) option.
+.PP
+.SH CONFIGURATION
+.TP 0
+The k2hr3 command reads /etc/antpickax/k2hr3.config as a global configuration file.
+After that, if the ~ HOME/.antpickax/k2hr3.config file exists as a user specific configuration file, load it.
+In addition, you can switch the configuration file with the --config(-c) option.
+.PP
+.SH SEE ALSO
+.TP
+https://k2hr3.antpick.ax/
+.SH BUGS
+.TP
+Please report owner and committer.
+.SH AUTHOR
+k2hr3 has been written by Takeshi Nakatani.

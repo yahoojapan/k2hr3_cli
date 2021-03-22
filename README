@@ -1,0 +1,24 @@
+K2HR3 Command Line Interface
+-----------------------------------
+
+K2HR3 Utilities - Command Line Interface
+
+### Overview
+K2HR3 Get Resource is a Systemd Timer Service for retrieving RESOURCE
+data from K2HR3 System, this is one of utility for it.
+
+### Feature
+The K2HR3 Command Line Interface (CLI) is a tool for manipulating K2HR3
+data using the K2HR3 REST API.
+All K2HR3 command line interface (CLI) programs are written in shell
+scripts and can be ported to various operating systems.
+
+### Documents
+- Github Pages - https://k2hr3.antpick.ax/
+- Github Wiki - https://github.com/yahoojapan/k2hr3_cli/wiki
+- AntPickax - https://antpick.ax/
+
+### License
+This software is released under the MIT License, see the license file.
+
+Copyright(C) 2021 Yahoo Japan Corporation.

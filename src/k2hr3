@@ -1,0 +1,369 @@
+#!/bin/sh
+#
+# K2HR3 Utilities - Command Line Interface
+#
+# Copyright 2021 Yahoo! Japan Corporation.
+#
+# K2HR3 is K2hdkc based Resource and Roles and policy Rules, gathers
+# common management information for the cloud.
+# K2HR3 can dynamically manage information as "who", "what", "operate".
+# These are stored as roles, resources, policies in K2hdkc, and the
+# client system can dynamically read and modify these information.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Mon Feb 15 2021
+# REVISION:
+#
+
+#--------------------------------------------------------------
+# Directories
+#--------------------------------------------------------------
+# shellcheck disable=SC2034
+BINNAME=$(basename "$0")
+BINDIR=$(dirname "$0")
+BINDIR=$(cd "${BINDIR}" || exit 1; pwd)
+
+LIBEXECDIR="/usr/libexec/k2hr3"
+#
+# Override libexec directory path for testing, etc
+#
+if [ "X${K2HR3CLI_LIBEXEC_DIR}" != "X" ]; then
+	if [ -d "${K2HR3CLI_LIBEXEC_DIR}" ]; then
+		LIBEXECDIR=${K2HR3CLI_LIBEXEC_DIR}
+	fi
+fi
+
+COMMON_DIRNAME="common"
+COMMONDIR=${LIBEXECDIR}/${COMMON_DIRNAME}
+COMMON_MESSAGE_FILE=${COMMONDIR}/message.sh
+COMMON_STRINGS_FILE=${COMMONDIR}/strings.sh
+COMMON_MODELIST_FILE=${COMMONDIR}/modelist.sh
+COMMON_OPTION_FILE=${COMMONDIR}/option.sh
+COMMON_INTERACTIVE_FILE=${COMMONDIR}/interactive.sh
+COMMON_JSONPARSER_FILE=${COMMONDIR}/jsonparser.sh
+COMMON_DEPENDS_FILE=${COMMONDIR}/depends.sh
+COMMON_REQUEST_FILE=${COMMONDIR}/request.sh
+COMMON_REQUESTUTIL_FILE=${COMMONDIR}/requestutil.sh
+COMMON_CONFIGURATION_FILE=${COMMONDIR}/configuration.sh
+
+MODE_HELP_FILENAME="help.sh"
+MODE_VERSION_CREDIT_FILENAME="CREDIT"
+MODE_VERSION_NUMBER_FILENAME="VERSION"
+MODE_SHORT_HELP_FILENAME="summary.sh"
+MODE_MAIN_FILENAME="command.sh"
+MODE_LIBRARY_FILENAME="library.sh"
+
+#
+# For version option
+#
+_K2HR3CLI_VERSION_NUMBER_KEYWORD="VERSION_NUMBER"
+
+#
+# A variable that indicates that the boot process is k2hr3
+# (This variable is used in the test script.)
+#
+export K2HR3_RUN_MAIN_PROCESS=1
+
+#--------------------------------------------------------------
+# Load common scripts
+#--------------------------------------------------------------
+#
+# Messageing functions
+#
+if [ -f "${COMMON_MESSAGE_FILE}" ]; then
+	. "${COMMON_MESSAGE_FILE}"
+	prn_dbg "Loaded ${COMMON_MESSAGE_FILE}"
+fi
+
+#
+# Load strings utility functions
+#
+if [ -f "${COMMON_STRINGS_FILE}" ]; then
+	. "${COMMON_STRINGS_FILE}"
+	prn_dbg "Loaded ${COMMON_STRINGS_FILE}"
+else
+	prn_err "Could not find ${COMMON_STRINGS_FILE} common file."
+	exit 1
+fi
+
+#
+# Set mode list
+#
+if [ -f "${COMMON_MODELIST_FILE}" ]; then
+	. "${COMMON_MODELIST_FILE}"
+	prn_dbg "Loaded ${COMMON_MODELIST_FILE}"
+else
+	prn_err "Could not find ${COMMON_MODELIST_FILE} common file."
+	exit 1
+fi
+
+#
+# Load option utility functions
+#
+if [ -f "${COMMON_OPTION_FILE}" ]; then
+	. "${COMMON_OPTION_FILE}"
+	prn_dbg "Loaded ${COMMON_OPTION_FILE}"
+else
+	prn_err "Could not find ${COMMON_OPTION_FILE} common file."
+	exit 1
+fi
+
+#
+# Load interactive utility functions
+#
+if [ -f "${COMMON_INTERACTIVE_FILE}" ]; then
+	. "${COMMON_INTERACTIVE_FILE}"
+	prn_dbg "Loaded ${COMMON_INTERACTIVE_FILE}"
+else
+	prn_err "Could not find ${COMMON_INTERACTIVE_FILE} common file."
+	exit 1
+fi
+
+#
+# Load json parser utility functions
+#
+if [ -f "${COMMON_JSONPARSER_FILE}" ]; then
+	. "${COMMON_JSONPARSER_FILE}"
+	prn_dbg "Loaded ${COMMON_JSONPARSER_FILE}"
+else
+	prn_err "Could not find ${COMMON_JSONPARSER_FILE} common file."
+	exit 1
+fi
+
+#
+# Check dependent external programs
+#
+if [ -f "${COMMON_DEPENDS_FILE}" ]; then
+	. "${COMMON_DEPENDS_FILE}"
+	prn_dbg "Loaded ${COMMON_DEPENDS_FILE}"
+else
+	prn_err "Could not find ${COMMON_DEPENDS_FILE} common file."
+	exit 1
+fi
+
+#
+# Load request utility functions
+#
+if [ -f "${COMMON_REQUESTUTIL_FILE}" ]; then
+	. "${COMMON_REQUESTUTIL_FILE}"
+	prn_dbg "Loaded ${COMMON_REQUESTUTIL_FILE}"
+else
+	prn_err "Could not find ${COMMON_REQUESTUTIL_FILE} common file."
+	exit 1
+fi
+
+#
+# Load option request functions
+#
+# [NOTE]
+# K2HR3CLI_REQUEST_FILE environment is override default file.
+#
+if [ "X${K2HR3CLI_REQUEST_FILE}" != "X" ]; then
+	if [ ! -f "${K2HR3CLI_REQUEST_FILE}" ]; then
+		prn_err "Could not find ${K2HR3CLI_REQUEST_FILE} request file which is specified K2HR3CLI_REQUEST_FILE environment."
+		exit 1
+	fi
+	. "${K2HR3CLI_REQUEST_FILE}"
+	prn_dbg "Loaded ${K2HR3CLI_REQUEST_FILE}"
+else
+	if [ -f "${COMMON_REQUEST_FILE}" ]; then
+		. "${COMMON_REQUEST_FILE}"
+		prn_dbg "Loaded ${COMMON_REQUEST_FILE}"
+	else
+		prn_err "Could not find ${COMMON_REQUEST_FILE} common file."
+		exit 1
+	fi
+fi
+
+#
+# Load library files in each libexec mode directory
+#
+# shellcheck disable=SC2153
+for _MODELIST_ONE in ${K2HR3CLI_MODES}; do
+	if [ -f "${LIBEXECDIR}/${_MODELIST_ONE}/${MODE_LIBRARY_FILENAME}" ]; then
+		. "${LIBEXECDIR}/${_MODELIST_ONE}/${MODE_LIBRARY_FILENAME}"
+		prn_dbg "Loaded ${LIBEXECDIR}/${_MODELIST_ONE}/${MODE_LIBRARY_FILENAME}"
+	fi
+done
+
+#--------------------------------------------------------------
+# Load configuration
+#--------------------------------------------------------------
+#
+# All option string is escaped
+#
+escape_all_options "$@"
+# shellcheck disable=SC2086
+set -- ${K2HR3CLI_OPTION_PARSER_REST}
+
+#
+# Check configuration option(special case)
+#
+# [NOTE]
+# Before loading this file, we must first check the option to
+# specify a configuration file.
+#
+get_option2_value "${K2HR3CLI_COMMON_OPT_CONFIG_SHORT}" "${K2HR3CLI_COMMON_OPT_CONFIG_LONG}" "$@"
+if [ $? -ne 0 ]; then
+	prn_err "The specified option is invalid."
+	exit 1
+else
+	# shellcheck disable=SC2086
+	set -- ${K2HR3CLI_OPTION_PARSER_REST}
+fi
+if [ "X${K2HR3_OPTION_VALUE}" != "X" ]; then
+	#
+	# Found option and set result value to K2HR3CLI_OPT_CONFIG
+	#
+	# shellcheck disable=SC2034
+	K2HR3CLI_OPT_CONFIG=${K2HR3_OPTION_VALUE}
+fi
+
+#
+# Load configuration file
+#
+if [ -f "${COMMON_CONFIGURATION_FILE}" ]; then
+	. "${COMMON_CONFIGURATION_FILE}"
+	prn_dbg "Loaded ${COMMON_CONFIGURATION_FILE}"
+else
+	prn_err "Could not find ${COMMON_MODELIST_FILE} common file."
+	exit 1
+fi
+
+#--------------------------------------------------------------
+# Check common options
+#--------------------------------------------------------------
+#
+# Common options
+#
+parse_common_option "$@"
+if [ $? -ne 0 ]; then
+	exit 1
+else
+	# shellcheck disable=SC2086
+	set -- ${K2HR3CLI_OPTION_PARSER_REST}
+fi
+
+#
+# Mode options
+#
+parse_mode_option "$@"
+if [ $? -ne 0 ]; then
+	exit 1
+else
+	if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+		K2HR3CLI_MODE=""
+	else
+		K2HR3CLI_MODE=${K2HR3CLI_OPTION_NOPREFIX}
+	fi
+	# shellcheck disable=SC2086
+	set -- ${K2HR3CLI_OPTION_PARSER_REST}
+fi
+
+#--------------------------------------------------------------
+# Check Error and Warning on environment
+#--------------------------------------------------------------
+if [ "${K2HR3CLI_HAS_CURL}" -ne 1 ]; then
+	prn_err "The curl program was not found, so command execution is interrupted. Please install the curl program and try again."
+	exit 1
+fi
+
+if [ "X${K2HR3CLI_API_URI}" = "X" ]; then
+	prn_warn "The URI for K2HR3 REST API is not specified, some commands require this. Please specify with the ${K2HR3CLI_COMMAND_OPT_API_URI_LONG}(${K2HR3CLI_COMMAND_OPT_API_URI_SHORT}) option, K2HR3CLI_API_URI environment variable, or configuration."
+fi
+
+#--------------------------------------------------------------
+# Main
+#--------------------------------------------------------------
+if [ "X${K2HR3CLI_OPT_VERSION}" = "X1" ]; then
+	#
+	# Version
+	#
+	if [ -f "${COMMONDIR}/${MODE_VERSION_NUMBER_FILENAME}" ]; then
+		_K2HR3CLI_VERSION_NUMBER=$(cat "${COMMONDIR}/${MODE_VERSION_NUMBER_FILENAME}")
+	else
+		_K2HR3CLI_VERSION_NUMBER="Unknown"
+	fi
+	if [ -f "${COMMONDIR}/${MODE_VERSION_CREDIT_FILENAME}" ]; then
+		sed "s/${_K2HR3CLI_VERSION_NUMBER_KEYWORD}/${_K2HR3CLI_VERSION_NUMBER}/g" < "${COMMONDIR}/${MODE_VERSION_CREDIT_FILENAME}" 2>/dev/null
+	else
+		prn_err "${COMMONDIR}/${MODE_VERSION_CREDIT_FILENAME} file does not exist."
+		exit 1
+	fi
+	#
+	# Each command version
+	#
+	for _MODELIST_ONE in ${K2HR3CLI_MODES}; do
+		if [ -f "${LIBEXECDIR}/${_MODELIST_ONE}/${MODE_VERSION_CREDIT_FILENAME}" ]; then
+			if [ -f "${LIBEXECDIR}/${_MODELIST_ONE}/${MODE_VERSION_NUMBER_FILENAME}" ]; then
+				_K2HR3CLI_VERSION_NUMBER=$(cat "${LIBEXECDIR}/${_MODELIST_ONE}/${MODE_VERSION_NUMBER_FILENAME}")
+			else
+				_K2HR3CLI_VERSION_NUMBER="Unknown"
+			fi
+			sed "s#${_K2HR3CLI_VERSION_NUMBER_KEYWORD}#${_K2HR3CLI_VERSION_NUMBER}#g" < "${LIBEXECDIR}/${_MODELIST_ONE}/${MODE_VERSION_CREDIT_FILENAME}" 2>/dev/null
+		fi
+	done
+
+elif [ "X${K2HR3CLI_MODE}" != "X" ]; then
+	#
+	# Run mode
+	#
+	MODEBASEDIR=${LIBEXECDIR}/${K2HR3CLI_MODE}
+
+	if [ -n "${K2HR3CLI_OPT_HELP}" ]; then
+		#
+		# Print each command help
+		#
+		. "${MODEBASEDIR}/${MODE_HELP_FILENAME}"
+	else
+		#
+		# Run mode command
+		#
+		. "${MODEBASEDIR}/${MODE_MAIN_FILENAME}"
+	fi
+
+	#
+	# Save configuration if needs
+	#
+	update_config_vars
+
+else
+	#
+	# Run common
+	#
+	if [ -n "${K2HR3CLI_OPT_HELP}" ]; then
+		#
+		# Print common help and each mode summary help
+		#
+		. "${COMMONDIR}/${MODE_HELP_FILENAME}"
+
+		for _MODELIST_ONE in ${K2HR3CLI_MODES}; do
+			if [ -f "${LIBEXECDIR}/${_MODELIST_ONE}/${MODE_SHORT_HELP_FILENAME}" ]; then
+				K2HR3CLI_MODE=${_MODELIST_ONE}
+				. "${LIBEXECDIR}/${_MODELIST_ONE}/${MODE_SHORT_HELP_FILENAME}"
+			fi
+		done
+		K2HR3CLI_MODE=
+	else
+		#
+		# Error
+		#
+		prn_err "No required options have been specified."
+		prn_msg "Check the options by specifying \"--help (-h)\"."
+		exit 1
+	fi
+fi
+
+exit 0
+
+#
+# Local variables:
+# tab-width: 4
+# c-basic-offset: 4
+# End:
+# vim600: noexpandtab sw=4 ts=4 fdm=marker
+# vim<600: noexpandtab sw=4 ts=4
+#

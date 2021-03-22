@@ -1,0 +1,484 @@
+TEST CASE : (1) Normal : example version API(/)
+{
+    "version": [
+        "v1"
+    ]
+}
+
+TEST CASE : (2) Normal : example version API(/v1)
+{
+    "version": {
+        "/": [
+            "GET"
+        ],
+        "/v1": [
+            "GET"
+        ]
+    },
+    "user token": {
+        "/v1/user/tokens": [
+            "HEAD",
+            "GET",
+            "POST"
+        ]
+    },
+    "host": {
+        "/v1/host": [
+            "GET",
+            "PUT",
+            "POST",
+            "DELETE"
+        ],
+        "/v1/host/{port}": [
+            "PUT",
+            "POST",
+            "DELETE"
+        ],
+        "/v1/host/FQDN": [
+            "DELETE"
+        ],
+        "/v1/host/FQDN:{port}": [
+            "DELETE"
+        ],
+        "/v1/host/IP": [
+            "DELETE"
+        ],
+        "/v1/host/IP:{port}": [
+            "DELETE"
+        ]
+    },
+    "service": {
+        "/v1/service": [
+            "PUT",
+            "POST"
+        ],
+        "/v1/service/{service}": [
+            "GET",
+            "HEAD",
+            "PUT",
+            "POST",
+            "DELETE"
+        ]
+    },
+    "role": {
+        "/v1/role": [
+            "PUT",
+            "POST"
+        ],
+        "/v1/role/{role}": [
+            "HEAD",
+            "GET",
+            "PUT",
+            "POST",
+            "DELETE"
+        ],
+        "/v1/role/token/{role}": [
+            "GET"
+        ]
+    },
+    "resource": {
+        "/v1/resource": [
+            "PUT",
+            "POST"
+        ],
+        "/v1/resource/{resource}": [
+            "HEAD",
+            "GET",
+            "DELETE"
+        ]
+    },
+    "policy": {
+        "/v1/policy": [
+            "PUT",
+            "POST"
+        ],
+        "/v1/policy/{policy}": [
+            "HEAD",
+            "GET",
+            "DELETE"
+        ]
+    },
+    "list": {
+        "/v1/list": [
+            "HEAD",
+            "GET"
+        ],
+        "/v1/list/{role, resource, policy}/{path}": [
+            "HEAD",
+            "GET"
+        ]
+    },
+    "acr": {
+        "/v1/acr/{service}": [
+            "GET",
+            "PUT",
+            "POST",
+            "DELETE"
+        ]
+    }
+}
+
+TEST CASE : (3) Normal : example list API(/v1/list/service)
+{
+    "result": true,
+    "message": null,
+    "children": [
+        {
+            "name": "service",
+            "children": [],
+            "owner": true
+        }
+    ]
+}
+
+TEST CASE : (4) Normal : example search key in list API(/v1/list/service)
+[
+    {
+        "name": "service",
+        "children": [],
+        "owner": true,
+        "custom1": 1,
+        "custom2": -1,
+        "custom3": false,
+        "custom4": null
+    }
+]
+type="%ARR%", value count=1
+
+TEST CASE : (5) Normal : Simulate Openstack neutron data(example)
+{
+    "security_groups": [
+        {
+            "id": "00000000-0000-0000-0000-000000000000",
+            "name": "ssh-allow",
+            "stateful": true,
+            "tenant_id": "00000000000000000000000000000000",
+            "description": "",
+            "security_group_rules": [
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv4",
+                    "direction": "ingress",
+                    "protocol": "tcp",
+                    "port_range_min": 22,
+                    "port_range_max": 22,
+                    "remote_ip_prefix": "0.0.0.0/0",
+                    "remote_group_id": null,
+                    "description": "",
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv4",
+                    "direction": "egress",
+                    "protocol": null,
+                    "port_range_min": null,
+                    "port_range_max": null,
+                    "remote_ip_prefix": null,
+                    "remote_group_id": null,
+                    "description": null,
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv6",
+                    "direction": "egress",
+                    "protocol": null,
+                    "port_range_min": null,
+                    "port_range_max": null,
+                    "remote_ip_prefix": null,
+                    "remote_group_id": null,
+                    "description": null,
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                }
+            ],
+            "tags": [],
+            "created_at": "2021-01-01T00:00:00Z",
+            "updated_at": "2021-01-01T00:00:00Z",
+            "revision_number": 2,
+            "project_id": "00000000000000000000000000000000"
+        },
+        {
+            "id": "00000000-0000-0000-0000-000000000000",
+            "name": "default",
+            "stateful": true,
+            "tenant_id": "00000000000000000000000000000000",
+            "description": "Default security group",
+            "security_group_rules": [
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv4",
+                    "direction": "egress",
+                    "protocol": null,
+                    "port_range_min": null,
+                    "port_range_max": null,
+                    "remote_ip_prefix": null,
+                    "remote_group_id": null,
+                    "description": null,
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv4",
+                    "direction": "ingress",
+                    "protocol": null,
+                    "port_range_min": null,
+                    "port_range_max": null,
+                    "remote_ip_prefix": null,
+                    "remote_group_id": "00000000-0000-0000-0000-000000000000",
+                    "description": null,
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv6",
+                    "direction": "ingress",
+                    "protocol": null,
+                    "port_range_min": null,
+                    "port_range_max": null,
+                    "remote_ip_prefix": null,
+                    "remote_group_id": "00000000-0000-0000-0000-000000000000",
+                    "description": null,
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv6",
+                    "direction": "egress",
+                    "protocol": null,
+                    "port_range_min": null,
+                    "port_range_max": null,
+                    "remote_ip_prefix": null,
+                    "remote_group_id": null,
+                    "description": null,
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                }
+            ],
+            "tags": [],
+            "created_at": "2021-01-01T00:00:00Z",
+            "updated_at": "2021-01-01T00:00:00Z",
+            "revision_number": 1,
+            "project_id": "00000000000000000000000000000000"
+        },
+        {
+            "id": "00000000-0000-0000-0000-000000000000",
+            "name": "k2hdkc-slave-sec",
+            "stateful": true,
+            "tenant_id": "00000000000000000000000000000000",
+            "description": "security group for k2hr3 slave node",
+            "security_group_rules": [
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv4",
+                    "direction": "ingress",
+                    "protocol": "tcp",
+                    "port_range_min": 22,
+                    "port_range_max": 22,
+                    "remote_ip_prefix": "0.0.0.0/0",
+                    "remote_group_id": null,
+                    "description": "ssh port",
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv6",
+                    "direction": "egress",
+                    "protocol": null,
+                    "port_range_min": null,
+                    "port_range_max": null,
+                    "remote_ip_prefix": null,
+                    "remote_group_id": null,
+                    "description": null,
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv4",
+                    "direction": "egress",
+                    "protocol": null,
+                    "port_range_min": null,
+                    "port_range_max": null,
+                    "remote_ip_prefix": null,
+                    "remote_group_id": null,
+                    "description": null,
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv4",
+                    "direction": "ingress",
+                    "protocol": "tcp",
+                    "port_range_min": 8031,
+                    "port_range_max": 8031,
+                    "remote_ip_prefix": "0.0.0.0/0",
+                    "remote_group_id": null,
+                    "description": "k2hdkc/chmpx slave node control port",
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                }
+            ],
+            "tags": [],
+            "created_at": "2021-01-01T00:00:00Z",
+            "updated_at": "2021-01-01T00:00:00Z",
+            "revision_number": 3,
+            "project_id": "00000000000000000000000000000000"
+        },
+        {
+            "id": "00000000-0000-0000-0000-000000000000",
+            "name": "mycluster--k2hdkc-slave-sec",
+            "stateful": true,
+            "tenant_id": "00000000000000000000000000000000",
+            "description": "security group for k2hdkc mycluster slave node",
+            "security_group_rules": [
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv4",
+                    "direction": "egress",
+                    "protocol": null,
+                    "port_range_min": null,
+                    "port_range_max": null,
+                    "remote_ip_prefix": null,
+                    "remote_group_id": null,
+                    "description": null,
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv4",
+                    "direction": "ingress",
+                    "protocol": "tcp",
+                    "port_range_min": 22,
+                    "port_range_max": 22,
+                    "remote_ip_prefix": "0.0.0.0/0",
+                    "remote_group_id": null,
+                    "description": "",
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv6",
+                    "direction": "egress",
+                    "protocol": null,
+                    "port_range_min": null,
+                    "port_range_max": null,
+                    "remote_ip_prefix": null,
+                    "remote_group_id": null,
+                    "description": null,
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "tenant_id": "00000000000000000000000000000000",
+                    "security_group_id": "00000000-0000-0000-0000-000000000000",
+                    "ethertype": "IPv4",
+                    "direction": "ingress",
+                    "protocol": "tcp",
+                    "port_range_min": 8031,
+                    "port_range_max": 8031,
+                    "remote_ip_prefix": null,
+                    "remote_group_id": null,
+                    "description": "k2hdkc/chmpx slave node control port",
+                    "tags": [],
+                    "created_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-01-01T00:00:00Z",
+                    "revision_number": 0,
+                    "project_id": "00000000000000000000000000000000"
+                }
+            ],
+            "tags": [],
+            "created_at": "2021-01-01T00:00:00Z",
+            "updated_at": "2021-01-01T00:00:00Z",
+            "revision_number": 3,
+            "project_id": "00000000000000000000000000000000"
+        }
+    ]
+}
+
+TEST CASE : (6) Normal : Line feed code test
+{
+    "field1": "1\n2\n3\n4"
+}
+
