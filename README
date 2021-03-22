@@ -4,12 +4,10 @@ K2HR3 Command Line Interface
 K2HR3 Utilities - Command Line Interface
 
 ### Overview
-K2HR3 Get Resource is a Systemd Timer Service for retrieving RESOURCE
-data from K2HR3 System, this is one of utility for it.
-
-### Feature
 The K2HR3 Command Line Interface (CLI) is a tool for manipulating K2HR3
 data using the K2HR3 REST API.
+
+### Feature
 All K2HR3 command line interface (CLI) programs are written in shell
 scripts and can be ported to various operating systems.
 
