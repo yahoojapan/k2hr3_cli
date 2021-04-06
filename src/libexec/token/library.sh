@@ -400,7 +400,9 @@ complement_unscoped_token()
 	#
 	if [ ${_TOKEN_UPSCOPED_TOKEN_BASE} -eq 0 ]; then
 		add_config_update_var "K2HR3CLI_USER"
-		add_config_update_var "K2HR3CLI_PASS"
+		if [ "X${K2HR3CLI_OPT_SAVE_PASS}" = "X1" ]; then
+			add_config_update_var "K2HR3CLI_PASS"
+		fi
 	else
 		add_config_update_var "K2HR3CLI_OPENSTACK_TOKEN"
 	fi
