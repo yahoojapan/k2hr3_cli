@@ -293,7 +293,7 @@ config_search_key()
 		return 0
 	fi
 	if [ "X$2" = "X" ]; then
-		prn_dbg "(config_get_keyvalue) Key name is empty."
+		prn_dbg "(config_search_key) Key name is empty."
 		pecho -n ""
 		return 0
 	fi
@@ -305,12 +305,12 @@ config_search_key()
 	#
 	_CONFIG_SEARCH_FOUND=$(grep -n "^[[:space:]]*${_CONFIG_SEARCH_KEY_NAME}[[:space:]]*=" "${_CONFIG_SEARCH_CONF_FILE}" | head -1 2>/dev/null)
 	if [ $? -ne 0 ]; then
-		prn_dbg "(config_get_keyvalue) Key name(${_CONFIG_SEARCH_KEY_NAME}) is not existed in configuration file(${_CONFIG_SEARCH_CONF_FILE})."
+		prn_dbg "(config_search_key) Key name(${_CONFIG_SEARCH_KEY_NAME}) is not existed in configuration file(${_CONFIG_SEARCH_CONF_FILE})."
 		pecho -n ""
 		return 0
 	fi
 	if [ "X${_CONFIG_SEARCH_FOUND}" = "X" ]; then
-		prn_dbg "(config_get_keyvalue) Key name(${_CONFIG_SEARCH_KEY_NAME}) is not existed in configuration file(${_CONFIG_SEARCH_CONF_FILE})."
+		prn_dbg "(config_search_key) Key name(${_CONFIG_SEARCH_KEY_NAME}) is not existed in configuration file(${_CONFIG_SEARCH_CONF_FILE})."
 		pecho -n ""
 		return 0
 	fi
