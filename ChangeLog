@@ -1,3 +1,10 @@
+k2hr3-cli (1.0.2) trusty; urgency=low
+
+  * Fixed an incorrect function name in debug message output - #4
+  * Fixed a bug that the passphrase would be saved without the option - #3
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Wed, 07 Apr 2021 09:19:57 +0900
+
 k2hr3-cli (1.0.1) trusty; urgency=low
 
   * Fixed README file - #1
