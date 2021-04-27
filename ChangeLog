@@ -1,3 +1,9 @@
+k2hr3-cli (1.0.3) trusty; urgency=low
+
+  * Fixed a bug parsing for user home directory - #6
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Tue, 27 Apr 2021 09:33:50 +0900
+
 k2hr3-cli (1.0.2) trusty; urgency=low
 
   * Fixed an incorrect function name in debug message output - #4
