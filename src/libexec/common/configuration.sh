@@ -110,7 +110,7 @@ config_get_default_user_dir()
 	# [NOTE]
 	# Don't want to use "~user"  because it depends on the HOME environment variable.
 	#
-	_CONFIG_DEFAULT_USER_HOME=$(grep "${_CONFIG_DEFAULT_USER_NAME}" /etc/passwd | sed 's/ //g' | tr ':' ' ' | awk '{print $6}' 2>/dev/null)
+	_CONFIG_DEFAULT_USER_HOME=$(grep "${_CONFIG_DEFAULT_USER_NAME}" /etc/passwd | awk -F: '{print $6}' 2>/dev/null)
 	if [ "X${_CONFIG_DEFAULT_USER_HOME}" = "X" ]; then
 		prn_dbg "(config_get_default_user_dir) Could not get user(${_CONFIG_DEFAULT_USER_NAME}) home directory."
 		pecho -n ""
