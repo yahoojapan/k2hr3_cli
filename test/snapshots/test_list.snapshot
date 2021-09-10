@@ -1,78 +1,52 @@
 TEST CASE : (1) Normal : Get list for service without service name
 [{"name":"test_service","children":[],"owner":true}]
-
 TEST CASE : (2) Normal : Get list for service with service name
 [{"name":"test_service","children":[],"owner":true}]
-
 TEST CASE : (3) Normal : Get list resource : no-resource/no-service/no-expand
 [{"name":"autocluster","children":[]},{"name":"test_resource","children":[]},{"name":"test_sub_resource","children":[]}]
-
 TEST CASE : (4) Normal : Get list resource : no-resource/no-service/expand
 [{"name":"autocluster","children":[{"name":"server","children":[]},{"name":"slave","children":[]}]},{"name":"test_resource","children":[]},{"name":"test_sub_resource","children":[]}]
-
 TEST CASE : (5) Normal : Get list resource : resource/no-service/no-expand
 [{"name":"test_child_resource","children":[]}]
-
 TEST CASE : (6) Normal : Get list resource : resource/no-service/expand
 [{"name":"test_child_resource","children":[]}]
-
 TEST CASE : (7) Normal : Get list resource : no-resource/service/no-expand
 [{"name":"test_child_resource","children":[]}]
-
 TEST CASE : (8) Normal : Get list resource : no-resource/service/expand
 [{"name":"test_child_resource","children":[]}]
-
 TEST CASE : (9) Normal : Get list resource : resource/service/no-expand
 []
-
 TEST CASE : (10) Normal : Get list resource : resource/service/expand
 []
-
 TEST CASE : (11) Normal : Get list policy : no-policy/no-service/no-expand
 [{"name":"autocluster","children":[]},{"name":"test_policy","children":[]},{"name":"test_sub_policy","children":[]}]
-
 TEST CASE : (12) Normal : Get list policy : no-policy/no-service/expand
 [{"name":"autocluster","children":[]},{"name":"test_policy","children":[]},{"name":"test_sub_policy","children":[]}]
-
 TEST CASE : (13) Normal : Get list policy : policy/no-service/no-expand
 []
-
 TEST CASE : (14) Normal : Get list policy : policy/no-service/expand
 []
-
 TEST CASE : (15) Normal : Get list policy : no-policy/service/no-expand
 []
-
 TEST CASE : (16) Normal : Get list policy : no-policy/service/expand
 []
-
 TEST CASE : (17) Normal : Get list policy : policy/service/no-expand
 []
-
 TEST CASE : (18) Normal : Get list policy : policy/service/expand
 []
-
 TEST CASE : (19) Normal : Get list role : no-role/no-service/no-expand
 [{"name":"autocluster","children":[]},{"name":"test_role","children":[]},{"name":"test_sub_role","children":[]}]
-
 TEST CASE : (20) Normal : Get list role : no-role/no-service/expand
 [{"name":"autocluster","children":[{"name":"server","children":[]},{"name":"slave","children":[]}]},{"name":"test_role","children":[]},{"name":"test_sub_role","children":[]}]
-
 TEST CASE : (21) Normal : Get list role : role/no-service/no-expand
 []
-
 TEST CASE : (22) Normal : Get list role : role/no-service/expand
 []
-
 TEST CASE : (23) Normal : Get list role : no-role/service/no-expand
 []
-
 TEST CASE : (24) Normal : Get list role : no-role/service/expand
 []
-
 TEST CASE : (25) Normal : Get list role : role/service/no-expand
 []
-
 TEST CASE : (26) Normal : Get list role : role/service/expand
 []
-

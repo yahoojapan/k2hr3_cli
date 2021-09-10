@@ -423,7 +423,7 @@ create_dummy_response()
 
 			else
 				#
-				# From oprnstack token
+				# From oprnstack or OIDC token
 				#
 				_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
 				if [ $? -ne 0 ]; then
@@ -435,20 +435,20 @@ create_dummy_response()
 
 				if [ "X${_UTIL_TMP_TENANT}" = "X" ]; then
 					#
-					# Unscoped token from openstack token
+					# Unscoped token from openstack or OIDC token
 					#
 					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=201
-					_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":false,\"token\":\"TEST_TOKEN_UNSCOPED_FOR_OPENSTACK_${_UTIL_TMP_TOKENVAL}\"}"
+					_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":false,\"token\":\"TEST_TOKEN_UNSCOPED_FOR_OTHER_${_UTIL_TMP_TOKENVAL}\"}"
 					pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
 				else
 					#
-					# Scoped token from openstack token
+					# Scoped token from openstack or OIDC token
 					#
 					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=201
-					_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":true,\"token\":\"TEST_TOKEN_SCOPED_FOR_TENANT_${_UTIL_TMP_TENANT}_OPENSTACK_${_UTIL_TMP_TOKENVAL}\"}"
+					_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":true,\"token\":\"TEST_TOKEN_SCOPED_FOR_TENANT_${_UTIL_TMP_TENANT}_OTHER_${_UTIL_TMP_TOKENVAL}\"}"
 					pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 				fi
 			fi
@@ -539,7 +539,7 @@ create_dummy_response()
 				fi
 
 				#
-				# Create Scoped Token from unscoped token(or OpenStack token)
+				# Create Scoped Token from unscoped token(or OpenStack/OIDC token)
 				#
 				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=201
@@ -558,11 +558,11 @@ create_dummy_response()
 				fi
 
 				#
-				# Create Unscoped Token from OpenStack token(or unscoped token)
+				# Create Unscoped Token from OpenStack/OIDC token(or unscoped token)
 				#
 				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=201
-				_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":false,\"token\":\"TEST_TOKEN_UNSCOPED_FOR_OPENSTACK_${_UTIL_TMP_TOKENVAL}\"}"
+				_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":false,\"token\":\"TEST_TOKEN_UNSCOPED_FOR_OTHER_${_UTIL_TMP_TOKENVAL}\"}"
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			fi
 

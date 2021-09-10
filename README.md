@@ -14,7 +14,7 @@ K2HR3 Command Line Interface(K2HR3 Utilities)
 
 ### K2HR3 System Overview
 **K2HR3** (**K2H**dkc based **R**esource and **R**oles and policy **R**ules) is one of extended **RBAC** (**R**ole **B**ased **A**ccess **C**ontrol) system.  
-K2HR3 works as RBAC in cooperation with **OpenStack** which is one of **IaaS**(Infrastructure as a Service), and also provides useful functions for using RBAC.  
+K2HR3 works as RBAC in cooperation with **OpenStack** and **Kubernetes** which are the **IaaS**(Infrastructure as a Service), and also provides useful functions for using RBAC.  
 
 K2HR3 is a system that defines and controls **HOW**(policy Rule), **WHO**(Role), **WHAT**(Resource), as RBAC.  
 Users of K2HR3 can define **Role**(WHO) groups to access freely defined **Resource**(WHAT) and control access by **policy Rule**(HOW).  

@@ -94,6 +94,9 @@ K2HR3CLI_COMMAND_OPT_SCOPED_TOKEN_LONG="--scopedtoken"
 K2HR3CLI_COMMAND_OPT_OPENSTACK_TOKEN_SHORT="-optoken"
 K2HR3CLI_COMMAND_OPT_OPENSTACK_TOKEN_LONG="--openstacktoken"
 
+K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_SHORT="-oidctoken"
+K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_LONG="--openidconnecttoken"
+
 #
 # Options used by each command
 #
@@ -182,6 +185,7 @@ K2HR3CLI_COMMAND_OPT_OUTPUT_LONG="--output"
 #	K2HR3CLI_UNSCOPED_TOKEN		: (*)	unscoped token
 #	K2HR3CLI_SCOPED_TOKEN		: (*)	scoped token
 #	K2HR3CLI_OPENSTACK_TOKEN	: (*)	openstack (un)scoped token
+#	K2HR3CLI_OIDC_TOKEN			: (*)	openid connect access token
 #
 
 #---------------------------------------------------------------------
@@ -456,6 +460,7 @@ parse_mode_option()
 #	K2HR3CLI_UNSCOPED_TOKEN		: --unscopedtoken(-utoken)
 #	K2HR3CLI_SCOPED_TOKEN		: --scopedtoken(-token)
 #	K2HR3CLI_OPENSTACK_TOKEN	: --openstacktoken(-optoken)
+#	K2HR3CLI_OIDC_TOKEN			: --openidconnecttoken(-oidctoken)
 #
 # [NOTE]
 # Unscoped Token(K2HR3CLI_UNSCOPED_TOKEN) and Scoped Token(K2HR3CLI_SCOPED_TOKEN) are removed
@@ -475,6 +480,7 @@ parse_common_option()
 	_OPT_TMP_UNSCOPED_TOKEN=
 	_OPT_TMP_SCOPED_TOKEN=
 	_OPT_TMP_OPENSTACK_TOKEN=
+	_OPT_TMP_OIDC_TOKEN=
 	_OPT_TMP_POLICIES=
 	_OPT_TMP_ALIAS=
 	_OPT_TMP_HOST=
@@ -692,6 +698,18 @@ parse_common_option()
 				return 1
 			fi
 			_OPT_TMP_OPENSTACK_TOKEN=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
+
+		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_LONG}" ]; then
+			if [ -n "${_OPT_TMP_OIDC_TOKEN}" ]; then
+				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_LONG}(${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_SHORT}) option."
+				return 1
+			fi
+			shift
+			if [ $# -le 0 ]; then
+				prn_err "${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_LONG}(${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_SHORT}) option needs parameter."
+				return 1
+			fi
+			_OPT_TMP_OIDC_TOKEN=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
 		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_EXPAND_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_EXPAND}" ]; then
@@ -1103,6 +1121,10 @@ parse_common_option()
 	if [ -n "${_OPT_TMP_OPENSTACK_TOKEN}" ]; then
 		# shellcheck disable=SC2034
 		K2HR3CLI_OPENSTACK_TOKEN=$(filter_null_string "${_OPT_TMP_OPENSTACK_TOKEN}")
+	fi
+	if [ -n "${_OPT_TMP_OIDC_TOKEN}" ]; then
+		# shellcheck disable=SC2034
+		K2HR3CLI_OIDC_TOKEN=$(filter_null_string "${_OPT_TMP_OIDC_TOKEN}")
 	fi
 	if [ -n "${_OPT_TMP_USER}" ]; then
 		# shellcheck disable=SC2034

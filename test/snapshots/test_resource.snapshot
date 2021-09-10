@@ -18,16 +18,12 @@ Succeed : Create/Update "test_resource" Resource
 
 TEST CASE : (7) Normal : Get resource without expand/service
 {"string":null,"object":{"data1":"value1","data2":"value2"},"keys":{"key1":"value1","key2":"value2"},"expire":null,"aliases":["yrn:yahoo:::test_tenant:resource:test_resource_sub"]}
-
 TEST CASE : (8) Normal : Get resource with expand without service
 {"string":"test_sub_resource_string","object":{"data1":"value1","data2":"value2"},"keys":{"key1":"value1","key2":"value2"},"expire":null}
-
 TEST CASE : (9) Normal : Get resource without expand with service
 {"string":"","object":null,"keys":null,"expire":null,"aliases":[]}
-
 TEST CASE : (10) Normal : Get resource with expand/service
 {"string":"","object":null,"keys":null,"expire":null}
-
 TEST CASE : (11) Normal : Delete resource(all)
 Succeed : Delete "test_resource" Resource
 

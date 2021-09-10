@@ -85,12 +85,34 @@ if [ $? -ne 0 ]; then
 fi
 
 #---------------------------------------------------------------------
-# (3) Normal : Create Scoped Token from credential
+# (3) Normal : Create Unscoped Token from OIDC token
 #---------------------------------------------------------------------
 #
 # Title
 #
-TEST_TITLE="(3) Normal : Create Scoped Token from credential"
+TEST_TITLE="(3) Normal : Create Unscoped Token from OIDC token"
+test_prn_title "${TEST_TITLE}"
+
+#
+# Run
+#
+"${K2HR3CLIBIN}" token create utoken_oidctoken --openidconnecttoken TEST_OIDC_TOKEN_DUMMY "$@" > "${SUB_TEST_PART_FILE}"
+
+#
+# Check result
+#
+test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
+if [ $? -ne 0 ]; then
+	TEST_EXIT_CODE=1
+fi
+
+#---------------------------------------------------------------------
+# (4) Normal : Create Scoped Token from credential
+#---------------------------------------------------------------------
+#
+# Title
+#
+TEST_TITLE="(4) Normal : Create Scoped Token from credential"
 test_prn_title "${TEST_TITLE}"
 
 #
@@ -107,12 +129,12 @@ if [ $? -ne 0 ]; then
 fi
 
 #---------------------------------------------------------------------
-# (4) Normal : Create Scoped Token from unscoped token
+# (5) Normal : Create Scoped Token from unscoped token
 #---------------------------------------------------------------------
 #
 # Title
 #
-TEST_TITLE="(4) Normal : Create Scoped Token from unscoped token"
+TEST_TITLE="(5) Normal : Create Scoped Token from unscoped token"
 test_prn_title "${TEST_TITLE}"
 
 #
@@ -129,12 +151,12 @@ if [ $? -ne 0 ]; then
 fi
 
 #---------------------------------------------------------------------
-# (5) Normal : Create Scoped Token from openstack token
+# (6) Normal : Create Scoped Token from openstack token
 #---------------------------------------------------------------------
 #
 # Title
 #
-TEST_TITLE="(5) Normal : Create Scoped Token from openstack token"
+TEST_TITLE="(6) Normal : Create Scoped Token from openstack token"
 test_prn_title "${TEST_TITLE}"
 
 #
@@ -151,12 +173,34 @@ if [ $? -ne 0 ]; then
 fi
 
 #---------------------------------------------------------------------
-# (6) Normal : Show tenant list from unscoped token
+# (7) Normal : Create Scoped Token from OIDC token
 #---------------------------------------------------------------------
 #
 # Title
 #
-TEST_TITLE="(6) Normal : Show tenant list from unscoped token"
+TEST_TITLE="(7) Normal : Create Scoped Token from OIDC token"
+test_prn_title "${TEST_TITLE}"
+
+#
+# Run
+#
+"${K2HR3CLIBIN}" token create token_oidctoken --tenant test --openidconnecttoken TEST_OIDC_TOKEN_DUMMY "$@" > "${SUB_TEST_PART_FILE}"
+
+#
+# Check result
+#
+test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
+if [ $? -ne 0 ]; then
+	TEST_EXIT_CODE=1
+fi
+
+#---------------------------------------------------------------------
+# (8) Normal : Show tenant list from unscoped token
+#---------------------------------------------------------------------
+#
+# Title
+#
+TEST_TITLE="(8) Normal : Show tenant list from unscoped token"
 test_prn_title "${TEST_TITLE}"
 
 #
@@ -173,12 +217,12 @@ if [ $? -ne 0 ]; then
 fi
 
 #---------------------------------------------------------------------
-# (7) Normal : Show tenant list from scoped token
+# (9) Normal : Show tenant list from scoped token
 #---------------------------------------------------------------------
 #
 # Title
 #
-TEST_TITLE="(7) Normal : Show tenant list from scoped token"
+TEST_TITLE="(9) Normal : Show tenant list from scoped token"
 test_prn_title "${TEST_TITLE}"
 
 #
@@ -195,12 +239,12 @@ if [ $? -ne 0 ]; then
 fi
 
 #---------------------------------------------------------------------
-# (8) Normal : Check user unscoped token
+# (10) Normal : Check user unscoped token
 #---------------------------------------------------------------------
 #
 # Title
 #
-TEST_TITLE="(8) Normal : Check user unscoped token"
+TEST_TITLE="(10) Normal : Check user unscoped token"
 test_prn_title "${TEST_TITLE}"
 
 #
@@ -217,12 +261,12 @@ if [ $? -ne 0 ]; then
 fi
 
 #---------------------------------------------------------------------
-# (9) Normal : Check user scoped token
+# (11) Normal : Check user scoped token
 #---------------------------------------------------------------------
 #
 # Title
 #
-TEST_TITLE="(9) Normal : Check user scoped token"
+TEST_TITLE="(11) Normal : Check user scoped token"
 test_prn_title "${TEST_TITLE}"
 
 #

@@ -3,10 +3,8 @@ Succeed : Create "test_policy" Policy
 
 TEST CASE : (2) Normal : Get policy without service
 {"effect":"allow","action":["yrn:yahoo::::action:read","yrn:yahoo::::action:write"],"resource":["yrn:yahoo:::test_tenant:resource:test_resource1","yrn:yahoo:::test_tenant:resource:test_resource2"],"condition":[],"reference":0,"alias":["yrn:yahoo:::test_tenant:policy:test_sub_policy"]}
-
 TEST CASE : (3) Normal : Get policy with service
 {"effect":"allow","action":["yrn:yahoo::::action:read"],"resource":["yrn:yahoo:test_service::test_tenant:resource:test_service_resouce_string"],"condition":[],"reference":0,"alias":[]}
-
 TEST CASE : (4) Normal : Delete policy
 Succeed : Delete "test_policy" Policy
 

@@ -39,6 +39,7 @@
 #	K2HR3CLI_UNSCOPED_TOKEN
 #	K2HR3CLI_SCOPED_TOKEN
 #	K2HR3CLI_OPENSTACK_TOKEN
+#	K2HR3CLI_OIDC_TOKEN
 #
 # After the ScopedToken has been validated, use the following variables
 # to prevent the same Token from being validated again.
@@ -109,6 +110,25 @@ get_openstack_token()
 }
 
 #
+# Complement and Set OIDC Token
+#
+# $?	: result
+#
+# Access and Change Environment
+#	K2HR3CLI_OIDC_TOKEN
+#
+get_oidc_token()
+{
+	#
+	# Interacvive input
+	#
+	completion_variable_auto "K2HR3CLI_OIDC_TOKEN" "OpenID Connect(OIDC) Token: " 1
+	_TOKEN_LIB_RESULT_TMP=$?
+	prn_dbg "(get_oidc_token) OIDC Token = \"${K2HR3CLI_OIDC_TOKEN}\"."
+	return ${_TOKEN_LIB_RESULT_TMP}
+}
+
+#
 # Complement and Set Tenant
 #
 # $?	: result
@@ -128,10 +148,10 @@ complement_tenant()
 }
 
 #
-# Select credential or openstack token
+# Select credential or openstack/OIDC token
 #
-# $1	: unscoped token based by ("cred" or "op" or "abort", other is selection)
-# $?	: selected type(cred:0, openstack:1, error:2)
+# $1	: unscoped token based by ("cred" or "op" or "oidc" or "abort", other is selection)
+# $?	: selected type(cred:0, openstack:1, oidc:2, error:3)
 #
 select_credential_type_for_unscopedtoken()
 {
@@ -142,11 +162,11 @@ select_credential_type_for_unscopedtoken()
 		#
 		complement_user_name
 		if [ $? -ne 0 ]; then
-			return 2
+			return 3
 		fi
 		complement_user_passphrase
 		if [ $? -ne 0 ]; then
-			return 2
+			return 3
 		fi
 		return 0
 
@@ -156,27 +176,37 @@ select_credential_type_for_unscopedtoken()
 		#
 		get_openstack_token
 		if [ $? -ne 0 ]; then
-			return 2
+			return 3
 		fi
 		return 1
+
+	elif [ "X${_TOKEN_UPSCOPED_SELECT_BASE}" = "XOIDC" ]; then
+		#
+		# Force : Select OIDC token
+		#
+		get_oidc_token
+		if [ $? -ne 0 ]; then
+			return 3
+		fi
+		return 2
 
 	else
 		#
 		# Selection
 		#
-		if [ "X${K2HR3CLI_USER}" = "X" ] && [ "X${K2HR3CLI_PASS}" = "X" ] && [ "X${K2HR3CLI_OPENSTACK_TOKEN}" = "X" ]; then
+		if [ "X${K2HR3CLI_USER}" = "X" ] && [ "X${K2HR3CLI_PASS}" = "X" ] && [ "X${K2HR3CLI_OPENSTACK_TOKEN}" = "X" ] && [ "X${K2HR3CLI_OIDC_TOKEN}" = "X" ]; then
 			#
 			# Need to choose
 			#
 			_TOKEN_LIBRARY_LOOP_FLAG=1
 			while [ "${_TOKEN_LIBRARY_LOOP_FLAG}" -eq 1 ]; do
 				_TOKEN_UNSCOPEDTOKEN_BASE_SELECT=""
-				completion_variable_auto "_TOKEN_UNSCOPEDTOKEN_BASE_SELECT" "Select either to get the K2HR3 Unscoped Token [K2HR3 user credential (cred) or OpenStack Token (op)]: " 1
+				completion_variable_auto "_TOKEN_UNSCOPEDTOKEN_BASE_SELECT" "Select either to get the K2HR3 Unscoped Token [K2HR3 user credential (cred) or OpenStack Token (op) or OpenID Connect Token (oidc)]: " 1
 				if [ $? -ne 0 ]; then
-					return 2
+					return 3
 				else
 					_TOKEN_UNSCOPEDTOKEN_BASE_SELECT=$(to_upper "${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}")
-					if [ "X${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "XCRED" ] || [ "X${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "XOP" ]; then
+					if [ "X${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "XCRED" ] || [ "X${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "XOP" ] || [ "X${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "XOIDC" ]; then
 						_TOKEN_LIBRARY_LOOP_FLAG=0
 					fi
 				fi
@@ -187,22 +217,32 @@ select_credential_type_for_unscopedtoken()
 				#
 				complement_user_name
 				if [ $? -ne 0 ]; then
-					return 2
+					return 3
 				fi
 				complement_user_passphrase
 				if [ $? -ne 0 ]; then
-					return 2
+					return 3
 				fi
 				return 0
-			else
+			elif [ "X${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "XOP" ] ;then
 				#
 				# Select openstack token
 				#
 				get_openstack_token
 				if [ $? -ne 0 ]; then
-					return 2
+					return 3
 				fi
 				return 1
+
+			else
+				#
+				# Select OIDC token
+				#
+				get_oidc_token
+				if [ $? -ne 0 ]; then
+					return 3
+				fi
+				return 2
 			fi
 
 		elif [ "X${K2HR3CLI_USER}" != "X" ] && [ "X${K2HR3CLI_PASS}" != "X" ]; then
@@ -217,28 +257,34 @@ select_credential_type_for_unscopedtoken()
 			#
 			return 1
 
+		elif [ "X${K2HR3CLI_OIDC_TOKEN}" != "X" ]; then
+			#
+			# Use OIDC toekn(already set)
+			#
+			return 2
+
 		else
 			#
 			# Use user credential(either is not set)
 			#
 			complement_user_name
 			if [ $? -ne 0 ]; then
-				return 2
+				return 3
 			fi
 			complement_user_passphrase
 			if [ $? -ne 0 ]; then
-				return 2
+				return 3
 			fi
 			return 0
 		fi
 	fi
-	return 2
+	return 3
 }
 
 #
 # Complement and Set K2HR3 unscoped token
 #
-# $1	: unscoped token based by ("cred" or "op" or "abort", other is selection)
+# $1	: unscoped token based by ("cred" or "op" or "oidc" or "abort", other is selection)
 # $?	: result
 #
 # Access and Change Environment
@@ -246,6 +292,7 @@ select_credential_type_for_unscopedtoken()
 #	K2HR3CLI_PASS
 #	K2HR3CLI_UNSCOPED_TOKEN
 #	K2HR3CLI_OPENSTACK_TOKEN
+#	K2HR3CLI_OIDC_TOKEN
 #
 complement_unscoped_token()
 {
@@ -327,8 +374,16 @@ complement_unscoped_token()
 		post_string_request "/v1/user/tokens" "${_TOKEN_REQUEST_BODY}" 1 "x-auth-token:U=${K2HR3CLI_OPENSTACK_TOKEN}"
 		_TOKEN_REQUEST_RESULT=$?
 
+	elif [ ${_TOKEN_UPSCOPED_TOKEN_BASE} -eq 2 ]; then
+		#
+		# Get K2HR3 Unscoped token by OIDC token
+		#
+		_TOKEN_REQUEST_BODY=""
+		post_string_request "/v1/user/tokens" "${_TOKEN_REQUEST_BODY}" 1 "x-auth-token:U=${K2HR3CLI_OIDC_TOKEN}"
+		_TOKEN_REQUEST_RESULT=$?
+
 	else
-		prn_err "K2HR3 User Credential or OpenStack Token for creating K2HR3 Unscoped Tokens is not specified."
+		prn_err "K2HR3 User Credential or OpenStack Token or OpenID Connect Token for creating K2HR3 Unscoped Tokens is not specified."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		return 1
 	fi
@@ -403,8 +458,10 @@ complement_unscoped_token()
 		if [ "X${K2HR3CLI_OPT_SAVE_PASS}" = "X1" ]; then
 			add_config_update_var "K2HR3CLI_PASS"
 		fi
-	else
+	elif [ ${_TOKEN_UPSCOPED_TOKEN_BASE} -eq 1 ]; then
 		add_config_update_var "K2HR3CLI_OPENSTACK_TOKEN"
+	else
+		add_config_update_var "K2HR3CLI_OIDC_TOKEN"
 	fi
 	add_config_update_var "K2HR3CLI_UNSCOPED_TOKEN"
 
@@ -424,6 +481,7 @@ complement_unscoped_token()
 #	K2HR3CLI_UNSCOPED_TOKEN
 #	K2HR3CLI_SCOPED_TOKEN
 #	K2HR3CLI_OPENSTACK_TOKEN
+#	K2HR3CLI_OIDC_TOKEN
 #
 complement_scoped_token()
 {

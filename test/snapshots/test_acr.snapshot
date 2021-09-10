@@ -6,7 +6,5 @@ Succeed : Delete Tenant(Scoped Token) from "test_service" Service member
 
 TEST CASE : (3) Normal : Show ACR(ACCESS CROSS ROLE) Tenant
 {"user":"test","tenant":"test_tenant","service":"test_service"}
-
 TEST CASE : (4) Normal : Show ACR(ACCESS CROSS ROLE) Resource
 [{"name":"acr_resource","expire":0,"type":"string","data":"test_acr_resource_datae","keys":{"acr_key1":"acr_val1","acr_key2":"acr_val2"}}]
-
