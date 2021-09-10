@@ -98,6 +98,10 @@ config_print_all_varnames()
 	prn_msg "   Stores the (Un)Scoped Token issued by OpenStack."
 	prn_msg ""
 
+	prn_msg "K2HR3CLI_OIDC_TOKEN"
+	prn_msg "   Stores the Access Token issued by OpenID Connect."
+	prn_msg ""
+
 	if [ "X${K2HR3CLI_PLUGIN_CONFIG_VAR_DESC}" != "X" ]; then
 		for _CONFIG_VAR_DESC in ${K2HR3CLI_PLUGIN_CONFIG_VAR_DESC}; do
 			${_CONFIG_VAR_DESC}
@@ -152,6 +156,12 @@ config_print_all_var()
 		prn_msg "K2HR3CLI_OPENSTACK_TOKEN: \"${K2HR3CLI_OPENSTACK_TOKEN}\""
 	else
 		prn_msg "K2HR3CLI_OPENSTACK_TOKEN: (empty)"
+	fi
+
+	if [ "X${K2HR3CLI_OIDC_TOKEN}" != "X" ]; then
+		prn_msg "K2HR3CLI_OIDC_TOKEN: \"${K2HR3CLI_OIDC_TOKEN}\""
+	else
+		prn_msg "K2HR3CLI_OIDC_TOKEN: (empty)"
 	fi
 
 	if [ "X${K2HR3CLI_PLUGIN_CONFIG_VAR_NAME}" != "X" ]; then
@@ -230,6 +240,14 @@ config_print_var()
 		fi
 		return 0
 
+	elif [ "X$1" = "XK2HR3CLI_OIDC_TOKEN" ]; then
+		if [ "X${K2HR3CLI_OIDC_TOKEN}" != "X" ]; then
+			prn_msg "K2HR3CLI_OIDC_TOKEN: \"${K2HR3CLI_OIDC_TOKEN}\""
+		else
+			prn_msg "K2HR3CLI_OIDC_TOKEN: (empty)"
+		fi
+		return 0
+
 	elif [ "X${K2HR3CLI_PLUGIN_CONFIG_VAR_NAME}" != "X" ]; then
 		for _CONFIG_VAR_NAME in ${K2HR3CLI_PLUGIN_CONFIG_VAR_NAME}; do
 			${_CONFIG_VAR_NAME}
@@ -264,7 +282,7 @@ config_set_var()
 	# Check the variable name is allowed
 	#
 	_CONFIG_SET_VAR_FOUND_NAME=0
-	if [ "X$1" = "XK2HR3CLI_API_URI" ] || [ "X$1" = "XK2HR3CLI_USER" ] || [ "X$1" = "XK2HR3CLI_PASS" ] || [ "X$1" = "XK2HR3CLI_TENANT" ] || [ "X$1" = "XK2HR3CLI_UNSCOPED_TOKEN" ] || [ "X$1" = "XK2HR3CLI_SCOPED_TOKEN" ] || [ "X$1" = "XK2HR3CLI_OPENSTACK_TOKEN" ]; then
+	if [ "X$1" = "XK2HR3CLI_API_URI" ] || [ "X$1" = "XK2HR3CLI_USER" ] || [ "X$1" = "XK2HR3CLI_PASS" ] || [ "X$1" = "XK2HR3CLI_TENANT" ] || [ "X$1" = "XK2HR3CLI_UNSCOPED_TOKEN" ] || [ "X$1" = "XK2HR3CLI_SCOPED_TOKEN" ] || [ "X$1" = "XK2HR3CLI_OPENSTACK_TOKEN" ] || [ "X$1" = "XK2HR3CLI_OIDC_TOKEN" ]; then
 		_CONFIG_SET_VAR_FOUND_NAME=1
 	elif [ "X${K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR}" != "X" ]; then
 		for _CONFIG_CHECK_VAR in ${K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR}; do
@@ -331,7 +349,7 @@ config_clear_var()
 	# Check the variable name is allowed
 	#
 	_CONFIG_CLEAR_VAR_FOUND_NAME=0
-	if [ "X$1" = "XK2HR3CLI_API_URI" ] || [ "X$1" = "XK2HR3CLI_USER" ] || [ "X$1" = "XK2HR3CLI_PASS" ] || [ "X$1" = "XK2HR3CLI_TENANT" ] || [ "X$1" = "XK2HR3CLI_UNSCOPED_TOKEN" ] || [ "X$1" = "XK2HR3CLI_SCOPED_TOKEN" ] || [ "X$1" = "XK2HR3CLI_OPENSTACK_TOKEN" ]; then
+	if [ "X$1" = "XK2HR3CLI_API_URI" ] || [ "X$1" = "XK2HR3CLI_USER" ] || [ "X$1" = "XK2HR3CLI_PASS" ] || [ "X$1" = "XK2HR3CLI_TENANT" ] || [ "X$1" = "XK2HR3CLI_UNSCOPED_TOKEN" ] || [ "X$1" = "XK2HR3CLI_SCOPED_TOKEN" ] || [ "X$1" = "XK2HR3CLI_OPENSTACK_TOKEN" ] || [ "X$1" = "XK2HR3CLI_OIDC_TOKEN" ]; then
 		_CONFIG_CLEAR_VAR_FOUND_NAME=1
 	elif [ "X${K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR}" != "X" ]; then
 		for _CONFIG_CHECK_VAR in ${K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR}; do

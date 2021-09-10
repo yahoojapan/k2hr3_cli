@@ -12,7 +12,6 @@ Succeed : Create "test_service" Service
 
 TEST CASE : (5) Normal : Show service
 {"name":"test_service","owner":"test_tenant","verify":[{"name":"test_service_resouce_string","type":"string","data":null}],"tenant":["yrn:yahoo:::test_tenant","yrn:yahoo:::test_service_member","yrn:yahoo:::test_service_member1"]}
-
 TEST CASE : (6) Normal : Delete service
 Succeed : Delete "test_service" Service
 

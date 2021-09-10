@@ -32,9 +32,11 @@ _TOKEN_COMMAND_SUB_CHECK="check"
 #
 _TOKEN_COMMAND_TYPE_UTOKEN_CRED="utoken_cred"
 _TOKEN_COMMAND_TYPE_UTOKEN_OPTOKEN="utoken_optoken"
+_TOKEN_COMMAND_TYPE_UTOKEN_OIDCTOKEN="utoken_oidctoken"
 _TOKEN_COMMAND_TYPE_TOKEN_CRED="token_cred"
 _TOKEN_COMMAND_TYPE_TOKEN_UTOKEN="token_utoken"
 _TOKEN_COMMAND_TYPE_TOKEN_OPTOKEN="token_optoken"
+_TOKEN_COMMAND_TYPE_TOKEN_OIDCTOKEN="token_oidctoken"
 
 _TOKEN_COMMAND_TYPE_UTOKEN="utoken"
 _TOKEN_COMMAND_TYPE_TOKEN="token"
@@ -157,6 +159,33 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 			exit 1
 		fi
 		config_default_set_key "K2HR3CLI_OPENSTACK_TOKEN" "${K2HR3CLI_OPENSTACK_TOKEN}"
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+
+	elif [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_UTOKEN_OIDCTOKEN}" ]; then
+		#
+		# Create Unscoped Token from OIDC Token
+		#
+		K2HR3CLI_UNSCOPED_TOKEN=""
+
+		#
+		# Get Unscoped Token
+		#
+		complement_unscoped_token "oidc"
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+		prn_msg "${K2HR3CLI_UNSCOPED_TOKEN}"
+
+		#
+		# Save to configuration(it need)
+		#
+		config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+		config_default_set_key "K2HR3CLI_OIDC_TOKEN" "${K2HR3CLI_OIDC_TOKEN}"
 		if [ $? -ne 0 ]; then
 			exit 1
 		fi
@@ -307,9 +336,55 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 			exit 1
 		fi
 
+#//TEST
+	elif [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_TOKEN_OIDCTOKEN}" ]; then
+		#
+		# Create Scoped Token from OIDC Token
+		#
+		K2HR3CLI_SCOPED_TOKEN=""
+
+		#
+		# Get Unscoped Token
+		#
+		complement_unscoped_token "oidc"
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+
+		#
+		# Get Scoped Token
+		#
+		complement_scoped_token
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+		prn_msg "${K2HR3CLI_SCOPED_TOKEN}"
+
+		#
+		# Save to configuration(it need)
+		#
+		if [ "X${K2HR3CLI_UNSCOPED_TOKEN}" != "X" ]; then
+			config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"
+			if [ $? -ne 0 ]; then
+				exit 1
+			fi
+		fi
+		config_default_set_key "K2HR3CLI_TENANT" "${K2HR3CLI_TENANT}"
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+		config_default_set_key "K2HR3CLI_SCOPED_TOKEN" "${K2HR3CLI_SCOPED_TOKEN}"
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+		config_default_set_key "K2HR3CLI_OIDC_TOKEN" "${K2HR3CLI_OIDC_TOKEN}"
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+
 	else
 		if [ "X${K2HR3CLI_COMMAND_TYPE}" = "X" ]; then
-			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the type(${_TOKEN_COMMAND_TYPE_UTOKEN_CRED}, ${_TOKEN_COMMAND_TYPE_UTOKEN_OPTOKEN}, ${_TOKEN_COMMAND_TYPE_TOKEN_CRED}, ${_TOKEN_COMMAND_TYPE_TOKEN_UTOKEN} and ${_TOKEN_COMMAND_TYPE_TOKEN_OPTOKEN}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the type(${_TOKEN_COMMAND_TYPE_UTOKEN_CRED}, ${_TOKEN_COMMAND_TYPE_UTOKEN_OPTOKEN}, ${_TOKEN_COMMAND_TYPE_UTOKEN_OIDCTOKEN}, ${_TOKEN_COMMAND_TYPE_TOKEN_CRED}, ${_TOKEN_COMMAND_TYPE_TOKEN_UTOKEN}, ${_TOKEN_COMMAND_TYPE_TOKEN_OPTOKEN} and ${_TOKEN_COMMAND_TYPE_TOKEN_OIDCTOKEN}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		else
 			prn_err "Unknown type(\"${K2HR3CLI_COMMAND_TYPE}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		fi
@@ -369,7 +444,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 	else
 		if [ "X${K2HR3CLI_COMMAND_TYPE}" = "X" ]; then
 			# shellcheck disable=SC2153
-			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the type(${_TOKEN_COMMAND_TYPE_UTOKEN} and ${_TOKEN_COMMAND_TYPE_OPTOKEN}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the type(${_TOKEN_COMMAND_TYPE_UTOKEN}, ${_TOKEN_COMMAND_TYPE_OPTOKEN} and ${_TOKEN_COMMAND_TYPE_OIDCTOKEN}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		else
 			prn_err "Unknown type(\"${K2HR3CLI_COMMAND_TYPE}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		fi
