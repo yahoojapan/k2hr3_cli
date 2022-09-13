@@ -752,7 +752,7 @@ jsonparser_parse_json_string()
 	# Case for Empty string
 	#
 	if [ "X${_JP_PAERSED_ESCAPED_JSON}" = "X" ]; then
-		touch ${_JP_PAERSED_FILE_TMP}
+		touch "${_JP_PAERSED_FILE_TMP}"
 		JP_PAERSED_FILE=${_JP_PAERSED_FILE_TMP}
 		return 0
 	fi

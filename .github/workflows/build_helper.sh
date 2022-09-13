@@ -352,15 +352,15 @@ fi
 # Set variables for packaging
 #
 if [ "X${OPT_BUILD_NUMBER}" != "X" ]; then
-	BUILD_NUMBER=${BUILD_NUMBER}
+	BUILD_NUMBER="${OPT_BUILD_NUMBER}"
 else
 	BUILD_NUMBER=1
 fi
 if [ "X${OPT_DEBEMAIL}" != "X" ]; then
-	export DEBEMAIL=${OPT_DEBEMAIL}
+	export DEBEMAIL="${OPT_DEBEMAIL}"
 fi
 if [ "X${OPT_DEBFULLNAME}" != "X" ]; then
-	export DEBFULLNAME=${OPT_DEBFULLNAME}
+	export DEBFULLNAME="${OPT_DEBFULLNAME}"
 fi
 
 #

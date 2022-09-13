@@ -84,7 +84,7 @@ fi
 # Build configure and Makefile
 #
 echo "--- run aclocal ${FORCEPARAM}"
-aclocal ${FORCEPARAM}
+aclocal "${FORCEPARAM}"
 if [ $? -ne 0 ]; then
 	echo "ERROR: something error occurred in aclocal ${FORCEPARAM}"
 	exit 1

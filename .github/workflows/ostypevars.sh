@@ -146,6 +146,11 @@ elif [ "X${CI_OSTYPE}" = "Xcentos:8" ] || [ "X${CI_OSTYPE}" = "Xcentos:centos8" 
 	PKG_EXT="rpm"
 	IS_OS_CENTOS=1
 
+	#
+	# Change mirrorlist
+	#
+	sed -i -e 's|^mirrorlist|#mirrorlist|g' -e 's|^#baseurl=http://mirror|baseurl=http://vault|g' /etc/yum.repos.d/CentOS-*repo
+
 	# [NOTE]
 	# Since it is difficult to install ShellCheck on CentOS8, it will not be installed.
 	#

@@ -82,6 +82,7 @@ DETAILS=""
 ALLLINES=""
 SET_FIRST_VERSION=0
 while read -r oneline; do
+	# shellcheck disable=SC2269
 	oneline="${oneline}"
 	if [ "X${oneline}" = "X" ]; then
 		continue
@@ -99,8 +100,7 @@ while read -r oneline; do
 		fi
 	else
 		TEST_CONTENTS=$(echo "${oneline}" | grep '^[-][-].*[ ][ ].*$')
-		PKG_RF2822=$(echo "${TEST_CONTENTS}" | grep -o '[ ][ ].*')
-		PKG_RF2822="${PKG_RF2822}"
+		PKG_RF2822="$(echo "${TEST_CONTENTS}" | grep -o '[ ][ ].*')"
 		PKG_COMMITTER=$(echo "${TEST_CONTENTS}" | grep -o '.*[ ][ ]' | sed 's/^[-][-][ ]//')
 		if [ "X${PKG_RF2822}" != "X" ] && [ "X${PKG_COMMITTER}" != "X" ]; then
 			INONEVER=0
@@ -125,7 +125,7 @@ done < "${CHANGELOG_FILE}"
 #
 # NOTE: echo command on ubuntu is print '-e', we need to cut it.
 #
-# shellcheck disable=SC2039
+# shellcheck disable=SC3037,SC2039
 echo -e "${ALLLINES}" | sed 's/^-e //g'
 
 exit 0
