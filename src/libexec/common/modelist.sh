@@ -76,7 +76,7 @@ _MODELIST_TMP=""
 for _MODELIST_ONEDIR in "${LIBEXECDIR}"/*; do
 	_MODELIST_ONEDIR=$(pecho -n "${_MODELIST_ONEDIR}" | sed "s#^${LIBEXECDIR}/##g")
 	case ${_MODELIST_ONEDIR} in
-		${COMMON_DIRNAME})
+		"${COMMON_DIRNAME}")
 			;;
 		*)
 			if [ "X${_MODELIST_TMP}" = "X" ]; then

@@ -84,7 +84,7 @@ K2HR3CLIBIN=${SRCDIR}/k2hr3
 #
 # Set Environments for test
 #
-export K2HR3CLI_LIBEXEC_DIR=${LIBEXECDIR}
+export K2HR3CLI_LIBEXEC_DIR="${LIBEXECDIR}"
 if [ "X${K2HR3CLI_REQUEST_FILE}" = "X" ]; then
 	export K2HR3CLI_REQUEST_FILE="${TESTDIR}/util_request.sh"
 fi

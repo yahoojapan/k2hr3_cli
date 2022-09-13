@@ -21,7 +21,7 @@ SUBDIRS = docs src buildutils test
 
 ACLOCAL_AMFLAGS = -I m4
 
-EXTRA_DIST = RELEASE_VERSION
+EXTRA_DIST = RELEASE_VERSION @CONFIGURECUSTOM@
 
 CLEANFILES = *.log src/libexec/common/VERSION
 
@@ -64,18 +64,30 @@ EXCLUDE_SHELLCHECK_FILE_OPT =	-not -name '*.sh' \
 								-not -name 'config.status' \
 								-not -name 'config.sub' \
 								-not -name 'configure' \
+								-not -name 'configure~' \
 								-not -name 'depcomp' \
 								-not -name 'install-sh' \
 								-not -name 'libtool' \
 								-not -name 'missing' \
-								-not -name 'test-driver'
+								-not -name 'test-driver' \
+								-not -name 'rules'
+
+SHELLCHECK_FILES = $(shell find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -executable -type f $(EXCLUDE_SHELLCHECK_FILE_OPT))
+SHELLCHECK_FILES_COMMON_SH = $(shell find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -type f -name '*.sh' | grep -v ostypevars.sh)
+SHELLCHECK_FILES_CUSTOM_SH = $(shell find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -type f -name '*.sh' | grep ostypevars.sh)
 
 shellcheck:
 	@if type shellcheck > /dev/null 2>&1; then \
 		echo "*** Check all files with ShellCheck"; \
-		$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_COMMON_IGN) $$(find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -executable -type f $(EXCLUDE_SHELLCHECK_FILE_OPT)) || exit 1; \
-		$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_COMMON_IGN) $$(find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -type f -name '*.sh' | grep -v ostypevars.sh) || exit 1; \
-		$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_CUSTOM_IGN) $$(find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -type f -name '*.sh' | grep ostypevars.sh) || exit 1; \
+		if [ -n "$(SHELLCHECK_FILES_ALL)" ]; then \
+			$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_COMMON_IGN) $(SHELLCHECK_FILES_ALL) || exit 1; \
+		fi; \
+		if [ -n "$(SHELLCHECK_FILES_COMMON_SH)" ]; then \
+			$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_COMMON_IGN) $(SHELLCHECK_FILES_COMMON_SH) || exit 1; \
+		fi; \
+		if [ -n "$(SHELLCHECK_FILES_CUSTOM_SH)" ]; then \
+			$(SHELLCHECK_CMD) $(SHELLCHECK_OPT) $(SHELLCHECK_CUSTOM_IGN) $(SHELLCHECK_FILES_CUSTOM_SH) || exit 1; \
+		fi; \
 		echo "   -> No error was detected."; \
 		echo ""; \
 	else \

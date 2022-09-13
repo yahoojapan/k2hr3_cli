@@ -29,7 +29,7 @@
 # implemented.
 #
 _K2HR3_CLI_ECHO_EXP=1
-# shellcheck disable=SC2039
+# shellcheck disable=SC2039,SC3037
 _K2HR3_CLI_ECHO_TMP=$(echo -e "" | tr -d ' ')
 if [ "X${_K2HR3_CLI_ECHO_TMP}" = "X-e" ]; then
 	_K2HR3_CLI_ECHO_EXP=0
@@ -52,7 +52,7 @@ pecho()
 {
 	if [ "X$1" = "X-e" ]; then
 		if [ "${_K2HR3_CLI_ECHO_EXP}" -eq 1 ]; then
-			# shellcheck disable=SC2039
+			# shellcheck disable=SC2039,SC3037
 			echo -e "$*"
 		else
 			echo "$*"
