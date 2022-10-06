@@ -25,6 +25,11 @@ EXTRA_DIST = RELEASE_VERSION @CONFIGURECUSTOM@
 
 CLEANFILES = *.log src/libexec/common/VERSION
 
+# [NOTE]
+# Change the default target to build.
+#
+.DEFAULT_GOAL = build
+
 # [BUILD]
 # Since it is a shell script-only project, there is nothing to build,
 # but we will create a VERSION file.
@@ -72,9 +77,9 @@ EXCLUDE_SHELLCHECK_FILE_OPT =	-not -name '*.sh' \
 								-not -name 'test-driver' \
 								-not -name 'rules'
 
-SHELLCHECK_FILES = $(shell find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -executable -type f $(EXCLUDE_SHELLCHECK_FILE_OPT))
-SHELLCHECK_FILES_COMMON_SH = $(shell find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -type f -name '*.sh' | grep -v ostypevars.sh)
-SHELLCHECK_FILES_CUSTOM_SH = $(shell find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -type f -name '*.sh' | grep ostypevars.sh)
+SHELLCHECK_FILES_ALL =       `find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -executable -type f $(EXCLUDE_SHELLCHECK_FILE_OPT) | tr '\n' ' '`
+SHELLCHECK_FILES_COMMON_SH = `find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -type f -name '*.sh' | grep -v ostypevars.sh | tr '\n' ' '`
+SHELLCHECK_FILES_CUSTOM_SH = `find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -type f -name '*.sh' | grep ostypevars.sh | tr '\n' ' '`
 
 shellcheck:
 	@if type shellcheck > /dev/null 2>&1; then \
