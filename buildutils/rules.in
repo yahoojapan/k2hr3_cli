@@ -1,0 +1,49 @@
+#!/usr/bin/make -f
+#
+# K2HR3 Utilities - Command Line Interface
+#
+# Copyright 2022 Yahoo! Japan Corporation.
+#
+# K2HR3 is K2hdkc based Resource and Roles and policy Rules, gathers
+# common management information for the cloud.
+# K2HR3 can dynamically manage information as "who", "what", "operate".
+# These are stored as roles, resources, policies in K2hdkc, and the
+# client system can dynamically read and modify these information.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Mon, Oct 17 2022
+# REVISION:
+#
+
+#---------------------------------------------------------------
+# @PACKAGE_NAME@ / @PACKAGE_NAME@-dev packages
+#---------------------------------------------------------------
+%:
+	dh $@
+
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/@PACKAGE_NAME@
+
+#
+# Placefolder for configure options
+#
+# [NOTE]
+# If an option is required for running configure, the placeholder will be rewritten as follows.
+# -------------------------------------------------
+# override_dh_auto_configure:
+#     dh_auto_configure -- <configure options>
+# -------------------------------------------------
+#
+# [PLACEFOLDER CONFIGURE OPTION]
+
+#
+# Local variables:
+# tab-width: 4
+# c-basic-offset: 4
+# End:
+# vim600: noexpandtab sw=4 ts=4 fdm=marker
+# vim<600: noexpandtab sw=4 ts=4
+#

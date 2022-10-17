@@ -558,12 +558,8 @@ else
 	#
 	# Create debian packages
 	#
-	DEBUILD_OPT=""
-	if [ ${IS_PUBLISH} -ne 1 ]; then
-		DEBUILD_OPT="-nodebuild"
-	fi
-	prn_cmd CONFIGUREOPT="${CONFIGURE_EXT_OPT}" ./buildutils/debian_build.sh -buildnum "${BUILD_NUMBER}" -disttype "${DIST_TAG}" -y "${DEBUILD_OPT}"
-	CONFIGUREOPT="${CONFIGURE_EXT_OPT}" ./buildutils/debian_build.sh -buildnum "${BUILD_NUMBER}" -disttype "${DIST_TAG}" -y "${DEBUILD_OPT}"
+	prn_cmd CONFIGUREOPT="${CONFIGURE_EXT_OPT}" ./buildutils/debian_build.sh --buildnum "${BUILD_NUMBER}" --disttype "${DIST_TAG}" -y
+	CONFIGUREOPT="${CONFIGURE_EXT_OPT}" ./buildutils/debian_build.sh --buildnum "${BUILD_NUMBER}" --disttype "${DIST_TAG}" -y
 fi
 if [ $? -ne 0 ]; then
 	echo "[ERROR] ${PRGNAME} : Failed to build packages"
