@@ -1,0 +1,78 @@
+#
+# K2HR3 Utilities - Command Line Interface
+#
+# Copyright 2022 Yahoo! Japan Corporation.
+#
+# K2HR3 is K2hdkc based Resource and Roles and policy Rules, gathers
+# common management information for the cloud.
+# K2HR3 can dynamically manage information as "who", "what", "operate".
+# These are stored as roles, resources, policies in K2hdkc, and the
+# client system can dynamically read and modify these information.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Mon, Oct 17 2022
+# REVISION:
+#
+
+src/k2hr3                           usr/bin
+src/libexec/common/CREDIT           usr/libexec/k2hr3/common
+src/libexec/common/VERSION          usr/libexec/k2hr3/common
+src/libexec/common/k2hr3.config     usr/libexec/k2hr3/common
+src/libexec/common/configuration.sh usr/libexec/k2hr3/common
+src/libexec/common/depends.sh       usr/libexec/k2hr3/common
+src/libexec/common/help.sh          usr/libexec/k2hr3/common
+src/libexec/common/interactive.sh   usr/libexec/k2hr3/common
+src/libexec/common/jsonparser.sh    usr/libexec/k2hr3/common
+src/libexec/common/message.sh       usr/libexec/k2hr3/common
+src/libexec/common/modelist.sh      usr/libexec/k2hr3/common
+src/libexec/common/option.sh        usr/libexec/k2hr3/common
+src/libexec/common/request.sh       usr/libexec/k2hr3/common
+src/libexec/common/requestutil.sh   usr/libexec/k2hr3/common
+src/libexec/common/strings.sh       usr/libexec/k2hr3/common
+src/libexec/config/help.sh          usr/libexec/k2hr3/config
+src/libexec/config/summary.sh       usr/libexec/k2hr3/config
+src/libexec/config/command.sh       usr/libexec/k2hr3/config
+src/libexec/acr/help.sh             usr/libexec/k2hr3/acr
+src/libexec/acr/summary.sh          usr/libexec/k2hr3/acr
+src/libexec/acr/command.sh          usr/libexec/k2hr3/acr
+src/libexec/extdata/help.sh         usr/libexec/k2hr3/extdata
+src/libexec/extdata/summary.sh      usr/libexec/k2hr3/extdata
+src/libexec/extdata/command.sh      usr/libexec/k2hr3/extdata
+src/libexec/list/help.sh            usr/libexec/k2hr3/list
+src/libexec/list/summary.sh         usr/libexec/k2hr3/list
+src/libexec/list/command.sh         usr/libexec/k2hr3/list
+src/libexec/policy/help.sh          usr/libexec/k2hr3/policy
+src/libexec/policy/summary.sh       usr/libexec/k2hr3/policy
+src/libexec/policy/command.sh       usr/libexec/k2hr3/policy
+src/libexec/resource/help.sh        usr/libexec/k2hr3/resource
+src/libexec/resource/summary.sh     usr/libexec/k2hr3/resource
+src/libexec/resource/command.sh     usr/libexec/k2hr3/resource
+src/libexec/role/help.sh            usr/libexec/k2hr3/role
+src/libexec/role/summary.sh         usr/libexec/k2hr3/role
+src/libexec/role/command.sh         usr/libexec/k2hr3/role
+src/libexec/service/help.sh         usr/libexec/k2hr3/service
+src/libexec/service/summary.sh      usr/libexec/k2hr3/service
+src/libexec/service/command.sh      usr/libexec/k2hr3/service
+src/libexec/token/help.sh           usr/libexec/k2hr3/token
+src/libexec/token/summary.sh        usr/libexec/k2hr3/token
+src/libexec/token/command.sh        usr/libexec/k2hr3/token
+src/libexec/token/library.sh        usr/libexec/k2hr3/token
+src/libexec/userdata/help.sh        usr/libexec/k2hr3/userdata
+src/libexec/userdata/summary.sh     usr/libexec/k2hr3/userdata
+src/libexec/userdata/command.sh     usr/libexec/k2hr3/userdata
+src/libexec/version/help.sh         usr/libexec/k2hr3/version
+src/libexec/version/summary.sh      usr/libexec/k2hr3/version
+src/libexec/version/command.sh      usr/libexec/k2hr3/version
+src/libexec/common/k2hr3.config     etc/antpickax
+
+#
+# Local variables:
+# tab-width: 4
+# c-basic-offset: 4
+# End:
+# vim600: noexpandtab sw=4 ts=4 fdm=marker
+# vim<600: noexpandtab sw=4 ts=4
+#

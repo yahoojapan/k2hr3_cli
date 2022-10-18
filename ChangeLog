@@ -1,29 +1,29 @@
-k2hr3-cli (1.0.4) trusty; urgency=low
+k2hr3-cli (1.0.4) unstable; urgency=low
 
   * Supported OpenID Connect (OIDC) authorization for K2HR3 - #8
 
  -- Takeshi Nakatani <ggtakec@gmail.com>  Fri, 10 Sep 2021 11:41:35 +0900
 
-k2hr3-cli (1.0.3) trusty; urgency=low
+k2hr3-cli (1.0.3) unstable; urgency=low
 
   * Fixed a bug parsing for user home directory - #6
 
  -- Takeshi Nakatani <ggtakec@gmail.com>  Tue, 27 Apr 2021 09:33:50 +0900
 
-k2hr3-cli (1.0.2) trusty; urgency=low
+k2hr3-cli (1.0.2) unstable; urgency=low
 
   * Fixed an incorrect function name in debug message output - #4
   * Fixed a bug that the passphrase would be saved without the option - #3
 
  -- Takeshi Nakatani <ggtakec@gmail.com>  Wed, 07 Apr 2021 09:19:57 +0900
 
-k2hr3-cli (1.0.1) trusty; urgency=low
+k2hr3-cli (1.0.1) unstable; urgency=low
 
   * Fixed README file - #1
 
  -- Takeshi Nakatani <ggtakec@gmail.com>  Mon, 22 Mar 2021 13:41:14 +0900
 
-k2hr3-cli (1.0.0) trusty; urgency=low
+k2hr3-cli (1.0.0) unstable; urgency=low
 
   * First version
 
