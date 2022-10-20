@@ -537,6 +537,12 @@ run_cmd ./autogen.sh
 echo "[INFO] ${PRGNAME} : Build - run configure."
 run_cmd ./configure --prefix=/usr "${CONFIGURE_EXT_OPT}"
 
+echo "[INFO] ${PRGNAME} : Build - run clean."
+run_cmd make clean
+
+echo "[INFO] ${PRGNAME} : Build - run shellcheck."
+run_cmd make shellcheck
+
 echo "[INFO] ${PRGNAME} : Build - run build and shellcheck."
 run_cmd make build
 
