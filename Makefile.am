@@ -33,9 +33,8 @@ CLEANFILES = *.log src/libexec/common/VERSION
 # [BUILD]
 # Since it is a shell script-only project, there is nothing to build,
 # but we will create a VERSION file.
-# Then, shellcheck checks all the source code.
 #
-build: build_version shellcheck
+build: build_version
 
 .PHONY: build_version shellcheck
 
