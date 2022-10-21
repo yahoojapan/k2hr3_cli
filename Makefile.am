@@ -57,28 +57,13 @@ build_version:
 # '.git' directory) and executable files(text files other than
 # the extension '*.sh').
 #
-SHELLCHECK_CMD =				shellcheck
-SHELLCHECK_OPT =				--shell=sh
-SHELLCHECK_COMMON_IGN =			--exclude=SC1117,SC1090,SC1091,SC2181
-SHELLCHECK_CUSTOM_IGN =			--exclude=SC1117,SC1090,SC1091,SC2181,SC2034
-EXCLUDE_SHELLCHECK_DIR_OPT =	\( -name '.git' -o -name 'rpmbuild' -o -name 'debian_build' -o -name 'autom4te.cache' -o -name 'm4' \) -prune -not \( -name '.git' -o -name 'rpmbuild' -o -name 'debian_build' -o -name 'autom4te.cache' -o -name 'm4' \)
-EXCLUDE_SHELLCHECK_FILE_OPT =	-not -name '*.sh' \
-								-not -name 'compile' \
-								-not -name 'config.guess' \
-								-not -name 'config.status' \
-								-not -name 'config.sub' \
-								-not -name 'configure' \
-								-not -name 'configure~' \
-								-not -name 'depcomp' \
-								-not -name 'install-sh' \
-								-not -name 'libtool' \
-								-not -name 'missing' \
-								-not -name 'test-driver' \
-								-not -name 'rules'
-
-SHELLCHECK_FILES_ALL =       `find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -executable -type f $(EXCLUDE_SHELLCHECK_FILE_OPT) | tr '\n' ' '`
-SHELLCHECK_FILES_COMMON_SH = `find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -type f -name '*.sh' | grep -v ostypevars.sh | tr '\n' ' '`
-SHELLCHECK_FILES_CUSTOM_SH = `find . -type d $(EXCLUDE_SHELLCHECK_DIR_OPT) -o -type f -name '*.sh' | grep ostypevars.sh | tr '\n' ' '`
+SHELLCHECK_CMD				= shellcheck
+SHELLCHECK_OPT				= --shell=sh
+SHELLCHECK_COMMON_IGN		= --exclude=SC1117,SC1090,SC1091,SC2181
+SHELLCHECK_CUSTOM_IGN		= --exclude=SC1117,SC1090,SC1091,SC2181,SC2034
+SHELLCHECK_FILES_ALL		= `grep -ril '^\#!/bin/sh' . | grep -v '\.sh' | grep -v '\.log' | grep -e '^\./.github/' -e '^\./buildutils/' -e '^\./docs/' -e '^\./src/' -e '^\./test/' | tr '\n' ' '`
+SHELLCHECK_FILES_COMMON_SH	= `grep -ril '^\#!/bin/sh' . | grep '\.sh' | grep -v '\.sh.' | grep -v '/.git/' | grep -v '/rpmbuild/' | grep -v '/debian_build/' | grep -v '/autom4te.cache/' | grep -v '/m4/' | grep -v '/.git/' | grep -v '/rpmbuild/' | grep -v '/debian_build/' | grep -v '/autom4te.cache/' | grep -v '/m4/' | tr '\n' ' '`
+SHELLCHECK_FILES_CUSTOM_SH	= `grep -Lir '^\#!/bin/sh' . | grep '\.sh' | grep -v '\.sh.' | grep -v '/.git/' | grep -v '/rpmbuild/' | grep -v '/debian_build/' | grep -v '/autom4te.cache/' | grep -v '/m4/' | grep -v '/.git/' | grep -v '/rpmbuild/' | grep -v '/debian_build/' | grep -v '/autom4te.cache/' | grep -v '/m4/' | tr '\n' ' '`
 
 shellcheck:
 	@if type shellcheck > /dev/null 2>&1; then \
