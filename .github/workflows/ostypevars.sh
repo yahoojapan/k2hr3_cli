@@ -78,7 +78,7 @@ if [ -z "${CI_OSTYPE}" ]; then
 	:
 elif [ "${CI_OSTYPE}" = "ubuntu:22.04" ] || [ "${CI_OSTYPE}" = "ubuntu:jammy" ]; then
 	DIST_TAG="ubuntu/jammy"
-	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps shellcheck"
+	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps"
 	INSTALLER_BIN="apt-get"
 	INSTALL_QUIET_ARG="-qq"
 	PKG_OUTPUT_DIR="debian_build"
@@ -87,7 +87,7 @@ elif [ "${CI_OSTYPE}" = "ubuntu:22.04" ] || [ "${CI_OSTYPE}" = "ubuntu:jammy" ];
 
 elif [ "${CI_OSTYPE}" = "ubuntu:20.04" ] || [ "${CI_OSTYPE}" = "ubuntu:focal" ]; then
 	DIST_TAG="ubuntu/focal"
-	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps shellcheck"
+	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps"
 	INSTALLER_BIN="apt-get"
 	INSTALL_QUIET_ARG="-qq"
 	PKG_OUTPUT_DIR="debian_build"
@@ -96,7 +96,7 @@ elif [ "${CI_OSTYPE}" = "ubuntu:20.04" ] || [ "${CI_OSTYPE}" = "ubuntu:focal" ];
 
 elif [ "${CI_OSTYPE}" = "ubuntu:18.04" ] || [ "${CI_OSTYPE}" = "ubuntu:bionic" ]; then
 	DIST_TAG="ubuntu/bionic"
-	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps shellcheck"
+	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps"
 	INSTALLER_BIN="apt-get"
 	INSTALL_QUIET_ARG="-qq"
 	PKG_OUTPUT_DIR="debian_build"
@@ -105,7 +105,7 @@ elif [ "${CI_OSTYPE}" = "ubuntu:18.04" ] || [ "${CI_OSTYPE}" = "ubuntu:bionic" ]
 
 elif [ "${CI_OSTYPE}" = "debian:11" ] || [ "${CI_OSTYPE}" = "debian:bullseye" ]; then
 	DIST_TAG="debian/bullseye"
-	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps shellcheck"
+	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps"
 	INSTALLER_BIN="apt-get"
 	INSTALL_QUIET_ARG="-qq"
 	PKG_OUTPUT_DIR="debian_build"
@@ -114,7 +114,7 @@ elif [ "${CI_OSTYPE}" = "debian:11" ] || [ "${CI_OSTYPE}" = "debian:bullseye" ];
 
 elif [ "${CI_OSTYPE}" = "debian:10" ] || [ "${CI_OSTYPE}" = "debian:buster" ]; then
 	DIST_TAG="debian/buster"
-	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps shellcheck"
+	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps"
 	INSTALLER_BIN="apt-get"
 	INSTALL_QUIET_ARG="-qq"
 	PKG_OUTPUT_DIR="debian_build"
@@ -150,7 +150,7 @@ elif [ "${CI_OSTYPE}" = "centos:7" ] || [ "${CI_OSTYPE}" = "centos:centos7" ]; t
 
 elif [ "${CI_OSTYPE}" = "fedora:36" ]; then
 	DIST_TAG="fedora/36"
-	INSTALL_PKG_LIST="git autoconf automake gcc-c++ make pkgconfig redhat-rpm-config rpm-build ruby-devel rubygems procps ShellCheck"
+	INSTALL_PKG_LIST="git autoconf automake gcc-c++ make pkgconfig redhat-rpm-config rpm-build ruby-devel rubygems procps"
 	INSTALLER_BIN="dnf"
 	INSTALL_QUIET_ARG="-q"
 	PKG_OUTPUT_DIR="."
@@ -159,7 +159,7 @@ elif [ "${CI_OSTYPE}" = "fedora:36" ]; then
 
 elif [ "${CI_OSTYPE}" = "fedora:35" ]; then
 	DIST_TAG="fedora/35"
-	INSTALL_PKG_LIST="git autoconf automake gcc-c++ make pkgconfig redhat-rpm-config rpm-build ruby-devel rubygems procps ShellCheck"
+	INSTALL_PKG_LIST="git autoconf automake gcc-c++ make pkgconfig redhat-rpm-config rpm-build ruby-devel rubygems procps"
 	INSTALLER_BIN="dnf"
 	INSTALL_QUIET_ARG="-q"
 	PKG_OUTPUT_DIR="."
@@ -173,7 +173,7 @@ elif [ "${CI_OSTYPE}" = "fedora:35" ]; then
 #
 elif [ "${CI_OSTYPE}" = "ubuntu:16.04" ] || [ "${CI_OSTYPE}" = "ubuntu:xenial" ]; then
 	DIST_TAG="ubuntu/xenial"
-	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps shellcheck"
+	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps"
 	INSTALLER_BIN="apt-get"
 	INSTALL_QUIET_ARG="-qq"
 	PKG_OUTPUT_DIR="debian_build"
@@ -182,7 +182,7 @@ elif [ "${CI_OSTYPE}" = "ubuntu:16.04" ] || [ "${CI_OSTYPE}" = "ubuntu:xenial" ]
 
 elif [ "${CI_OSTYPE}" = "debian:9" ] || [ "${CI_OSTYPE}" = "debian:stretch" ]; then
 	DIST_TAG="debian/stretch"
-	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps shellcheck"
+	INSTALL_PKG_LIST="git autoconf autotools-dev make dh-make fakeroot dpkg-dev devscripts pkg-config ruby-dev rubygems rubygems-integration procps"
 	INSTALLER_BIN="apt-get"
 	INSTALL_QUIET_ARG="-qq"
 	PKG_OUTPUT_DIR="debian_build"
@@ -205,7 +205,7 @@ elif [ "${CI_OSTYPE}" = "centos:8" ] || [ "${CI_OSTYPE}" = "centos:centos8" ]; t
 
 elif [ "${CI_OSTYPE}" = "fedora:32" ]; then
 	DIST_TAG="fedora/32"
-	INSTALL_PKG_LIST="git autoconf automake gcc-c++ make pkgconfig redhat-rpm-config rpm-build ruby-devel rubygems procps ShellCheck"
+	INSTALL_PKG_LIST="git autoconf automake gcc-c++ make pkgconfig redhat-rpm-config rpm-build ruby-devel rubygems procps"
 	INSTALLER_BIN="dnf"
 	INSTALL_QUIET_ARG="-qq"
 	PKG_OUTPUT_DIR="."
@@ -214,7 +214,7 @@ elif [ "${CI_OSTYPE}" = "fedora:32" ]; then
 
 elif [ "${CI_OSTYPE}" = "fedora:31" ]; then
 	DIST_TAG="fedora/31"
-	INSTALL_PKG_LIST="git autoconf automake gcc-c++ make pkgconfig redhat-rpm-config rpm-build ruby-devel rubygems procps ShellCheck"
+	INSTALL_PKG_LIST="git autoconf automake gcc-c++ make pkgconfig redhat-rpm-config rpm-build ruby-devel rubygems procps"
 	INSTALLER_BIN="dnf"
 	INSTALL_QUIET_ARG="-qq"
 	PKG_OUTPUT_DIR="."
@@ -223,7 +223,7 @@ elif [ "${CI_OSTYPE}" = "fedora:31" ]; then
 
 elif [ "${CI_OSTYPE}" = "fedora:30" ]; then
 	DIST_TAG="fedora/30"
-	INSTALL_PKG_LIST="git autoconf automake gcc-c++ make pkgconfig redhat-rpm-config rpm-build ruby-devel rubygems procps ShellCheck"
+	INSTALL_PKG_LIST="git autoconf automake gcc-c++ make pkgconfig redhat-rpm-config rpm-build ruby-devel rubygems procps"
 	INSTALLER_BIN="dnf"
 	INSTALL_QUIET_ARG="-qq"
 	PKG_OUTPUT_DIR="."
