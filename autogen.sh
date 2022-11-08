@@ -1,20 +1,24 @@
 #!/bin/sh
 #
-# K2HR3 Utilities - Command Line Interface
+# Utility helper tools for Github Actions by AntPickax
 #
-# Copyright 2021 Yahoo! Japan Corporation.
+# Copyright 2018 Yahoo Japan Corporation.
 #
-# K2HR3 is K2hdkc based Resource and Roles and policy Rules, gathers
-# common management information for the cloud.
-# K2HR3 can dynamically manage information as "who", "what", "operate".
-# These are stored as roles, resources, policies in K2hdkc, and the
-# client system can dynamically read and modify these information.
+# AntPickax provides utility tools for supporting autotools
+# builds.
 #
+# These tools retrieve the necessary information from the
+# repository and appropriately set the setting values of
+# configure, Makefile, spec,etc file and so on.
+# These tools were recreated to reduce the number of fixes and
+# reduce the workload of developers when there is a change in
+# the project configuration.
+# 
 # For the full copyright and license information, please view
 # the license file that was distributed with this source code.
 #
 # AUTHOR:   Takeshi Nakatani
-# CREATE:   Mon Feb 15 2021
+# CREATE:   Fri, Apr 13 2018
 # REVISION:
 #
 
