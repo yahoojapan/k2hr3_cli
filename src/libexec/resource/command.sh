@@ -33,11 +33,10 @@ _RESOURCE_COMMAND_SUB_DELETE="delete"
 #
 # Sub Command
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	K2HR3CLI_SUBCOMMAND=""
 else
 	#
@@ -54,13 +53,16 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 #
 # Get Scoped Token
 #
-complement_scoped_token
-if [ $? -ne 0 ]; then
+if ! complement_scoped_token; then
 	exit 1
 fi
 prn_dbg "${K2HR3CLI_SCOPED_TOKEN}"
 
-if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_CREATE}" ]; then
+if [ -z "${K2HR3CLI_SUBCOMMAND}" ]; then
+	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_RESOURCE_COMMAND_SUB_CREATE}, ${_RESOURCE_COMMAND_SUB_SHOW} or ${_RESOURCE_COMMAND_SUB_DELETE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+	exit 1
+
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_RESOURCE_COMMAND_SUB_CREATE}" ]; then
 	#
 	# RESOURCE CREATE/UPDATE
 	#
@@ -69,8 +71,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_CREATE}" ]; then
 	# Get resource name(or path)
 	#
 	_RESOURCE_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the resource name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -79,7 +80,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_CREATE}" ]; then
 	#
 	# Request
 	#
-	if [ "X${K2HR3CLI_OPT_DATAFILE}" = "X" ]; then
+	if [ -z "${K2HR3CLI_OPT_DATAFILE}" ]; then
 		_RESOURCE_URL_ARGS="?name=${_RESOURCE_PATH}"
 		_RESOURCE_URL_ARGS=$(requtil_urlarg_type_param "${_RESOURCE_URL_ARGS}" 1)
 		_RESOURCE_URL_ARGS=$(requtil_urlarg_data_param "${_RESOURCE_URL_ARGS}" 1)
@@ -119,12 +120,11 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_CREATE}" ]; then
 			pecho -n 		"\"name\":\"${_RESOURCE_PATH}\""
 			pecho -n 		",\"type\":\"string\""
 			pecho -n 		",\"data\":\"${_RESOURCE_DATAFILE_ESC}\""
-			if [ "X${K2HR3CLI_OPT_KEYS}" != "X" ]; then
+			if [ -n "${K2HR3CLI_OPT_KEYS}" ]; then
 				pecho -n	",\"keys\":${K2HR3CLI_OPT_KEYS}"
 			fi
-			if [ "X${K2HR3CLI_OPT_ALIAS}" != "X" ]; then
-				pecho -n "${K2HR3CLI_OPT_ALIAS}" | grep -q '['
-				if [ $? -eq 0 ]; then
+			if [ -n "${K2HR3CLI_OPT_ALIAS}" ]; then
+				if pecho -n "${K2HR3CLI_OPT_ALIAS}" | grep -q '['; then
 					pecho -n ",\"alias\":${K2HR3CLI_OPT_ALIAS}"
 				else
 					pecho -n ",\"alias\":\"${K2HR3CLI_OPT_ALIAS}\""
@@ -144,8 +144,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_CREATE}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -155,8 +154,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_CREATE}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_RESOURCE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_RESOURCE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -167,7 +165,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_CREATE}" ]; then
 	#
 	prn_msg "${CGRN}Succeed${CDEF} : Create/Update \"${_RESOURCE_PATH}\" Resource"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_SHOW}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_RESOURCE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# RESOURCE SHOW
 	#
@@ -176,8 +174,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_SHOW}" ]; then
 	# Get resource name(or path)
 	#
 	_RESOURCE_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the resource name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -197,8 +194,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -208,8 +204,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_RESOURCE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_RESOURCE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -217,15 +212,14 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Display resource value in json
 	#
-	jsonparser_dump_key_parsed_file '%' '"resource"' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_dump_key_parsed_file '%' '"resource"' "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to get \"resource\" element in response."
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
 	rm -f "${JP_PAERSED_FILE}"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_DELETE}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_RESOURCE_COMMAND_SUB_DELETE}" ]; then
 	#
 	# RESOURCE DELETE
 	#
@@ -234,8 +228,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_DELETE}" ]; then
 	# Get resource name(or path)
 	#
 	_RESOURCE_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the resource name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -256,8 +249,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_DELETE}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -267,8 +259,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_DELETE}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_RESOURCE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_RESOURCE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -279,9 +270,6 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_RESOURCE_COMMAND_SUB_DELETE}" ]; then
 	#
 	prn_msg "${CGRN}Succeed${CDEF} : Delete \"${_RESOURCE_PATH}\" Resource"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X" ]; then
-	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_RESOURCE_COMMAND_SUB_CREATE}, ${_RESOURCE_COMMAND_SUB_SHOW} or ${_RESOURCE_COMMAND_SUB_DELETE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-	exit 1
 else
 	prn_err "Unknown subcommand(\"${K2HR3CLI_SUBCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1

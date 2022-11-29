@@ -31,8 +31,7 @@ requtil_check_result_parsed_file()
 	#
 	# Get "result" value
 	#
-	jsonparser_get_key_value '%"result"%' "$1"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_get_key_value '%"result"%' "$1"; then
 		prn_dbg "(requtil_check_result_parsed_file) Not found \"result\" key in parsed json file."
 		return 1
 	fi
@@ -40,17 +39,19 @@ requtil_check_result_parsed_file()
 	#
 	# Check result
 	#
-	if [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_TRUE}" ] && [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_FALSE}" ]; then
+	if [ -z "${JSONPARSER_FIND_VAL_TYPE}" ]; then
+		prn_dbg "(requtil_check_result_parsed_file) Unknown value type(empty) for \"result\" key in response json."
+		return 1
+	elif [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_TRUE}" ] && [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_FALSE}" ]; then
 		prn_dbg "(requtil_check_result_parsed_file) Unknown value type(${JSONPARSER_FIND_VAL_TYPE}) for \"result\" key in response json."
 		return 1
 	fi
 
-	if [ "X${JSONPARSER_FIND_VAL}" != "Xtrue" ]; then
+	if [ "${JSONPARSER_FIND_VAL}" != "true" ]; then
 		#
 		# Result is false
 		#
-		jsonparser_get_key_value '%"message"%' "$1"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_get_key_value '%"message"%' "$1"; then
 			prn_err "RESULT in response body is FALSE : Unknown reason."
 		else
 			prn_err "RESULT in response body is FALSE : ${JSONPARSER_FIND_VAL}"
@@ -75,12 +76,12 @@ requtil_check_result()
 	if [ $# -lt 4 ]; then
 		return 1
 	fi
-	if [ "X$1" = "X" ] || [ "X$2" = "X" ] || [ "X$3" = "X" ] || [ "X$4" = "X" ]; then
+	if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]; then
 		return 1
 	fi
 	_CHECK_RESULT_CODE_NOCHECK_RESULT=0
 	if [ $# -ge 5 ]; then
-		if [ "X$5" = "X1" ]; then
+		if [ -n "$5" ] && [ "$5" = "1" ]; then
 			_CHECK_RESULT_CODE_NOCHECK_RESULT=1
 		fi
 	fi
@@ -106,13 +107,12 @@ requtil_check_result()
 	#
 	# Check HTTP response code
 	#
-	if [ "X$2" = "X$4" ]; then
+	if [ "$2" = "$4" ]; then
 		#
 		# Success -> check result in response body
 		#
 		if [ "${_CHECK_RESULT_CODE_NOCHECK_RESULT}" -ne 1 ]; then
-			requtil_check_result_parsed_file "$3"
-			if [ $? -ne 0 ]; then
+			if ! requtil_check_result_parsed_file "$3"; then
 				return 1
 			fi
 		fi
@@ -139,14 +139,14 @@ requtil_check_result()
 requtil_urlarg_expand_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_EXPAND}" = "X1" ]; then
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_EXPAND}" ] && [ "${K2HR3CLI_OPT_EXPAND}" = "1" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?expand=true"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&expand=true"
 		fi
 	else
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?expand=false"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&expand=false"
@@ -167,15 +167,15 @@ requtil_urlarg_expand_param()
 requtil_urlarg_policies_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_POLICIES}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_POLICIES}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_POLICIES}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?policies=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&policies=${_REQUTIL_OPT_STR_TMP}"
 		fi
-	elif [ "X$2" = "X1" ]; then
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+	elif [ -n "$2" ] && [ "$2" = "1" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?policies="
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&policies="
@@ -196,15 +196,15 @@ requtil_urlarg_policies_param()
 requtil_urlarg_alias_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_ALIAS}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_ALIAS}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_ALIAS}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?alias=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&alias=${_REQUTIL_OPT_STR_TMP}"
 		fi
-	elif [ "X$2" = "X1" ]; then
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+	elif [ -n "$2" ] && [ "$2" = "1" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?alias="
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&alias="
@@ -224,9 +224,9 @@ requtil_urlarg_alias_param()
 requtil_urlarg_host_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_HOST}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_HOST}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_HOST}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?host=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&host=${_REQUTIL_OPT_STR_TMP}"
@@ -246,15 +246,15 @@ requtil_urlarg_host_param()
 requtil_urlarg_port_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_PORT}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_PORT}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_PORT}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?port=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&port=${_REQUTIL_OPT_STR_TMP}"
 		fi
 	else
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?port=0"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&port=0"
@@ -274,9 +274,9 @@ requtil_urlarg_port_param()
 requtil_urlarg_cuk_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_CUK}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_CUK}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_CUK}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?cuk=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&cuk=${_REQUTIL_OPT_STR_TMP}"
@@ -296,9 +296,9 @@ requtil_urlarg_cuk_param()
 requtil_urlarg_extra_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_EXTRA}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_EXTRA}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_EXTRA}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?extra=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&extra=${_REQUTIL_OPT_STR_TMP}"
@@ -318,9 +318,9 @@ requtil_urlarg_extra_param()
 requtil_urlarg_tag_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_TAG}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_TAG}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_TAG}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?tag=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&tag=${_REQUTIL_OPT_STR_TMP}"
@@ -340,9 +340,9 @@ requtil_urlarg_tag_param()
 requtil_urlarg_expire_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_EXPIRE}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_EXPIRE}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_EXPIRE}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?expire=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&expire=${_REQUTIL_OPT_STR_TMP}"
@@ -363,15 +363,15 @@ requtil_urlarg_expire_param()
 requtil_urlarg_type_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_TYPE}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_TYPE}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_TYPE}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?type=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&type=${_REQUTIL_OPT_STR_TMP}"
 		fi
-	elif [ "X$2" = "X1" ]; then
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+	elif [ -n "$2" ] && [ "$2" = "1" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?type="
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&type="
@@ -392,15 +392,15 @@ requtil_urlarg_type_param()
 requtil_urlarg_data_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_DATA}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_DATA}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_DATA}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?data=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&data=${_REQUTIL_OPT_STR_TMP}"
 		fi
-	elif [ "X$2" = "X1" ]; then
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+	elif [ -n "$2" ] && [ "$2" = "1" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?data="
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&data="
@@ -421,15 +421,15 @@ requtil_urlarg_data_param()
 requtil_urlarg_keys_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_KEYS}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_KEYS}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_KEYS}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?keys=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&keys=${_REQUTIL_OPT_STR_TMP}"
 		fi
-	elif [ "X$2" = "X1" ]; then
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+	elif [ -n "$2" ] && [ "$2" = "1" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?keys="
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&keys="
@@ -449,9 +449,9 @@ requtil_urlarg_keys_param()
 requtil_urlarg_service_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_SERVICE}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_SERVICE}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_SERVICE}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?service=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&service=${_REQUTIL_OPT_STR_TMP}"
@@ -471,9 +471,9 @@ requtil_urlarg_service_param()
 requtil_urlarg_keynames_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_KEYNAMES}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_KEYNAMES}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_KEYNAMES}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?keynames=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&keynames=${_REQUTIL_OPT_STR_TMP}"
@@ -493,9 +493,9 @@ requtil_urlarg_keynames_param()
 requtil_urlarg_aliases_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_ALIASES}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_ALIASES}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_ALIASES}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?aliases=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&aliases=${_REQUTIL_OPT_STR_TMP}"
@@ -516,15 +516,15 @@ requtil_urlarg_aliases_param()
 requtil_urlarg_effect_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_EFFECT}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_EFFECT}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_EFFECT}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?effect=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&effect=${_REQUTIL_OPT_STR_TMP}"
 		fi
-	elif [ "X$2" = "X1" ]; then
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+	elif [ -n "$2" ] && [ "$2" = "1" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?effect="
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&effect="
@@ -544,9 +544,9 @@ requtil_urlarg_effect_param()
 requtil_urlarg_action_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_ACTION}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_ACTION}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_ACTION}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?action=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&action=${_REQUTIL_OPT_STR_TMP}"
@@ -567,15 +567,15 @@ requtil_urlarg_action_param()
 requtil_urlarg_resource_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_RESOURCE}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_RESOURCE}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_RESOURCE}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?resource=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&resource=${_REQUTIL_OPT_STR_TMP}"
 		fi
-	elif [ "X$2" = "X1" ]; then
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+	elif [ -n "$2" ] && [ "$2" = "1" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?resource="
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&resource="
@@ -595,9 +595,9 @@ requtil_urlarg_resource_param()
 requtil_urlarg_verify_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_VERIFY}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_VERIFY}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_VERIFY}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?verify=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&verify=${_REQUTIL_OPT_STR_TMP}"
@@ -617,14 +617,14 @@ requtil_urlarg_verify_param()
 requtil_urlarg_clear_tenant_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_CLEAR_TENANT}" = "X1" ]; then
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_CLEAR_TENANT}" ] && [ "${K2HR3CLI_OPT_CLEAR_TENANT}" = "1" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?clear_tenant=true"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&clear_tenant=true"
 		fi
 	else
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?clear_tenant=false"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&clear_tenant=false"
@@ -644,9 +644,9 @@ requtil_urlarg_clear_tenant_param()
 requtil_urlarg_acr_cip_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_CIP}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_CIP}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_CIP}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?cip=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&cip=${_REQUTIL_OPT_STR_TMP}"
@@ -666,9 +666,9 @@ requtil_urlarg_acr_cip_param()
 requtil_urlarg_acr_cport_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_CPORT}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_CPORT}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_CPORT}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?cport=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&cport=${_REQUTIL_OPT_STR_TMP}"
@@ -688,9 +688,9 @@ requtil_urlarg_acr_cport_param()
 requtil_urlarg_acr_crole_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_CROLE}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_CROLE}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_CROLE}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?crole=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&crole=${_REQUTIL_OPT_STR_TMP}"
@@ -710,9 +710,9 @@ requtil_urlarg_acr_crole_param()
 requtil_urlarg_acr_ccuk_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_CCUK}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_CCUK}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_CCUK}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?ccuk=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&ccuk=${_REQUTIL_OPT_STR_TMP}"
@@ -732,9 +732,9 @@ requtil_urlarg_acr_ccuk_param()
 requtil_urlarg_acr_sport_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_SPORT}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_SPORT}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_SPORT}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?sport=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&sport=${_REQUTIL_OPT_STR_TMP}"
@@ -754,9 +754,9 @@ requtil_urlarg_acr_sport_param()
 requtil_urlarg_acr_srole_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_SROLE}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_SROLE}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_SROLE}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?srole=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&srole=${_REQUTIL_OPT_STR_TMP}"
@@ -776,9 +776,9 @@ requtil_urlarg_acr_srole_param()
 requtil_urlarg_acr_scuk_param()
 {
 	_REQUTIL_BASE_STR="$1"
-	if [ "X${K2HR3CLI_OPT_SCUK}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_SCUK}" ]; then
 		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_SCUK}")
-		if [ "X${_REQUTIL_BASE_STR}" = "X" ]; then
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
 			_REQUTIL_BASE_STR="?scuk=${_REQUTIL_OPT_STR_TMP}"
 		else
 			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&scuk=${_REQUTIL_OPT_STR_TMP}"

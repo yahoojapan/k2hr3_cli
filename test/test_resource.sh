@@ -57,8 +57,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -85,8 +84,7 @@ pecho "LINE 1"								>> "/tmp/.${TESTBASENAME}_$$.resource"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -109,8 +107,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -138,8 +135,7 @@ pecho "LINE 1"							>> "/tmp/.${TESTBASENAME}_$$.resource"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -162,8 +158,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -184,8 +179,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -206,8 +200,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -228,8 +221,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -250,8 +242,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -272,8 +263,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -294,8 +284,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -316,8 +305,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -338,8 +326,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -360,8 +347,7 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -382,20 +368,18 @@ test_prn_title "${TEST_TITLE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
 #---------------------------------------------------------------------
 # Check update log
 #---------------------------------------------------------------------
-test_update_snapshot
-if [ $? -ne 0 ]; then
+if ! test_update_snapshot; then
 	TEST_EXIT_CODE=1
 fi
 
-exit ${TEST_EXIT_CODE}
+exit "${TEST_EXIT_CODE}"
 
 #
 # Local variables:

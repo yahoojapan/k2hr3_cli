@@ -23,11 +23,10 @@
 #
 # Sub-command
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	K2HR3CLI_SUBCOMMAND=""
 else
 	K2HR3CLI_SUBCOMMAND=${K2HR3CLI_OPTION_NOPREFIX}
@@ -50,7 +49,7 @@ fi
 #--------------------------------------------------------------
 # Processing
 #--------------------------------------------------------------
-if [ "X${K2HR3CLI_SUBCOMMAND}" = "X" ]; then
+if [ -z "${K2HR3CLI_SUBCOMMAND}" ]; then
 	#
 	# VERSION API - GET(/)
 	#
@@ -60,8 +59,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -71,8 +69,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X" ]; then
 	#
 	# Check Result
 	#
-	requtil_check_result "${_VERSION_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200" 1
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_VERSION_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200" 1; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -80,8 +77,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X" ]; then
 	#
 	# Success
 	#
-	jsonparser_dump_parsed_file "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_dump_parsed_file "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to display result."
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
@@ -98,8 +94,7 @@ else
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -109,8 +104,7 @@ else
 	#
 	# Check Result
 	#
-	requtil_check_result "${_VERSION_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200" 1
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_VERSION_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200" 1; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -118,8 +112,7 @@ else
 	#
 	# Success
 	#
-	jsonparser_dump_parsed_file "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_dump_parsed_file "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to display result."
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1

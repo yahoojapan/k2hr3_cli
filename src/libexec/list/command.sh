@@ -34,11 +34,10 @@ _LIST_COMMAND_SUB_POLICY="policy"
 #
 # Sub-command
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	K2HR3CLI_SUBCOMMAND=""
 else
 	#
@@ -53,9 +52,8 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 # Type(3'rd command)
 #
 _LIST_3RD_PARAM=""
-parse_noprefix_option "$@"
-if [ $? -eq 0 ]; then
-	if [ "X${K2HR3CLI_OPTION_NOPREFIX}" != "X" ]; then
+if parse_noprefix_option "$@"; then
+	if [ -n "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 		#
 		# Always using lower case
 		#
@@ -68,12 +66,12 @@ fi
 #--------------------------------------------------------------
 # Processing
 #--------------------------------------------------------------
-if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_LIST_COMMAND_SUB_SERVICE}" ]; then
+if [ -n "${K2HR3CLI_SUBCOMMAND}" ] && [ "${K2HR3CLI_SUBCOMMAND}" = "${_LIST_COMMAND_SUB_SERVICE}" ]; then
 	#
 	# List SERVICEs
 	#
 	_LIST_SERVICE_NAME="${_LIST_3RD_PARAM}"
-	if [ "X${_LIST_SERVICE_NAME}" != "X" ]; then
+	if [ -n "${_LIST_SERVICE_NAME}" ]; then
 		#
 		# First word is "/"
 		#
@@ -83,8 +81,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_LIST_COMMAND_SUB_SERVICE}" ]; then
 	#
 	# Get Scoped Token
 	#
-	complement_scoped_token
-	if [ $? -ne 0 ]; then
+	if ! complement_scoped_token; then
 		exit 1
 	fi
 	prn_dbg "Get scoped token = \"${K2HR3CLI_SCOPED_TOKEN}\""
@@ -102,7 +99,7 @@ else
 	# List ROLEs/RESOURCEs/POLICIes
 	#
 	_LIST_YRN_PATH="${_LIST_3RD_PARAM}"
-	if [ "X${_LIST_YRN_PATH}" != "X" ]; then
+	if [ -n "${_LIST_YRN_PATH}" ]; then
 		#
 		# First word is "/"
 		#
@@ -113,9 +110,8 @@ else
 	# 4'th parameter is service name, if exists
 	#
 	_LIST_SERVICE_NAME=""
-	parse_noprefix_option "$@"
-	if [ $? -eq 0 ]; then
-		if [ "X${K2HR3CLI_OPTION_NOPREFIX}" != "X" ]; then
+	if parse_noprefix_option "$@"; then
+		if [ -n "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 			#
 			# Always using lower case
 			#
@@ -131,13 +127,16 @@ else
 	#
 	# Get Scoped Token
 	#
-	complement_scoped_token
-	if [ $? -ne 0 ]; then
+	if ! complement_scoped_token; then
 		exit 1
 	fi
 	prn_dbg "Get scoped token = \"${K2HR3CLI_SCOPED_TOKEN}\""
 
-	if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_LIST_COMMAND_SUB_ROLE}" ]; then
+	if [ -z "${K2HR3CLI_SUBCOMMAND}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_LIST_COMMAND_SUB_SERVICE}, ${_LIST_COMMAND_SUB_ROLE}, ${_LIST_COMMAND_SUB_RESOURCE} and ${_LIST_COMMAND_SUB_POLICY}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_LIST_COMMAND_SUB_ROLE}" ]; then
 		#
 		# List ROLEs
 		#
@@ -146,7 +145,7 @@ else
 		get_request "${_LIST_URL_PATH}" 1 "x-auth-token:U=${K2HR3CLI_SCOPED_TOKEN}"
 		_LIST_REQUEST_RESULT=$?
 
-	elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_LIST_COMMAND_SUB_RESOURCE}" ]; then
+	elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_LIST_COMMAND_SUB_RESOURCE}" ]; then
 		#
 		# List RESOURCEs
 		#
@@ -155,7 +154,7 @@ else
 		get_request "${_LIST_URL_PATH}" 1 "x-auth-token:U=${K2HR3CLI_SCOPED_TOKEN}"
 		_LIST_REQUEST_RESULT=$?
 
-	elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_LIST_COMMAND_SUB_POLICY}" ]; then
+	elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_LIST_COMMAND_SUB_POLICY}" ]; then
 		#
 		# List POLICIes
 		#
@@ -164,9 +163,6 @@ else
 		get_request "${_LIST_URL_PATH}" 1 "x-auth-token:U=${K2HR3CLI_SCOPED_TOKEN}"
 		_LIST_REQUEST_RESULT=$?
 
-	elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X" ]; then
-		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_LIST_COMMAND_SUB_SERVICE}, ${_LIST_COMMAND_SUB_ROLE}, ${_LIST_COMMAND_SUB_RESOURCE} and ${_LIST_COMMAND_SUB_POLICY}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-		exit 1
 	else
 		prn_err "Unknown subcommand(\"${K2HR3CLI_SUBCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
@@ -176,8 +172,7 @@ fi
 #
 # Parse response body
 #
-jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-if [ $? -ne 0 ]; then
+if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 	prn_err "Failed to parse result."
 	rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 	exit 1
@@ -187,8 +182,7 @@ rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 #
 # Check Result
 #
-requtil_check_result "${_LIST_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"
-if [ $? -ne 0 ]; then
+if ! requtil_check_result "${_LIST_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"; then
 	rm -f "${JP_PAERSED_FILE}"
 	exit 1
 fi
@@ -196,8 +190,7 @@ fi
 #
 # Check children value in json
 #
-jsonparser_dump_key_parsed_file '%' '"children"' "${JP_PAERSED_FILE}"
-if [ $? -ne 0 ]; then
+if ! jsonparser_dump_key_parsed_file '%' '"children"' "${JP_PAERSED_FILE}"; then
 	prn_err "Failed to display \"children\" element."
 	rm -f "${JP_PAERSED_FILE}"
 	exit 1

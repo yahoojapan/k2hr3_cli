@@ -33,11 +33,10 @@ _POLICY_COMMAND_SUB_DELETE="delete"
 #
 # Sub Command
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	K2HR3CLI_SUBCOMMAND=""
 else
 	#
@@ -54,13 +53,16 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 #
 # Get Scoped Token
 #
-complement_scoped_token
-if [ $? -ne 0 ]; then
+if ! complement_scoped_token; then
 	exit 1
 fi
 prn_dbg "${K2HR3CLI_SCOPED_TOKEN}"
 
-if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_CREATE}" ]; then
+if [ -z "${K2HR3CLI_SUBCOMMAND}" ]; then
+	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_POLICY_COMMAND_SUB_CREATE}, ${_POLICY_COMMAND_SUB_SHOW} or ${_POLICY_COMMAND_SUB_DELETE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+	exit 1
+
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_POLICY_COMMAND_SUB_CREATE}" ]; then
 	#
 	# POLICY CREATE
 	#
@@ -69,8 +71,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_CREATE}" ]; then
 	# Get policy name(or path)
 	#
 	_POLICY_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the policy name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -92,8 +93,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_CREATE}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -103,8 +103,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_CREATE}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_POLICY_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_POLICY_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -115,7 +114,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_CREATE}" ]; then
 	#
 	prn_msg "${CGRN}Succeed${CDEF} : Create \"${_POLICY_PATH}\" Policy"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_SHOW}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_POLICY_COMMAND_SUB_SHOW}" ]; then
 	#
 	# POLICY SHOW
 	#
@@ -124,8 +123,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_SHOW}" ]; then
 	# Get policy name(or path)
 	#
 	_POLICY_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the policy name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -144,8 +142,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -155,8 +152,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_POLICY_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_POLICY_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -164,15 +160,14 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Display policy value in json
 	#
-	jsonparser_dump_key_parsed_file '%' '"policy"' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_dump_key_parsed_file '%' '"policy"' "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to get \"policy\" element in response."
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
 	rm -f "${JP_PAERSED_FILE}"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_DELETE}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_POLICY_COMMAND_SUB_DELETE}" ]; then
 	#
 	# POLICY DELETE
 	#
@@ -181,8 +176,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_DELETE}" ]; then
 	# Get policy name(or path)
 	#
 	_POLICY_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the policy name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -198,8 +192,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_DELETE}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -209,8 +202,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_DELETE}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_POLICY_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_POLICY_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -221,9 +213,6 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_POLICY_COMMAND_SUB_DELETE}" ]; then
 	#
 	prn_msg "${CGRN}Succeed${CDEF} : Delete \"${_POLICY_PATH}\" Policy"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X" ]; then
-	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_POLICY_COMMAND_SUB_CREATE}, ${_POLICY_COMMAND_SUB_SHOW} or ${_POLICY_COMMAND_SUB_DELETE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-	exit 1
 else
 	prn_err "Unknown subcommand(\"${K2HR3CLI_SUBCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1

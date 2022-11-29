@@ -40,7 +40,7 @@
 # If the value of "K2HR3CLI_PLUGIN_CONFIG_VAR_DESC" has already
 # been set, add the value here.
 #
-if [ "X${K2HR3CLI_PLUGIN_CONFIG_VAR_DESC}" != "X" ]; then
+if [ -n "${K2HR3CLI_PLUGIN_CONFIG_VAR_DESC}" ]; then
 	K2HR3CLI_PLUGIN_CONFIG_VAR_DESC="${K2HR3CLI_PLUGIN_CONFIG_VAR_DESC} config_var_desciption_example"
 else
 	K2HR3CLI_PLUGIN_CONFIG_VAR_DESC="config_var_desciption_example"
@@ -54,7 +54,7 @@ fi
 # If the value of "K2HR3CLI_PLUGIN_CONFIG_VAR_NAME" has already
 # been set, add the value here.
 #
-if [ "X${K2HR3CLI_PLUGIN_CONFIG_VAR_NAME}" != "X" ]; then
+if [ -n "${K2HR3CLI_PLUGIN_CONFIG_VAR_NAME}" ]; then
 	K2HR3CLI_PLUGIN_CONFIG_VAR_NAME="${K2HR3CLI_PLUGIN_CONFIG_VAR_NAME} config_var_name_example"
 else
 	K2HR3CLI_PLUGIN_CONFIG_VAR_NAME="config_var_name_example"
@@ -68,7 +68,7 @@ fi
 # If the value of "K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR" has already
 # been set, add the value here.
 #
-if [ "X${K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR}" != "X" ]; then
+if [ -n "${K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR}" ]; then
 	K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR="${K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR} config_check_var_name_example"
 else
 	K2HR3CLI_PLUGIN_CONFIG_CHECK_VAR="config_check_var_name_example"
@@ -104,16 +104,16 @@ config_var_desciption_example()
 #
 config_var_name_example()
 {
-	if [ "X$1" = "X" ]; then
-		if [ "X${K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE}" != "X" ]; then
+	if [ -z "$1" ]; then
+		if [ -n "${K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE}" ]; then
 			prn_msg "K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE: \"${K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE}\""
 		else
 			prn_msg "K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE: (empty)"
 		fi
 		return 0
 
-	elif [ "X$1" = "XK2HR3CLI_PLUGIN_VARIABLE_EXAMPLE" ]; then
-		if [ "X${K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE}" != "X" ]; then
+	elif [ "$1" = "K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE" ]; then
+		if [ -n "${K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE}" ]; then
 			prn_msg "K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE: \"${K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE}\""
 		else
 			prn_msg "K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE: (empty)"
@@ -132,7 +132,7 @@ config_var_name_example()
 #
 config_check_var_name_example()
 {
-	if [ "X$1" = "XK2HR3CLI_PLUGIN_VARIABLE_EXAMPLE" ]; then
+	if [ -n "$1" ] && [ "$1" = "K2HR3CLI_PLUGIN_VARIABLE_EXAMPLE" ]; then
 		return 0
 	fi
 	return 1

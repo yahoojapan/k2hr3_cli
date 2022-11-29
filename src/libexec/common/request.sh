@@ -81,7 +81,7 @@ print_curl_verbose()
 				prn_err "Curl Verbose file ${K2HR3CLI_REQUEST_DEBUG_FILE} is not existed."
 			else
 				prn_msg_stderr "${CREV}[CURL VERBOSE]${CDEF}"
-				if [ "X${K2HR3CLI_PASS}" != "X" ]; then
+				if [ -n "${K2HR3CLI_PASS}" ]; then
 					sed -e "s/=${K2HR3CLI_PASS}/=********/g" "${K2HR3CLI_REQUEST_DEBUG_FILE}" 1>&2
 				else
 					cat "${K2HR3CLI_REQUEST_DEBUG_FILE}" 1>&2
@@ -95,7 +95,7 @@ print_curl_verbose()
 		if [ "${K2HR3CLI_OPT_CURLBODY}" -eq 1 ]; then
 			if [ -f "${K2HR3CLI_REQUEST_RESULT_FILE}" ]; then
 				prn_msg_stderr "${CREV}[CURL BODY]${CDEF}"
-				if [ "X${K2HR3CLI_PASS}" != "X" ]; then
+				if [ -n "${K2HR3CLI_PASS}" ]; then
 					sed -e "s/${K2HR3CLI_PASS}/********/g" "${K2HR3CLI_REQUEST_RESULT_FILE}" 1>&2
 				else
 					cat "${K2HR3CLI_REQUEST_RESULT_FILE}" 1>&2
@@ -151,10 +151,10 @@ raw_request()
 	# URI
 	#
 	_REQUEST_URI=""
-	if [ "X${K2HR3CLI_OVERRIDE_URI}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OVERRIDE_URI}" ]; then
 		_REQUEST_URI=${K2HR3CLI_OVERRIDE_URI}
 	else
-		if [ "X${K2HR3CLI_API_URI}" = "X" ]; then
+		if [ -z "${K2HR3CLI_API_URI}" ]; then
 			prn_err "K2HR3 REST API endpoint is not specified."
 			return 1
 		fi
@@ -165,7 +165,10 @@ raw_request()
 	# Method
 	#
 	_REQUEST_OPTION_METHOD_NAME=$(to_upper "$1")
-	if [ "X${_REQUEST_OPTION_METHOD_NAME}" != "XGET" ] && [ "X${_REQUEST_OPTION_METHOD_NAME}" != "XPUT" ] && [ "X${_REQUEST_OPTION_METHOD_NAME}" != "XPOST" ] && [ "X${_REQUEST_OPTION_METHOD_NAME}" != "XHEAD" ] && [ "X${_REQUEST_OPTION_METHOD_NAME}" != "XDELETE" ]; then
+	if [ -z "${_REQUEST_OPTION_METHOD_NAME}" ]; then
+		prn_err "Internal Error : Unknown method(empty)"
+		return 2
+	elif [ "${_REQUEST_OPTION_METHOD_NAME}" != "GET" ] && [ "${_REQUEST_OPTION_METHOD_NAME}" != "PUT" ] && [ "${_REQUEST_OPTION_METHOD_NAME}" != "POST" ] && [ "${_REQUEST_OPTION_METHOD_NAME}" != "HEAD" ] && [ "${_REQUEST_OPTION_METHOD_NAME}" != "DELETE" ]; then
 		prn_err "Internal Error : Unknown method($1)"
 		return 2
 	fi
@@ -182,8 +185,8 @@ raw_request()
 	# Body data(string)
 	#
 	_REQUEST_OPTION_BODY=""
-	if [ "X$3" != "X" ]; then
-		if [ "X${_REQUEST_OPTION_METHOD_NAME}" != "XPOST" ]; then
+	if [ -n "$3" ]; then
+		if [ "${_REQUEST_OPTION_METHOD_NAME}" != "POST" ]; then
 			prn_err "Internal Error : Body data was specified other than the POST method($1)."
 			return 2
 		fi
@@ -193,12 +196,12 @@ raw_request()
 	#
 	# Body data(file)
 	#
-	if [ "X$4" != "X" ]; then
-		if [ "X${_REQUEST_OPTION_BODY}" != "X" ]; then
+	if [ -n "$4" ]; then
+		if [ -n "${_REQUEST_OPTION_BODY}" ]; then
 			prn_err "Internal Error : Body data is specified as a string and a file."
 			return 2
 		fi
-		if [ "X${_REQUEST_OPTION_METHOD_NAME}" != "XPOST" ]; then
+		if [ "${_REQUEST_OPTION_METHOD_NAME}" != "POST" ]; then
 			prn_err "Internal Error : Body data was specified other than the POST method($1)."
 			return 2
 		fi
@@ -212,7 +215,7 @@ raw_request()
 	#
 	# Content-type header
 	#
-	if [ "X$5" = "X1" ]; then
+	if [ -n "$5" ] && [ "$5" = "1" ]; then
 		_REQUEST_OPTION_HEADERS="-H 'Content-Type: application/json'"
 	else
 		_REQUEST_OPTION_HEADERS=""
@@ -223,9 +226,9 @@ raw_request()
 	#
 	shift 5
 	while [ $# -gt 0 ]; do
-		if [ "X$1" != "X" ]; then
+		if [ -n "$1" ]; then
 			_REQUEST_OPTION_HEADER_TMP=$(pecho -n "$1" | sed -e 's/:/: /' -e 's/\\s/ /g')
-			if [ "X${_REQUEST_OPTION_HEADERS}" != "X" ]; then
+			if [ -n "${_REQUEST_OPTION_HEADERS}" ]; then
 				_REQUEST_OPTION_HEADERS="${_REQUEST_OPTION_HEADERS} "
 			fi
 			_REQUEST_OPTION_HEADERS="${_REQUEST_OPTION_HEADERS}-H '${_REQUEST_OPTION_HEADER_TMP}'"
@@ -247,7 +250,7 @@ raw_request()
 	# --dump-header option
 	#
 	_REQUEST_OPTION_RESHEADER=
-	if [ "X${K2HR3CLI_CURL_RESHEADER}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_CURL_RESHEADER}" ] && [ "${K2HR3CLI_CURL_RESHEADER}" = "1" ]; then
 		_REQUEST_OPTION_RESHEADER=${_REQUEST_OPTION_RESHEADER_FILE}
 	fi
 
@@ -255,34 +258,29 @@ raw_request()
 	# Remove result/response header/debug file and clear exit code
 	#
 	if [ -f "${K2HR3CLI_REQUEST_RESULT_FILE}" ]; then
-		rm "${K2HR3CLI_REQUEST_RESULT_FILE}" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! rm "${K2HR3CLI_REQUEST_RESULT_FILE}" >/dev/null 2>&1; then
 			prn_err "${K2HR3CLI_REQUEST_RESULT_FILE} is existed and could not remove it."
 			return 1
 		fi
 	fi
 	if [ -f "${K2HR3CLI_REQUEST_DEBUG_FILE}" ]; then
-		rm "${K2HR3CLI_REQUEST_DEBUG_FILE}" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! rm "${K2HR3CLI_REQUEST_DEBUG_FILE}" >/dev/null 2>&1; then
 			prn_err "${K2HR3CLI_REQUEST_DEBUG_FILE} is existed and could not remove it."
 			return 1
 		fi
 	fi
 	if [ -f "${K2HR3CLI_REQUEST_RESHEADER_FILE}" ]; then
-		rm "${K2HR3CLI_REQUEST_RESHEADER_FILE}" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! rm "${K2HR3CLI_REQUEST_RESHEADER_FILE}" >/dev/null 2>&1; then
 			prn_err "${K2HR3CLI_REQUEST_RESHEADER_FILE} is existed and could not remove it."
 			return 1
 		fi
 	fi
 
-	# shellcheck disable=SC2034
 	K2HR3CLI_REQUEST_EXIT_CODE=""
 
 	#
 	# Send request by curl
 	#
-	# shellcheck disable=SC2034
 	K2HR3CLI_REQUEST_EXIT_CODE=$(/bin/sh -c "curl ${_REQUEST_OPTION_SILENT} ${_REQUEST_OPTION_DBG} ${_REQUEST_OPTION_RESHEADER} ${_REQUEST_OPTION_EXITCODE} ${_REQUEST_OPTION_RESULT_FILE} ${_REQUEST_OPTION_HEADERS} ${_REQUEST_OPTION_DBG_FILE} ${_REQUEST_OPTION_BODY} ${_REQUEST_OPTION_METHOD} ${_REQUEST_URI}${_REQUEST_OPTION_PATH}")
 	K2HR3CLI_REQUEST_CURL_EXITCODE=$?
 
@@ -294,7 +292,7 @@ raw_request()
 	#
 	# Check
 	#
-	if [ ${K2HR3CLI_REQUEST_CURL_EXITCODE} -ne 0 ]; then
+	if [ "${K2HR3CLI_REQUEST_CURL_EXITCODE}" -ne 0 ]; then
 		prn_err "Something error occured in curl request : [${_REQUEST_OPTION_METHOD}] ${_REQUEST_URI}${_REQUEST_OPTION_PATH}"
 		return 1
 	fi

@@ -62,7 +62,7 @@ UTILTESTBASENAME=$(echo "${UTILTESTNAME}" | sed 's/[.]sh$//')
 #
 # Flag for this file
 #
-if [ "X${LOADED_UTIL_TEST}" = "X" ]; then
+if [ -z "${LOADED_UTIL_TEST}" ]; then
 	LOADED_UTIL_TEST=1
 else
 	#
@@ -85,7 +85,7 @@ K2HR3CLIBIN=${SRCDIR}/k2hr3
 # Set Environments for test
 #
 export K2HR3CLI_LIBEXEC_DIR="${LIBEXECDIR}"
-if [ "X${K2HR3CLI_REQUEST_FILE}" = "X" ]; then
+if [ -z "${K2HR3CLI_REQUEST_FILE}" ]; then
 	export K2HR3CLI_REQUEST_FILE="${TESTDIR}/util_request.sh"
 fi
 if [ -t 1 ]; then
@@ -165,21 +165,21 @@ SUB_TEST_UPDATE_OPT=""
 # If the boot process is k2hr3, the options will not be parsed.
 #
 _UNIT_UPDATE_LOG=0
-if [ "X${K2HR3_RUN_MAIN_PROCESS}" != "X1" ]; then
+if [ -z "${K2HR3_RUN_MAIN_PROCESS}" ] || [ "${K2HR3_RUN_MAIN_PROCESS}" != "1" ]; then
 	_UTIL_TMP_OPT_COUNT=$#
 	_UTIL_TMP_OPT_POS=1
 	while [ "${_UTIL_TMP_OPT_COUNT}" -gt 0 ]; do
 		_UTIL_TMP_OPT_VALUE=$(eval pecho -n '$'${_UTIL_TMP_OPT_POS})
 
-		if [ "X${_UTIL_TMP_OPT_VALUE}" = "X--update" ] || [ "X${_UTIL_TMP_OPT_VALUE}" = "X--UPDATE" ] || [ "X${_UTIL_TMP_OPT_VALUE}" = "X-u" ] || [ "X${_UTIL_TMP_OPT_VALUE}" = "X-U" ]; then
-			if [ ${_UNIT_UPDATE_LOG} -ne 0 ]; then
+		if [ -n "${_UTIL_TMP_OPT_VALUE}" ] && { [ "${_UTIL_TMP_OPT_VALUE}" = "--update" ] || [ "${_UTIL_TMP_OPT_VALUE}" = "--UPDATE" ] || [ "${_UTIL_TMP_OPT_VALUE}" = "-u" ] || [ "${_UTIL_TMP_OPT_VALUE}" = "-U" ]; }; then
+			if [ "${_UNIT_UPDATE_LOG}" -ne 0 ]; then
 				echo "${CRED}[ERROR] Already set ${_UTIL_TMP_OPT_VALUE} option.${CDEF}"
 				exit 1
 			fi
 			_UNIT_UPDATE_LOG=1
 			# shellcheck disable=SC2034
 			SUB_TEST_UPDATE_OPT="--update"
-		elif [ "X${_UTIL_TMP_OPT_VALUE}" != "X" ]; then
+		elif [ -n "${_UTIL_TMP_OPT_VALUE}" ]; then
 			echo "${CRED}[ERROR] Unknown option : ${_UTIL_TMP_OPT_VALUE}${CDEF}"
 			exit 1
 		fi
@@ -224,8 +224,7 @@ test_update_snapshot()
 			test_prn_msg_stdout "    ${CYEL}[WARNING] The test has failed, but I will update the file of comparison.${CDEF}"
 		fi
 		if [ -f "${SUB_TEST_LOGFILE}" ]; then
-			cp -p "${SUB_TEST_LOGFILE}" "${SUB_TEST_SNAPSHOT_FILE}"
-			if [ $? -ne 0 ]; then
+			if ! cp -p "${SUB_TEST_LOGFILE}" "${SUB_TEST_SNAPSHOT_FILE}"; then
 				test_prn_msg_stdout "-> ${CRED}Failed${CDEF} (Failed to update the master log file)"
 				test_prn_msg ""
 				return 1
@@ -258,10 +257,10 @@ test_prn_msg_mode()
 	_UTIL_TEST_PRN_LOG_MODE_STDOUT="$1"
 	_UTIL_TEST_PRN_LOG_MODE_LOG="$2"
 	shift 2
-	if [ "X${_UTIL_TEST_PRN_LOG_MODE_STDOUT}" = "X1" ]; then
+	if [ -n "${_UTIL_TEST_PRN_LOG_MODE_STDOUT}" ] && [ "${_UTIL_TEST_PRN_LOG_MODE_STDOUT}" = "1" ]; then
 		echo "$@"
 	fi
-	if [ "X${_UTIL_TEST_PRN_LOG_MODE_LOG}" = "X1" ]; then
+	if [ -n "${_UTIL_TEST_PRN_LOG_MODE_LOG}" ] && [ "${_UTIL_TEST_PRN_LOG_MODE_LOG}" = "1" ]; then
 		echo "$1" | sed -r "${TEST_ES_FILTER_OPT}" >> "${SUB_TEST_LOGFILE}"
 	fi
 }
@@ -320,17 +319,17 @@ test_prn_title()
 #
 test_prn_file_mode()
 {
-	if [ "X$3" = "X" ]; then
+	if [ -z "$3" ]; then
 		return 1
 	fi
 	if [ ! -f "$3" ]; then
 		return 1
 	fi
 
-	if [ "X$1" = "X1" ]; then
+	if [ -n "$1" ] && [ "$1" = "1" ]; then
 		cat "$3"
 	fi
-	if [ "X$2" = "X1" ]; then
+	if [ -n "$2" ] && [ "$2" = "1" ]; then
 		sed -r "${TEST_ES_FILTER_OPT}" < "$3" >> "${SUB_TEST_LOGFILE}"
 	fi
 	return 0
@@ -391,11 +390,10 @@ parse_part_log_from_snapshot()
 	# Search target title line
 	#
 	_UTIL_PARSE_MASTER_START_POS=$(grep -n "^${_UTIL_SUBTEST_TITLE_PREFIX}${_UTIL_PARSE_START_TITLE}" "${_UTIL_PARSE_MASTER_FILE}" | sed 's/:/ /g' | awk '{print $1}' | head -1)
-	if [ "X${_UTIL_PARSE_MASTER_START_POS}" = "X" ]; then
+	if [ -z "${_UTIL_PARSE_MASTER_START_POS}" ]; then
 		cat /dev/null > "${_UTIL_PARSE_TEMP_PART_FILE}"
 	fi
-	_UTIL_PARSE_MASTER_START_POS=$((_UTIL_PARSE_MASTER_START_POS + 1))
-	if [ $? -ne 0 ]; then
+	if ! _UTIL_PARSE_MASTER_START_POS=$((_UTIL_PARSE_MASTER_START_POS + 1)); then
 		cat /dev/null > "${_UTIL_PARSE_TEMP_PART_FILE}"
 	fi
 
@@ -405,7 +403,7 @@ parse_part_log_from_snapshot()
 	_UTIL_PARSE_MASTER_TITLE_POS=$(grep -n "^${_UTIL_SUBTEST_TITLE_PREFIX}" "${_UTIL_PARSE_MASTER_FILE}" | sed 's/:/ /g' | awk '{print $1}')
 	_UTIL_PARSE_MASTER_END_POS=-1
 	for _UTIL_PARSE_POS in ${_UTIL_PARSE_MASTER_TITLE_POS}; do
-		if [ "X${_UTIL_PARSE_POS}" = "X" ]; then
+		if [ -z "${_UTIL_PARSE_POS}" ]; then
 			continue
 		fi
 		if ! is_positive_number "${_UTIL_PARSE_POS}" >/dev/null 2>&1; then
@@ -512,18 +510,18 @@ test_processing_result()
 		prn_err "(test_processing_result) Paramters are wrong."
 		return 1
 	fi
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		prn_err "(test_processing_result) First paramter is wrong."
 		return 1
 	fi
-	if [ "X$2" = "X" ]; then
+	if [ -z "$2" ]; then
 		prn_err "(test_processing_result) Second paramter is wrong."
 		return 1
 	elif [ ! -f "$2" ]; then
 		prn_err "(test_processing_result) The result log file is not existed."
 		return 1
 	fi
-	if [ "X$3" = "X" ]; then
+	if [ -z "$3" ]; then
 		prn_err "(test_processing_result) Third paramter is wrong."
 		return 1
 	fi
@@ -545,8 +543,7 @@ test_processing_result()
 		#
 		# Check result
 		#
-		test_compare_part_log "${_TEST_PROC_TITLE}"
-		if [ $? -ne 0 ]; then
+		if ! test_compare_part_log "${_TEST_PROC_TITLE}"; then
 			TEST_EXIT_CODE=1
 			test_prn_msg_stdout ""
 			test_prn_file_stdout "${SUB_TEST_DIFF_FILE}"

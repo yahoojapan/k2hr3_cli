@@ -112,7 +112,7 @@ config_get_default_user_dir()
 	# Don't want to use "~user"  because it depends on the HOME environment variable.
 	#
 	_CONFIG_DEFAULT_USER_HOME=$(grep "${_CONFIG_DEFAULT_USER_NAME}" /etc/passwd | awk -F: '{print $6}' 2>/dev/null)
-	if [ "X${_CONFIG_DEFAULT_USER_HOME}" = "X" ]; then
+	if [ -z "${_CONFIG_DEFAULT_USER_HOME}" ]; then
 		prn_dbg "(config_get_default_user_dir) Could not get user(${_CONFIG_DEFAULT_USER_NAME}) home directory."
 		pecho -n ""
 		return 1
@@ -132,8 +132,7 @@ config_get_default_user_dir()
 #
 config_get_default_user_path()
 {
-	_CONFIG_DEFAULT_USER_DIR=$(config_get_default_user_dir)
-	if [ $? -ne 0 ]; then
+	if ! _CONFIG_DEFAULT_USER_DIR=$(config_get_default_user_dir); then
 		pecho -n ""
 		return 1
 	fi
@@ -157,18 +156,18 @@ config_create_file()
 		prn_dbg "(config_create_file) Insufficient input parameters($#)"
 		return 1
 	fi
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		prn_dbg "(config_create_file) Configuration file path is empty."
 		return 1
 	fi
 
 	_CONFIG_CREATE_FILE_OVERWRITE=0
 	if [ $# -gt 1 ]; then
-		if [ "X$2" = "X1" ]; then
+		if [ -n "$2" ] && [ "$2" = "1" ]; then
 			_CONFIG_CREATE_FILE_OVERWRITE=1
 		fi
 	fi
-	if [ ${_CONFIG_CREATE_FILE_OVERWRITE} -ne 1 ]; then
+	if [ "${_CONFIG_CREATE_FILE_OVERWRITE}" -ne 1 ]; then
 		if [ -f "$1" ]; then
 			prn_dbg "(config_create_file) Configuration file($1) is already existed, so could not over write."
 			return 1
@@ -200,8 +199,7 @@ config_create_file()
 		#
 		# Try to create directory
 		#
-		mkdir -p "${_CONFIG_CREATE_FILE_DIR}"
-		if [ $? -ne 0 ]; then
+		if ! mkdir -p "${_CONFIG_CREATE_FILE_DIR}"; then
 			prn_err "Cloud not create ${_CONFIG_CREATE_FILE_DIR} directory."
 			umask "${_CONFIG_CREATE_UMASK_BUP}"
 			return 1
@@ -211,8 +209,7 @@ config_create_file()
 	#
 	# Create file
 	#
-	cat "${K2HR3CLI_TEMPLATE_CONFIG}" > "$1"
-	if [ $? -ne 0 ]; then
+	if ! cat "${K2HR3CLI_TEMPLATE_CONFIG}" > "$1"; then
 		prn_err "Failed to create(overwirte) configuration file($1)."
 		umask "${_CONFIG_CREATE_UMASK_BUP}"
 		return 1
@@ -229,8 +226,7 @@ config_create_file()
 #
 config_check_default_file()
 {
-	_CONFIG_DEFAULT_USER_FILE=$(config_get_default_user_path)
-	if [ $? -ne 0 ]; then
+	if ! _CONFIG_DEFAULT_USER_FILE=$(config_get_default_user_path); then
 		return 1
 	fi
 
@@ -248,13 +244,12 @@ config_check_default_file()
 #
 config_create_default_file()
 {
-	_CONFIG_DEFAULT_USER_FILE=$(config_get_default_user_path)
-	if [ $? -ne 0 ]; then
+	if ! _CONFIG_DEFAULT_USER_FILE=$(config_get_default_user_path); then
 		return 1
 	fi
 
 	_CONFIG_CREATE_FILE_OVERWRITE=0
-	if [ "X$1" = "X1" ]; then
+	if [ -n "$1" ] && [ "$1" = "1" ]; then
 		_CONFIG_CREATE_FILE_OVERWRITE=1
 	fi
 	if [ "${_CONFIG_CREATE_FILE_OVERWRITE}" -ne 1 ]; then
@@ -283,7 +278,7 @@ config_search_key()
 		pecho -n ""
 		return 0
 	fi
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		prn_dbg "(config_search_key) Configuration file path is empty."
 		pecho -n ""
 		return 0
@@ -293,7 +288,7 @@ config_search_key()
 		pecho -n ""
 		return 0
 	fi
-	if [ "X$2" = "X" ]; then
+	if [ -z "$2" ]; then
 		prn_dbg "(config_search_key) Key name is empty."
 		pecho -n ""
 		return 0
@@ -304,13 +299,12 @@ config_search_key()
 	#
 	# Search key and get line
 	#
-	_CONFIG_SEARCH_FOUND=$(grep -n "^[[:space:]]*${_CONFIG_SEARCH_KEY_NAME}[[:space:]]*=" "${_CONFIG_SEARCH_CONF_FILE}" | head -1 2>/dev/null)
-	if [ $? -ne 0 ]; then
+	if ! _CONFIG_SEARCH_FOUND=$(grep -n "^[[:space:]]*${_CONFIG_SEARCH_KEY_NAME}[[:space:]]*=" "${_CONFIG_SEARCH_CONF_FILE}" | head -1 2>/dev/null); then
 		prn_dbg "(config_search_key) Key name(${_CONFIG_SEARCH_KEY_NAME}) is not existed in configuration file(${_CONFIG_SEARCH_CONF_FILE})."
 		pecho -n ""
 		return 0
 	fi
-	if [ "X${_CONFIG_SEARCH_FOUND}" = "X" ]; then
+	if [ -z "${_CONFIG_SEARCH_FOUND}" ]; then
 		prn_dbg "(config_search_key) Key name(${_CONFIG_SEARCH_KEY_NAME}) is not existed in configuration file(${_CONFIG_SEARCH_CONF_FILE})."
 		pecho -n ""
 		return 0
@@ -322,7 +316,6 @@ config_search_key()
 	# And if the same key exists, all you need is the last key.
 	#
 	_CONFIG_SEARCH_FOUND_NUMBER=$(echo "${_CONFIG_SEARCH_FOUND}" | awk 'END{print $NF}' | sed "s/:/ /g" | awk '{print $1}')
-	# shellcheck disable=SC2034
 	_CONFIG_SEARCH_FOUND_LINE=$(echo "${_CONFIG_SEARCH_FOUND}" | awk 'END{print $NF}' | sed "s/:/ /g" | awk '{print $2}')
 
 	pecho -n "${_CONFIG_SEARCH_FOUND}"
@@ -344,7 +337,7 @@ config_get_keyvalue()
 		pecho -n ""
 		return 1
 	fi
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		prn_dbg "(config_get_keyvalue) Configuration file path is empty."
 		pecho -n ""
 		return 1
@@ -354,7 +347,7 @@ config_get_keyvalue()
 		pecho -n ""
 		return 1
 	fi
-	if [ "X$2" = "X" ]; then
+	if [ -z "$2" ]; then
 		prn_dbg "(config_get_keyvalue) Key name is empty."
 		pecho -n ""
 		return 1
@@ -367,7 +360,7 @@ config_get_keyvalue()
 	#
 	_CONFIG_GET_KEY_LINE=$(config_search_key "${_CONFIG_GET_CONF_FILE}" "${_CONFIG_GET_KEY_NAME}")
 	_CONFIG_GET_KEY_NUMBER=$?
-	if [ ${_CONFIG_GET_KEY_NUMBER} -eq 0 ]; then
+	if [ "${_CONFIG_GET_KEY_NUMBER}" -eq 0 ]; then
 		pecho -n ""
 		return 1
 	fi
@@ -375,8 +368,7 @@ config_get_keyvalue()
 	#
 	# Parse value
 	#
-	_CONFIG_KEY_FOUND=$(pecho -n "${_CONFIG_GET_KEY_LINE}" | sed "s/^[[:space:]]*${_CONFIG_GET_KEY_NAME}[[:space:]]*=[[:space:]]*//g" 2>/dev/null)
-	if [ $? -ne 0 ]; then
+	if ! _CONFIG_KEY_FOUND=$(pecho -n "${_CONFIG_GET_KEY_LINE}" | sed "s/^[[:space:]]*${_CONFIG_GET_KEY_NAME}[[:space:]]*=[[:space:]]*//g" 2>/dev/null); then
 		prn_dbg "(config_get_keyvalue) Could not get the value from key(${_CONFIG_GET_KEY_NAME}) in configuration file(${_CONFIG_GET_CONF_FILE})."
 		pecho -n ""
 		return 1
@@ -405,7 +397,7 @@ config_modify_key()
 		prn_dbg "(config_modify_key) Insufficient input parameters($#)"
 		return 1
 	fi
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		prn_dbg "(config_modify_key) Configuration file path is empty."
 		return 1
 	fi
@@ -413,7 +405,7 @@ config_modify_key()
 		prn_dbg "(config_modify_key) Configuration file($1) is not existed."
 		return 1
 	fi
-	if [ "X$2" = "X" ]; then
+	if [ -z "$2" ]; then
 		prn_dbg "(config_modify_key) Key name is empty."
 		return 1
 	fi
@@ -423,14 +415,14 @@ config_modify_key()
 	_CONFIG_MODIFY_BACKUP_EXT=""
 	_CONFIG_MODIFY_BACKUP_OPT="-i"
 	if [ $# -ge 3 ]; then
-		if [ "X$3" != "X" ]; then
+		if [ -n "$3" ]; then
 			_CONFIG_MODIFY_BACKUP_EXT=".$3"
 			_CONFIG_MODIFY_BACKUP_OPT="-i.$3"
 		fi
 	fi
 	_CONFIG_MODIFY_REMOVE_MODE=0
 	if [ $# -ge 4 ]; then
-		if [ "X$4" = "X1" ]; then
+		if [ -n "$4" ] && [ "$4" = "1" ]; then
 			_CONFIG_MODIFY_REMOVE_MODE=1
 		fi
 	fi
@@ -440,9 +432,8 @@ config_modify_key()
 		_CONFIG_MODIFY_VALUE=""
 	fi
 
-	pecho -n "${_CONFIG_MODIFY_KEY_NAME}" | grep -q '_PASS$'
-	if [ $? -eq 0 ]; then
-		if [ "X${_CONFIG_MODIFY_VALUE}" != "X" ]; then
+	if pecho -n "${_CONFIG_MODIFY_KEY_NAME}" | grep -q '_PASS$'; then
+		if [ -n "${_CONFIG_MODIFY_VALUE}" ]; then
 			_CONFIG_MODIFY_LOGGING_VALUE="**********(${#_CONFIG_MODIFY_VALUE})"
 		else
 			_CONFIG_MODIFY_LOGGING_VALUE="empty"
@@ -456,16 +447,15 @@ config_modify_key()
 	#
 	config_search_key "${_CONFIG_MODIFY_CONF_FILE}" "${_CONFIG_MODIFY_KEY_NAME}" >/dev/null
 	_CONFIG_SEARCH_NUMBER=$?
-	if [ ${_CONFIG_SEARCH_NUMBER} -gt 0 ]; then
+	if [ "${_CONFIG_SEARCH_NUMBER}" -gt 0 ]; then
 		#
 		# Found key
 		#
-		if [ ${_CONFIG_MODIFY_REMOVE_MODE} -eq 1 ]; then
+		if [ "${_CONFIG_MODIFY_REMOVE_MODE}" -eq 1 ]; then
 			#
 			# remove key
 			#
-			sed "${_CONFIG_MODIFY_BACKUP_OPT}" -e "${_CONFIG_SEARCH_NUMBER}d" "${_CONFIG_MODIFY_CONF_FILE}" >/dev/null 2>&1
-			if [ $? -ne 0 ]; then
+			if ! sed "${_CONFIG_MODIFY_BACKUP_OPT}" -e "${_CONFIG_SEARCH_NUMBER}d" "${_CONFIG_MODIFY_CONF_FILE}" >/dev/null 2>&1; then
 				prn_dbg "(config_modify_key) Failed remove key(${_CONFIG_MODIFY_KEY_NAME}) in configuration file(${_CONFIG_MODIFY_CONF_FILE}): line number(${_CONFIG_SEARCH_NUMBER})"
 				return 1
 			fi
@@ -474,8 +464,7 @@ config_modify_key()
 			#
 			# replace key
 			#
-			sed "${_CONFIG_MODIFY_BACKUP_OPT}" -e "s|^[[:space:]]*${_CONFIG_MODIFY_KEY_NAME}[[:space:]]*=.*$|${_CONFIG_MODIFY_KEY_NAME}=${_CONFIG_MODIFY_VALUE}|g" "${_CONFIG_MODIFY_CONF_FILE}" >/dev/null 2>&1
-			if [ $? -ne 0 ]; then
+			if ! sed "${_CONFIG_MODIFY_BACKUP_OPT}" -e "s|^[[:space:]]*${_CONFIG_MODIFY_KEY_NAME}[[:space:]]*=.*$|${_CONFIG_MODIFY_KEY_NAME}=${_CONFIG_MODIFY_VALUE}|g" "${_CONFIG_MODIFY_CONF_FILE}" >/dev/null 2>&1; then
 				prn_dbg "(config_modify_key) Failed replace key(${_CONFIG_MODIFY_KEY_NAME}) value(${_CONFIG_MODIFY_LOGGING_VALUE}) in configuration file(${_CONFIG_MODIFY_CONF_FILE})"
 				return 1
 			fi
@@ -485,7 +474,7 @@ config_modify_key()
 		#
 		# Not found key
 		#
-		if [ ${_CONFIG_MODIFY_REMOVE_MODE} -eq 1 ]; then
+		if [ "${_CONFIG_MODIFY_REMOVE_MODE}" -eq 1 ]; then
 			#
 			# remove key -> nothing to do
 			#
@@ -499,13 +488,12 @@ config_modify_key()
 			# If lastest line is empty, it is removed here.
 			#
 			_CONFIG_MODIFY_CONF_LASTLINE=$(tail -1 "${_CONFIG_MODIFY_CONF_FILE}" | sed 's/^[[:space:]]*//g')
-			if [ "X${_CONFIG_MODIFY_CONF_LASTLINE}" = "X" ]; then
+			if [ -z "${_CONFIG_MODIFY_CONF_LASTLINE}" ]; then
 				#
 				# Cut lastest empty line
 				#
 				_CONFIG_MODIFY_CONF_RMLINE=$(wc -l "${_CONFIG_MODIFY_CONF_FILE}" | awk '{print $1}')
-				sed "${_CONFIG_MODIFY_BACKUP_OPT}" -e "${_CONFIG_MODIFY_CONF_RMLINE}d" "${_CONFIG_MODIFY_CONF_FILE}" >/dev/null 2>&1
-				if [ $? -ne 0 ]; then
+				if ! sed "${_CONFIG_MODIFY_BACKUP_OPT}" -e "${_CONFIG_MODIFY_CONF_RMLINE}d" "${_CONFIG_MODIFY_CONF_FILE}" >/dev/null 2>&1; then
 					prn_dbg "(config_modify_key) Failed remove empty lasted line(${_CONFIG_MODIFY_CONF_RMLINE}) in configuration file(${_CONFIG_MODIFY_CONF_FILE})"
 					return 1
 				fi
@@ -514,9 +502,8 @@ config_modify_key()
 				#
 				# Copy backup file
 				#
-				if [ "X${_CONFIG_MODIFY_BACKUP_EXT}" != "X" ]; then
-					cp -p "${_CONFIG_MODIFY_CONF_FILE}" "${_CONFIG_MODIFY_CONF_FILE}${_CONFIG_MODIFY_BACKUP_EXT}" >/dev/null 2>&1
-					if [ $? -ne 0 ]; then
+				if [ -n "${_CONFIG_MODIFY_BACKUP_EXT}" ]; then
+					if ! cp -p "${_CONFIG_MODIFY_CONF_FILE}" "${_CONFIG_MODIFY_CONF_FILE}${_CONFIG_MODIFY_BACKUP_EXT}" >/dev/null 2>&1; then
 						prn_dbg "(config_modify_key) Failed remove empty lasted line(${_CONFIG_MODIFY_CONF_RMLINE}) in configuration file(${_CONFIG_MODIFY_CONF_FILE})"
 						return 1
 					fi
@@ -550,17 +537,16 @@ config_set_key()
 		prn_dbg "(config_set_key) Insufficient input parameters($#)"
 		return 1
 	fi
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		prn_dbg "(config_set_key) Configuration file path is empty."
 		return 1
 	fi
-	if [ "X$2" = "X" ]; then
+	if [ -z "$2" ]; then
 		prn_dbg "(config_set_key) Key name is empty."
 		return 1
 	fi
 	if [ ! -f "$1" ]; then
-		touch "$1" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! touch "$1" >/dev/null 2>&1; then
 			prn_dbg "(config_set_key) Configuration file($1) is not existed, and failed to create new file."
 			return 1
 		fi
@@ -595,7 +581,7 @@ config_default_set_key()
 	if [ -z "${K2HR3CLI_OPT_SAVE}" ]; then
 		return 0
 	fi
-	if [ "X${K2HR3CLI_OPT_SAVE}" != "X1" ]; then
+	if [ -z "${K2HR3CLI_OPT_SAVE}" ] || [ "${K2HR3CLI_OPT_SAVE}" != "1" ]; then
 		return 0
 	fi
 
@@ -603,7 +589,7 @@ config_default_set_key()
 		prn_dbg "(config_default_modify_key) Insufficient input parameters($#)"
 		return 1
 	fi
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		prn_dbg "(config_default_modify_key) Key name is empty."
 		return 1
 	fi
@@ -611,10 +597,8 @@ config_default_set_key()
 	#
 	# Check and Create default configuration file
 	#
-	config_check_default_file
-	if [ $? -ne 0 ]; then
-		config_create_default_file 1
-		if [ $? -ne 0 ]; then
+	if ! config_check_default_file; then
+		if ! config_create_default_file 1; then
 			prn_err "Could not find or create default user configuration file."
 			return 1
 		fi
@@ -623,8 +607,7 @@ config_default_set_key()
 	#
 	# Overwrite key
 	#
-	config_set_key "${_CONFIG_DEFAULT_USER_FILE}" "$1" "$2"
-	if [ $? -ne 0 ]; then
+	if ! config_set_key "${_CONFIG_DEFAULT_USER_FILE}" "$1" "$2"; then
 		prn_err "Failed set key($1) to default configuration file(${_CONFIG_DEFAULT_USER_FILE})."
 		return 1
 	fi
@@ -644,11 +627,11 @@ config_unset_key()
 		prn_dbg "(config_unset_key) Insufficient input parameters($#)"
 		return 1
 	fi
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		prn_dbg "(config_unset_key) Configuration file path is empty."
 		return 1
 	fi
-	if [ "X$2" = "X" ]; then
+	if [ -z "$2" ]; then
 		prn_dbg "(config_unset_key) Key name is empty."
 		return 1
 	fi
@@ -675,8 +658,7 @@ config_unset_key()
 		if [ "${_CONFIG_UNSET_FOUND_CNT}" -le 1 ]; then
 			break
 		fi
-		_CONFIG_UNSET_FOUND=$(grep -n "^[[:space:]]*$2[[:space:]]*=" "$1" | head -1 2>/dev/null)
-		if [ $? -ne 0 ]; then
+		if ! _CONFIG_UNSET_FOUND=$(grep -n "^[[:space:]]*$2[[:space:]]*=" "$1" | head -1 2>/dev/null); then
 			break
 		fi
 		_CONFIG_UNSET_FOUND_LINENO=$(echo "${_CONFIG_UNSET_FOUND}" | awk 'END{print $NF}' | sed "s/:/ /g" | awk '{print $1}')
@@ -684,8 +666,7 @@ config_unset_key()
 		#
 		# remove line
 		#
-		sed -i -e "${_CONFIG_UNSET_FOUND_LINENO}d" "$1" >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
+		if ! sed -i -e "${_CONFIG_UNSET_FOUND_LINENO}d" "$1" >/dev/null 2>&1; then
 			prn_dbg "(config_unset_key) Failed remove key($2) in configuration file($1): line number(${_CONFIG_UNSET_FOUND_LINENO})"
 			return 1
 		fi
@@ -694,16 +675,14 @@ config_unset_key()
 	#
 	# Unset key
 	#
-	config_search_key "$1" "$2" >/dev/null
-	if [ $? -eq 0 ]; then
+	if config_search_key "$1" "$2" >/dev/null; then
 		#
 		# Not found key in configuration file -> loop end
 		#
 		prn_dbg "(config_unset_key) Not found unset key($2) in configuration file($1)."
 		return 0
 	fi
-	config_modify_key "$1" "$2" "" 0
-	if [ $? -ne 0 ]; then
+	if ! config_modify_key "$1" "$2" "" 0; then
 		prn_dbg "(config_unset_key) Failed to unset key($2) in configuration file($1)."
 		return 1
 	fi
@@ -724,11 +703,11 @@ config_remove_key()
 		prn_dbg "(config_remove_key) Insufficient input parameters($#)"
 		return 1
 	fi
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		prn_dbg "(config_remove_key) Configuration file path is empty."
 		return 1
 	fi
-	if [ "X$2" = "X" ]; then
+	if [ -z "$2" ]; then
 		prn_dbg "(config_remove_key) Key name is empty."
 		return 1
 	fi
@@ -751,8 +730,7 @@ config_remove_key()
 	#
 	_CONFIG_REMOVE_KEY_LOOP=1
 	while [ "${_CONFIG_REMOVE_KEY_LOOP}" -eq 1 ]; do
-		config_search_key "$1" "$2" >/dev/null
-		if [ $? -eq 0 ]; then
+		if config_search_key "$1" "$2" >/dev/null; then
 			#
 			# Not found key in configuration file -> loop end
 			#
@@ -761,8 +739,7 @@ config_remove_key()
 		#
 		# Remove lastest key line
 		#
-		config_modify_key "$1" "$2" "" 1
-		if [ $? -ne 0 ]; then
+		if ! config_modify_key "$1" "$2" "" 1; then
 			return 1
 		fi
 	done
@@ -781,14 +758,14 @@ config_remove_key()
 #
 add_config_update_var()
 {
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		return 1
 	fi
-	if [ "X${K2HR3CLI_UPDATED_CONFIG_VARS}" = "X" ]; then
+	if [ -z "${K2HR3CLI_UPDATED_CONFIG_VARS}" ]; then
 		K2HR3CLI_UPDATED_CONFIG_VARS="$1"
 	else
 		for _UPDATED_CONFIG_ONE_VAR in ${K2HR3CLI_UPDATED_CONFIG_VARS}; do
-			if [ "X${_UPDATED_CONFIG_ONE_VAR}" = "X$1" ]; then
+			if [ -n "${_UPDATED_CONFIG_ONE_VAR}" ] && [ "${_UPDATED_CONFIG_ONE_VAR}" = "$1" ]; then
 				#
 				# Already set variable name
 				#
@@ -811,16 +788,16 @@ add_config_update_var()
 #
 delete_config_update_var()
 {
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		return 1
 	fi
-	if [ "X${K2HR3CLI_UPDATED_CONFIG_VARS}" = "X" ]; then
+	if [ -z "${K2HR3CLI_UPDATED_CONFIG_VARS}" ]; then
 		return 0
 	fi
 	_UPDATED_CONFIG_NEW_VARS=""
 	for _UPDATED_CONFIG_ONE_VAR in ${K2HR3CLI_UPDATED_CONFIG_VARS}; do
-		if [ "X${_UPDATED_CONFIG_ONE_VAR}" != "X$1" ]; then
-			if [ "X${_UPDATED_CONFIG_NEW_VARS}" != "X" ]; then
+		if [ -z "${_UPDATED_CONFIG_ONE_VAR}" ] || [ "${_UPDATED_CONFIG_ONE_VAR}" != "$1" ]; then
+			if [ -n "${_UPDATED_CONFIG_NEW_VARS}" ]; then
 				_UPDATED_CONFIG_NEW_VARS="${_UPDATED_CONFIG_NEW_VARS} ${_UPDATED_CONFIG_ONE_VAR}"
 			else
 				_UPDATED_CONFIG_NEW_VARS="${_UPDATED_CONFIG_ONE_VAR}"
@@ -845,17 +822,17 @@ update_config_vars()
 	if [ -z "${K2HR3CLI_OPT_SAVE}" ]; then
 		return 0
 	fi
-	if [ "X${K2HR3CLI_OPT_SAVE}" != "X1" ]; then
+	if [ -z "${K2HR3CLI_OPT_SAVE}" ] || [ "${K2HR3CLI_OPT_SAVE}" != "1" ]; then
 		return 0
 	fi
-	if [ "X${K2HR3CLI_UPDATED_CONFIG_VARS}" = "X" ]; then
+	if [ -z "${K2HR3CLI_UPDATED_CONFIG_VARS}" ]; then
 		return 0
 	fi
 
 	for _UPDATED_CONFIG_ONE_VAR in ${K2HR3CLI_UPDATED_CONFIG_VARS}; do
 		_UPDATED_CONFIG_ONE_VAR_VAL=$(eval pecho -n '$'"${_UPDATED_CONFIG_ONE_VAR}")
 
-		if [ "X${_CONFIG_SET_CONFIG_FILE}" != "X" ]; then
+		if [ -n "${_CONFIG_SET_CONFIG_FILE}" ]; then
 			config_set_key "${_CONFIG_SET_CONFIG_FILE}" "${_UPDATED_CONFIG_ONE_VAR}" "${_UPDATED_CONFIG_ONE_VAR_VAL}"
 		else
 			config_default_set_key "${_UPDATED_CONFIG_ONE_VAR}" "${_UPDATED_CONFIG_ONE_VAR_VAL}"
@@ -873,42 +850,39 @@ update_config_vars()
 # Load global configuration file
 #
 if [ -f "${K2HR3CLI_GLOBAL_CONFIG}" ]; then
-	check_backquote_in_file "${K2HR3CLI_GLOBAL_CONFIG}"
-	if [ $? -ne 0 ]; then
+	if ! check_backquote_in_file "${K2HR3CLI_GLOBAL_CONFIG}"; then
 		prn_warn "${K2HR3CLI_GLOBAL_CONFIG} configuration file has back quote for shell executable charactor, then skip it loading."
 	else
 		prn_info "Loaded ${K2HR3CLI_GLOBAL_CONFIG} configuration file."
-		. ${K2HR3CLI_GLOBAL_CONFIG}
+		. "${K2HR3CLI_GLOBAL_CONFIG}"
 	fi
 fi
 
 #
 # Load configuration file with priority
 #
-if [ "X${K2HR3CLI_OPT_CONFIG}" != "X" ]; then
+if [ -n "${K2HR3CLI_OPT_CONFIG}" ]; then
 	#
 	# Custom configuration file
 	#
 	if [ ! -f "${K2HR3CLI_OPT_CONFIG}" ]; then
 		prn_warn "${K2HR3CLI_OPT_CONFIG} configuration file is specified, but the file is not found."
 	else
-		check_backquote_in_file "${K2HR3CLI_OPT_CONFIG}"
-		if [ $? -ne 0 ]; then
+		if ! check_backquote_in_file "${K2HR3CLI_OPT_CONFIG}"; then
 			prn_warn "${K2HR3CLI_OPT_CONFIG} configuration file has back quote for shell executable charactor, then skip it loading."
 		else
 			prn_dbg "Loaded ${K2HR3CLI_OPT_CONFIG} configuration file."
 			. "${K2HR3CLI_OPT_CONFIG}"
 		fi
 	fi
-elif [ "X${K2HR3CLI_CUSTOM_CONFIG}" != "X" ]; then
+elif [ -n "${K2HR3CLI_CUSTOM_CONFIG}" ]; then
 	#
 	# Custom configuration file
 	#
 	if [ ! -f "${K2HR3CLI_CUSTOM_CONFIG}" ]; then
 		prn_warn "${K2HR3CLI_CUSTOM_CONFIG} configuration file is specified, but the file is not found."
 	else
-		check_backquote_in_file "${K2HR3CLI_CUSTOM_CONFIG}"
-		if [ $? -ne 0 ]; then
+		if ! check_backquote_in_file "${K2HR3CLI_CUSTOM_CONFIG}"; then
 			prn_warn "${K2HR3CLI_CUSTOM_CONFIG} configuration file has back quote for shell executable charactor, then skip it loading."
 		else
 			prn_info "Loaded ${K2HR3CLI_CUSTOM_CONFIG} configuration file."
@@ -922,11 +896,9 @@ else
 	#
 	# Check and load user configuration file
 	#
-	_CONFIG_DEFAULT_USER_FILE=$(config_get_default_user_path)
-	if [ $? -eq 0 ]; then
+	if _CONFIG_DEFAULT_USER_FILE=$(config_get_default_user_path); then
 		if [ -f "${_CONFIG_DEFAULT_USER_FILE}" ]; then
-			check_backquote_in_file "${_CONFIG_DEFAULT_USER_FILE}"
-			if [ $? -ne 0 ]; then
+			if ! check_backquote_in_file "${_CONFIG_DEFAULT_USER_FILE}"; then
 				prn_warn "${_CONFIG_DEFAULT_USER_FILE} configuration file has back quote for shell executable charactor, then skip it loading."
 			else
 				prn_info "Loaded ${_CONFIG_DEFAULT_USER_FILE} configuration file."

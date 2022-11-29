@@ -157,12 +157,12 @@ jsonparser_parse_json_element()
 		prn_dbg "(jsonparser_parse_json_element) Parameter is wrong."
 		return 1
 	fi
-	if [ "X$2" = "X" ]; then
+	if [ -z "$2" ]; then
 		_JP_ELEMENT_PATH="%"
 	else
 		_JP_ELEMENT_PATH="$2"
 	fi
-	if [ "X$3" = "X" ]; then
+	if [ -z "$3" ]; then
 		prn_dbg "(jsonparser_parse_json_element) Output file parameter is empty."
 		return 1
 	fi
@@ -178,7 +178,7 @@ jsonparser_parse_json_element()
 	#
 	_JP_ELEMENT_START_WORD=$(pecho -n "${_JP_ELEMENT_REMAINING}" | cut -b 1)
 	_JP_ELEMENT_REMAINING=$(pecho -n "${_JP_ELEMENT_REMAINING}" | cut -c 2-)
-	if [ "X${_JP_ELEMENT_START_WORD}" = "X{" ]; then
+	if [ -n "${_JP_ELEMENT_START_WORD}" ] && [ "${_JP_ELEMENT_START_WORD}" = "{" ]; then
 		#--------------------------------------------------
 		# Start Object
 		#--------------------------------------------------
@@ -190,7 +190,7 @@ jsonparser_parse_json_element()
 		#
 		# Search square brackets for end of object
 		#
-		while [ "X${_JP_ELEMENT_REMAINING}" != "X" ]; do
+		while [ -n "${_JP_ELEMENT_REMAINING}" ]; do
 			#
 			# Search key word("{}[])
 			#
@@ -198,7 +198,7 @@ jsonparser_parse_json_element()
 			#	awk result : '<key found position> <found key> <string before key> <string after key>'
 			#
 			_JP_ELEMENT_PARSED_TMP=$(pecho -n "${_JP_ELEMENT_REMAINING}" | awk 'match($0, /[{}\[\]"]/){print RSTART, substr($0, RSTART, 1), "\"" substr($0, 1, RSTART - 1) "\"", "\"" substr($0, RSTART + 1) "\""}')
-			if [ "X${_JP_ELEMENT_PARSED_TMP}" = "X" ]; then
+			if [ -z "${_JP_ELEMENT_PARSED_TMP}" ]; then
 				prn_dbg "(jsonparser_parse_json_element) ${_JP_ELEMENT_PATH} path is object, but end word of it is not found."
 				return 1
 			fi
@@ -208,18 +208,18 @@ jsonparser_parse_json_element()
 			_JP_ELEMENT_REMAINING=$(pecho -n "${_JP_ELEMENT_PARSED_TMP}" | awk '{print $4}' | sed -e 's/^"//g' -e 's/\"$//g')
 
 			if [ "${_JP_ELEMENT_DOUBLE_QUOTE}" -eq 1 ]; then
-				if [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X\"" ]; then
+				if [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "\"" ]; then
 					_JP_ELEMENT_DOUBLE_QUOTE=0
 				fi
-			elif [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X\"" ]; then
+			elif [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "\"" ]; then
 				_JP_ELEMENT_DOUBLE_QUOTE=1
-			elif [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X{" ]; then
+			elif [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "{" ]; then
 				_JP_ELEMENT_SQUARE_BRACKETS=$((_JP_ELEMENT_SQUARE_BRACKETS + 1))
-			elif [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X}" ]; then
+			elif [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "}" ]; then
 				_JP_ELEMENT_SQUARE_BRACKETS=$((_JP_ELEMENT_SQUARE_BRACKETS - 1))
-			elif [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X[" ]; then
+			elif [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "[" ]; then
 				_JP_ELEMENT_CURLY_BRACKETS=$((_JP_ELEMENT_CURLY_BRACKETS + 1))
-			elif [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X]" ]; then
+			elif [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "]" ]; then
 				_JP_ELEMENT_CURLY_BRACKETS=$((_JP_ELEMENT_CURLY_BRACKETS - 1))
 			fi
 
@@ -238,8 +238,7 @@ jsonparser_parse_json_element()
 		#
 		# Put file
 		#
-		pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_OBJ}" >> "${_JP_ELEMENT_OUTPUT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_OBJ}" >> "${_JP_ELEMENT_OUTPUT_FILE}"; then
 			prn_dbg "(jsonparser_parse_json_element) Failed to put ${_JP_ELEMENT_PATH} path to file(${_JP_ELEMENT_OUTPUT_FILE})."
 			return 1
 		fi
@@ -248,12 +247,12 @@ jsonparser_parse_json_element()
 		# Children elements( "key":value, ... )
 		#
 		_JP_ELEMENT_CONTENT_STR=$(pecho -n "${_JP_ELEMENT_CONTENT_STR}" | sed -e 's/^[[:space:]]*//g' -e 's/^\(%20\)*//g')
-		while [ "X${_JP_ELEMENT_CONTENT_STR}" != "X" ]; do
+		while [ -n "${_JP_ELEMENT_CONTENT_STR}" ]; do
 			#
 			# key must be string
 			#
 			_JP_ELEMENT_START_WORD=$(pecho -n "${_JP_ELEMENT_CONTENT_STR}" | cut -b 1)
-			if [ "X${_JP_ELEMENT_START_WORD}" != "X\"" ]; then
+			if [ -z "${_JP_ELEMENT_START_WORD}" ] || [ "${_JP_ELEMENT_START_WORD}" != "\"" ]; then
 				prn_dbg "(jsonparser_parse_json_element) The key of ${_JP_ELEMENT_PATH} path object child is wrong."
 				return 1
 			fi
@@ -267,7 +266,7 @@ jsonparser_parse_json_element()
 			#
 			_JP_ELEMENT_CONTENT_STR=$(pecho -n "${_JP_ELEMENT_CONTENT_STR}" | cut -c 2-)
 			_JP_ELEMENT_KEY_STR=$(pecho -n "${_JP_ELEMENT_CONTENT_STR}" | awk 'match($0, /["]/){print "\"" substr($0, 1, RSTART)}')
-			if [ "X${_JP_ELEMENT_KEY_STR}" = "X" ]; then
+			if [ -z "${_JP_ELEMENT_KEY_STR}" ]; then
 				prn_dbg "(jsonparser_parse_json_element) The key of ${_JP_ELEMENT_PATH} path object child is wrong."
 				return 1
 			fi
@@ -277,13 +276,13 @@ jsonparser_parse_json_element()
 			# Check separator between key and value
 			#
 			_JP_ELEMENT_START_WORD=$(pecho -n "${_JP_ELEMENT_CONTENT_STR}" | cut -b 1)
-			if [ "X${_JP_ELEMENT_START_WORD}" != "X:" ]; then
+			if [ -z "${_JP_ELEMENT_START_WORD}" ] || [ "${_JP_ELEMENT_START_WORD}" != ":" ]; then
 				prn_dbg "(jsonparser_parse_json_element) The key of ${_JP_ELEMENT_PATH} path object child has wrong separator(:)."
 				return 1
 			fi
 
 			_JP_ELEMENT_CONTENT_STR=$(pecho -n "${_JP_ELEMENT_CONTENT_STR}" | cut -c 2- | sed -e 's/^[[:space:]]*//g' -e 's/^\(%20\)*//g')
-			if [ "X${_JP_ELEMENT_CONTENT_STR}" = "X" ]; then
+			if [ -z "${_JP_ELEMENT_CONTENT_STR}" ]; then
 				prn_dbg "(jsonparser_parse_json_element) The key of ${_JP_ELEMENT_PATH} path object child has empty value."
 				return 1
 			fi
@@ -299,8 +298,7 @@ jsonparser_parse_json_element()
 			# [NOTE]
 			# Call as a subshell to keep local variables unchanged.
 			#
-			_JP_ELEMENT_CONTENT_STR=$(jsonparser_parse_json_element "${_JP_ELEMENT_CONTENT_STR}" "${_JP_ELEMENT_CHILD_PATH}" "${_JP_ELEMENT_OUTPUT_FILE}")
-			if [ $? -ne 0 ]; then
+			if ! _JP_ELEMENT_CONTENT_STR=$(jsonparser_parse_json_element "${_JP_ELEMENT_CONTENT_STR}" "${_JP_ELEMENT_CHILD_PATH}" "${_JP_ELEMENT_OUTPUT_FILE}"); then
 				prn_dbg "(jsonparser_parse_json_element) Failed to parse ${_JP_ELEMENT_CHILD_PATH} value."
 				return 1
 			fi
@@ -311,7 +309,7 @@ jsonparser_parse_json_element()
 			_JP_ELEMENT_CONTENT_STR=$(pecho -n "${_JP_ELEMENT_CONTENT_STR}" | sed -e 's/^[[:space:]]*[,][[:space:]]*//g' -e 's/^\(%20\)*[,]\(%20\)*//g' -e 's/^[[:space:]]*//g' -e 's/^\(%20\)*//g')
 		done
 
-	elif [ "X${_JP_ELEMENT_START_WORD}" = "X[" ]; then
+	elif [ -n "${_JP_ELEMENT_START_WORD}" ] && [ "${_JP_ELEMENT_START_WORD}" = "[" ]; then
 		#--------------------------------------------------
 		# Start Array
 		#--------------------------------------------------
@@ -323,7 +321,7 @@ jsonparser_parse_json_element()
 		#
 		# Search square brackets for end of array
 		#
-		while [ "X${_JP_ELEMENT_REMAINING}" != "X" ]; do
+		while [ -n "${_JP_ELEMENT_REMAINING}" ]; do
 			#
 			# Search key word("{}[])
 			#
@@ -331,7 +329,7 @@ jsonparser_parse_json_element()
 			#	awk result : '<key found position> <found key> <string before key> <string after key>'
 			#
 			_JP_ELEMENT_PARSED_TMP=$(pecho -n "${_JP_ELEMENT_REMAINING}" | awk 'match($0, /[{}\[\]"]/){print RSTART, substr($0, RSTART, 1), "\"" substr($0, 1, RSTART - 1) "\"", "\"" substr($0, RSTART + 1) "\""}')
-			if [ "X${_JP_ELEMENT_PARSED_TMP}" = "X" ]; then
+			if [ -z "${_JP_ELEMENT_PARSED_TMP}" ]; then
 				prn_dbg "(jsonparser_parse_json_element) ${_JP_ELEMENT_PATH} path is array, but end word of it is not found."
 				return 1
 			fi
@@ -341,18 +339,18 @@ jsonparser_parse_json_element()
 			_JP_ELEMENT_REMAINING=$(pecho -n "${_JP_ELEMENT_PARSED_TMP}" | awk '{print $4}' | sed -e 's/^"//g' -e 's/\"$//g')
 
 			if [ "${_JP_ELEMENT_DOUBLE_QUOTE}" -eq 1 ]; then
-				if [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X\"" ]; then
+				if [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "\"" ]; then
 					_JP_ELEMENT_DOUBLE_QUOTE=0
 				fi
-			elif [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X\"" ]; then
+			elif [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "\"" ]; then
 				_JP_ELEMENT_DOUBLE_QUOTE=1
-			elif [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X{" ]; then
+			elif [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "{" ]; then
 				_JP_ELEMENT_SQUARE_BRACKETS=$((_JP_ELEMENT_SQUARE_BRACKETS + 1))
-			elif [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X}" ]; then
+			elif [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "}" ]; then
 				_JP_ELEMENT_SQUARE_BRACKETS=$((_JP_ELEMENT_SQUARE_BRACKETS - 1))
-			elif [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X[" ]; then
+			elif [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "[" ]; then
 				_JP_ELEMENT_CURLY_BRACKETS=$((_JP_ELEMENT_CURLY_BRACKETS + 1))
-			elif [ "X${_JP_ELEMENT_SEPARATOR_WORD}" = "X]" ]; then
+			elif [ -n "${_JP_ELEMENT_SEPARATOR_WORD}" ] && [ "${_JP_ELEMENT_SEPARATOR_WORD}" = "]" ]; then
 				_JP_ELEMENT_CURLY_BRACKETS=$((_JP_ELEMENT_CURLY_BRACKETS - 1))
 			fi
 
@@ -371,8 +369,7 @@ jsonparser_parse_json_element()
 		#
 		# Put file
 		#
-		pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_ARR}" >> "${_JP_ELEMENT_OUTPUT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_ARR}" >> "${_JP_ELEMENT_OUTPUT_FILE}"; then
 			prn_dbg "(jsonparser_parse_json_element) Failed to put ${_JP_ELEMENT_PATH} path to file(${_JP_ELEMENT_OUTPUT_FILE})."
 			return 1
 		fi
@@ -382,7 +379,7 @@ jsonparser_parse_json_element()
 		#
 		_JP_ELEMENT_CONTENT_STR=$(pecho -n "${_JP_ELEMENT_CONTENT_STR}" | sed -e 's/^[[:space:]]*//g' -e 's/^\(%20\)*//g')
 		_JP_ELEMENT_CONTENT_ARR_NUM=1
-		while [ "X${_JP_ELEMENT_CONTENT_STR}" != "X" ]; do
+		while [ -n "${_JP_ELEMENT_CONTENT_STR}" ]; do
 			#
 			# Make element path for child
 			#
@@ -394,8 +391,7 @@ jsonparser_parse_json_element()
 			# [NOTE]
 			# Call as a subshell to keep local variables unchanged.
 			#
-			_JP_ELEMENT_CONTENT_STR=$(jsonparser_parse_json_element "${_JP_ELEMENT_CONTENT_STR}" "${_JP_ELEMENT_CHILD_PATH}" "${_JP_ELEMENT_OUTPUT_FILE}")
-			if [ $? -ne 0 ]; then
+			if ! _JP_ELEMENT_CONTENT_STR=$(jsonparser_parse_json_element "${_JP_ELEMENT_CONTENT_STR}" "${_JP_ELEMENT_CHILD_PATH}" "${_JP_ELEMENT_OUTPUT_FILE}"); then
 				prn_dbg "(jsonparser_parse_json_element) Failed to parse ${_JP_ELEMENT_CHILD_PATH} value."
 				return 1
 			fi
@@ -407,7 +403,7 @@ jsonparser_parse_json_element()
 			_JP_ELEMENT_CONTENT_ARR_NUM=$((_JP_ELEMENT_CONTENT_ARR_NUM + 1))
 		done
 
-	elif [ "X${_JP_ELEMENT_START_WORD}" = "X\"" ]; then
+	elif [ -n "${_JP_ELEMENT_START_WORD}" ] && [ "${_JP_ELEMENT_START_WORD}" = "\"" ]; then
 		#--------------------------------------------------
 		# Start String
 		#--------------------------------------------------
@@ -419,7 +415,7 @@ jsonparser_parse_json_element()
 		#	_JP_ELEMENT_REMAINING	: '<remaining string(after separator)>'
 		#
 		_JP_ELEMENT_CONTENT_STR=$(pecho -n "${_JP_ELEMENT_REMAINING}" | awk 'match($0, /["]/){print "\"" substr($0, 1, RSTART)}')
-		if [ "X${_JP_ELEMENT_CONTENT_STR}" = "X" ]; then
+		if [ -z "${_JP_ELEMENT_CONTENT_STR}" ]; then
 			prn_dbg "(jsonparser_parse_json_element) ${_JP_ELEMENT_PATH} path is string, but end word of it is not found."
 			return 1
 		fi
@@ -428,8 +424,7 @@ jsonparser_parse_json_element()
 		#
 		# Put file
 		#
-		pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_STR}${_JP_ELEMENT_CONTENT_STR}" >> "${_JP_ELEMENT_OUTPUT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_STR}${_JP_ELEMENT_CONTENT_STR}" >> "${_JP_ELEMENT_OUTPUT_FILE}"; then
 			prn_dbg "(jsonparser_parse_json_element) Failed to put ${_JP_ELEMENT_PATH} path to file(${_JP_ELEMENT_OUTPUT_FILE})."
 			return 1
 		fi
@@ -445,7 +440,7 @@ jsonparser_parse_json_element()
 		#	result of following awk comand : "<found word position> <found separator word> <string of before separator> <string of after separator>"
 		#
 		_JP_ELEMENT_PARSED_TMP=$(pecho -n "${_JP_ELEMENT_REMAINING}" | awk 'match($0, /[,}\]]/){print RSTART, substr($0, RSTART, 1), "\"" substr($0, 1, RSTART - 1) "\"", "\"" substr($0, RSTART + 1) "\""}')
-		if [ "X${_JP_ELEMENT_PARSED_TMP}" = "X" ]; then
+		if [ -z "${_JP_ELEMENT_PARSED_TMP}" ]; then
 			_JP_ELEMENT_CONTENT_STR=$(pecho -n "${_JP_ELEMENT_START_WORD}${_JP_ELEMENT_REMAINING}" | tr '[:upper:]' '[:lower:]')
 			_JP_ELEMENT_REMAINING=""
 		else
@@ -457,23 +452,20 @@ jsonparser_parse_json_element()
 		#
 		# Check and Put file
 		#
-		if [ "X${_JP_ELEMENT_CONTENT_STR}" = "Xnull" ]; then
-			pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_NULL}" >> "${_JP_ELEMENT_OUTPUT_FILE}"
-			if [ $? -ne 0 ]; then
+		if [ -n "${_JP_ELEMENT_CONTENT_STR}" ] && [ "${_JP_ELEMENT_CONTENT_STR}" = "null" ]; then
+			if ! pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_NULL}" >> "${_JP_ELEMENT_OUTPUT_FILE}"; then
 				prn_dbg "(jsonparser_parse_json_element) Failed to put ${_JP_ELEMENT_PATH} path to file(${_JP_ELEMENT_OUTPUT_FILE})."
 				return 1
 			fi
 
-		elif [ "X${_JP_ELEMENT_CONTENT_STR}" = "Xtrue" ]; then
-			pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_TRUE}" >> "${_JP_ELEMENT_OUTPUT_FILE}"
-			if [ $? -ne 0 ]; then
+		elif [ -n "${_JP_ELEMENT_CONTENT_STR}" ] && [ "${_JP_ELEMENT_CONTENT_STR}" = "true" ]; then
+			if ! pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_TRUE}" >> "${_JP_ELEMENT_OUTPUT_FILE}"; then
 				prn_dbg "(jsonparser_parse_json_element) Failed to put ${_JP_ELEMENT_PATH} path to file(${_JP_ELEMENT_OUTPUT_FILE})."
 				return 1
 			fi
 
-		elif [ "X${_JP_ELEMENT_CONTENT_STR}" = "Xfalse" ]; then
-			pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_FALSE}" >> "${_JP_ELEMENT_OUTPUT_FILE}"
-			if [ $? -ne 0 ]; then
+		elif [ -n "${_JP_ELEMENT_CONTENT_STR}" ] && [ "${_JP_ELEMENT_CONTENT_STR}" = "false" ]; then
+			if ! pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_FALSE}" >> "${_JP_ELEMENT_OUTPUT_FILE}"; then
 				prn_dbg "(jsonparser_parse_json_element) Failed to put ${_JP_ELEMENT_PATH} path to file(${_JP_ELEMENT_OUTPUT_FILE})."
 				return 1
 			fi
@@ -482,7 +474,7 @@ jsonparser_parse_json_element()
 			#
 			# Check number
 			#
-			if [ "X${_JP_ELEMENT_START_WORD}" = "X-" ]; then
+			if [ -n "${_JP_ELEMENT_START_WORD}" ] && [ "${_JP_ELEMENT_START_WORD}" = "-" ]; then
 				#
 				# Check negative word
 				#
@@ -503,8 +495,7 @@ jsonparser_parse_json_element()
 			#
 			# Put file
 			#
-			pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_NUM}${_JP_ELEMENT_CONTENT_STR}" >> "${_JP_ELEMENT_OUTPUT_FILE}"
-			if [ $? -ne 0 ]; then
+			if ! pecho "${_JP_ELEMENT_PATH}	${JP_TYPE_NUM}${_JP_ELEMENT_CONTENT_STR}" >> "${_JP_ELEMENT_OUTPUT_FILE}"; then
 				prn_dbg "(jsonparser_parse_json_element) Failed to put ${_JP_ELEMENT_PATH} path to file(${_JP_ELEMENT_OUTPUT_FILE})."
 				return 1
 			fi
@@ -540,12 +531,12 @@ jsonparser_get_json_part()
 	#
 	# Check key path and name parameter
 	#
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		_JP_GET_JSON_PATH=""
 	else
 		_JP_GET_JSON_PATH="$1"
 	fi
-	if [ "X$2" = "X" ]; then
+	if [ -z "$2" ]; then
 		_JP_GET_JSON_KEY=""
 	else
 		_JP_GET_JSON_KEY="$2"
@@ -555,7 +546,7 @@ jsonparser_get_json_part()
 	#
 	# Check parsed file
 	#
-	if [ "X$3" = "X" ]; then
+	if [ -z "$3" ]; then
 		prn_dbg "(jsonparser_get_json_part) Json parsed file path is empty."
 		return 1
 	fi
@@ -568,7 +559,7 @@ jsonparser_get_json_part()
 	#
 	# Check nest parameter
 	#
-	if [ "X$4" != "X" ]; then
+	if [ -n "$4" ]; then
 		_JP_GET_JSON_NEST="$4"
 		_JP_GET_JSON_CHILD_NEST=$((_JP_GET_JSON_NEST + 1))
 	else
@@ -579,7 +570,12 @@ jsonparser_get_json_part()
 	#
 	# Check mutiline
 	#
-	if [ "X$5" = "X1" ] || [ "X${K2HR3CLI_OPT_JSON}" != "X1" ]; then
+	if [ -n "$5" ] && [ "$5" = "1" ]; then
+		_JP_GET_JSON_SINGLE_LINE=1
+		_JP_GET_JSON_KEYVAL_SEP=""
+		_JP_GET_JSON_NEST_WORDS=""
+		_JP_GET_JSON_CHILD_NEST_WORDS=""
+	elif [ -z "${K2HR3CLI_OPT_JSON}" ] || [ "${K2HR3CLI_OPT_JSON}" != "1" ]; then
 		_JP_GET_JSON_SINGLE_LINE=1
 		_JP_GET_JSON_KEYVAL_SEP=""
 		_JP_GET_JSON_NEST_WORDS=""
@@ -588,7 +584,6 @@ jsonparser_get_json_part()
 		_JP_GET_JSON_SINGLE_LINE=0
 		_JP_GET_JSON_KEYVAL_SEP=" "
 		_JP_GET_JSON_NEST_WORDS=""
-		#shellcheck disable=SC2034
 		for _JP_GET_JSON_NEST_CNT in $(seq 1 "${_JP_GET_JSON_NEST}"); do
 			_JP_GET_JSON_NEST_WORDS="${_JP_GET_JSON_NEST_WORDS}    "
 		done
@@ -598,7 +593,7 @@ jsonparser_get_json_part()
 	#
 	# Check output file path
 	#
-	if [ "X$6" = "X" ]; then
+	if [ -z "$6" ]; then
 		prn_dbg "(jsonparser_get_json_part) Output file parameter is empty."
 		return 1
 	fi
@@ -606,8 +601,7 @@ jsonparser_get_json_part()
 	#
 	# Get key value
 	#
-	jsonparser_get_key_value "${_JP_GET_JSON_OWN_PATH}" "${_JP_GET_JSON_PARSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_get_key_value "${_JP_GET_JSON_OWN_PATH}" "${_JP_GET_JSON_PARSED_FILE}"; then
 		prn_dbg "(jsonparser_get_json_part) Could not get key($1)."
 		return 1
 	fi
@@ -615,7 +609,11 @@ jsonparser_get_json_part()
 	#
 	# Dump
 	#
-	if [ "X${JSONPARSER_FIND_VAL_TYPE}" = "X${JP_TYPE_OBJ}" ]; then
+	if [ -z "${JSONPARSER_FIND_VAL_TYPE}" ]; then
+		prn_dbg "(jsonparser_get_json_part) Json parsed file($2) is something wrong(empty)."
+		return 1
+
+	elif [ "${JSONPARSER_FIND_VAL_TYPE}" = "${JP_TYPE_OBJ}" ]; then
 		#
 		# Object
 		#
@@ -649,7 +647,7 @@ jsonparser_get_json_part()
 		fi
 		pecho -n "}" >> "$6"
 
-	elif [ "X${JSONPARSER_FIND_VAL_TYPE}" = "X${JP_TYPE_ARR}" ]; then
+	elif [ "${JSONPARSER_FIND_VAL_TYPE}" = "${JP_TYPE_ARR}" ]; then
 		#
 		# Array
 		#
@@ -672,7 +670,6 @@ jsonparser_get_json_part()
 			#
 			# Call ownself as a Reentrant for child element
 			#
-			#shellcheck disable=SC2034
 			(jsonparser_get_json_part "${_JP_GET_JSON_OWN_PATH}" "${_JP_GET_JSON_CHILD_ARR_NAME_RAW}" "${_JP_GET_JSON_PARSED_FILE}" "${_JP_GET_JSON_CHILD_NEST}" "$5" "$6")
 
 		done
@@ -685,7 +682,7 @@ jsonparser_get_json_part()
 		fi
 		pecho -n "]" >> "$6"
 
-	elif [ "X${JSONPARSER_FIND_VAL_TYPE}" = "X${JP_TYPE_STR}" ] || [ "X${JSONPARSER_FIND_VAL_TYPE}" = "X${JP_TYPE_NUM}" ] || [ "X${JSONPARSER_FIND_VAL_TYPE}" = "X${JP_TYPE_NULL}" ] || [ "X${JSONPARSER_FIND_VAL_TYPE}" = "X${JP_TYPE_TRUE}" ] || [ "X${JSONPARSER_FIND_VAL_TYPE}" = "X${JP_TYPE_FALSE}" ]; then
+	elif [ "${JSONPARSER_FIND_VAL_TYPE}" = "${JP_TYPE_STR}" ] || [ "${JSONPARSER_FIND_VAL_TYPE}" = "${JP_TYPE_NUM}" ] || [ "${JSONPARSER_FIND_VAL_TYPE}" = "${JP_TYPE_NULL}" ] || [ "${JSONPARSER_FIND_VAL_TYPE}" = "${JP_TYPE_TRUE}" ] || [ "${JSONPARSER_FIND_VAL_TYPE}" = "${JP_TYPE_FALSE}" ]; then
 		#
 		# String / Number / null / boolean(true/false)
 		#
@@ -723,7 +720,7 @@ jsonparser_parse_json_string()
 	# Make file path
 	#
 	_JP_PAERSED_FILE_TMP=""
-	while [ "X${_JP_PAERSED_FILE_TMP}" = "X" ]; do
+	while [ -z "${_JP_PAERSED_FILE_TMP}" ]; do
 		_JP_PAERSED_FILE_SUFFIX=$((_JP_PAERSED_FILE_SUFFIX + 1))
 		_JP_PAERSED_FILE_TMP="/tmp/.k2hr3_parse_json_$$_${_JP_PAERSED_FILE_SUFFIX}.tmp"
 		if [ -f "${_JP_PAERSED_FILE_TMP}" ]; then
@@ -751,21 +748,20 @@ jsonparser_parse_json_string()
 	#
 	# Case for Empty string
 	#
-	if [ "X${_JP_PAERSED_ESCAPED_JSON}" = "X" ]; then
+	if [ -z "${_JP_PAERSED_ESCAPED_JSON}" ]; then
 		touch "${_JP_PAERSED_FILE_TMP}"
 		JP_PAERSED_FILE=${_JP_PAERSED_FILE_TMP}
 		return 0
 	fi
 
-	_JP_PARSE_REMAINING_STR=$(jsonparser_parse_json_element "${_JP_PAERSED_ESCAPED_JSON}" "%" "${_JP_PAERSED_FILE_TMP}")
-	if [ $? -ne 0 ]; then
+	if ! _JP_PARSE_REMAINING_STR=$(jsonparser_parse_json_element "${_JP_PAERSED_ESCAPED_JSON}" "%" "${_JP_PAERSED_FILE_TMP}"); then
 		prn_dbg "(jsonparser_parse_json_string) Failed to parse json string."
 		rm -f "${_JP_PAERSED_FILE_TMP}"
 		return 1
 	fi
-	if [ "X${_JP_PARSE_REMAINING_STR}" != "X" ]; then
+	if [ -n "${_JP_PARSE_REMAINING_STR}" ]; then
 		_JP_PARSE_REMAINING_STR=$(pecho -n "${_JP_PARSE_REMAINING_STR}" | tr -d '\n' | sed 's/[[:space:]]//g')
-		if [ "X${_JP_PARSE_REMAINING_STR}" != "X" ]; then
+		if [ -n "${_JP_PARSE_REMAINING_STR}" ]; then
 			prn_dbg "(jsonparser_parse_json_string) After the JSON string has been parsed. It still remains(${_JP_PARSE_REMAINING_STR})"
 			rm -f "${_JP_PAERSED_FILE_TMP}"
 			return 1
@@ -828,7 +824,6 @@ jsonparser_parse_json_file()
 jsonparser_get_key_value()
 {
 	JSONPARSER_FIND_VAL=
-	#shellcheck disable=SC2034
 	JSONPARSER_FIND_STR_VAL=
 	JSONPARSER_FIND_KEY_VAL=
 	JSONPARSER_FIND_VAL_TYPE=
@@ -847,7 +842,7 @@ jsonparser_get_key_value()
 	# Search key
 	#
 	_JP_FIND_VAL_TMP=$(sed -e 's/%25%5c/\\\\/g' -e 's/%25%22/\\"/g' -e 's/%25%6e/\\n/g' -e 's/%20/ /g' -e 's/%25/%/g' "$2" | grep "^$1[[:space:]]" | sed -e "s/^${_JP_FIND_ESCAPED_KEY}[[:space:]]\+//g" | tr -d '\n')
-	if [ "X${_JP_FIND_VAL_TMP}" = "X" ]; then
+	if [ -z "${_JP_FIND_VAL_TMP}" ]; then
 		prn_dbg "(jsonparser_get_key_value) Not found \"$1\" key in Json parsed file($2)."
 		return 1
 	fi
@@ -857,7 +852,11 @@ jsonparser_get_key_value()
 	#
 	_JP_FIND_VAL_TYPE_TMP=$(pecho -n "${_JP_FIND_VAL_TMP}" | sed 's/^%\([^%]*\)%.*$/%\1%/g')
 
-	if [ "X${_JP_FIND_VAL_TYPE_TMP}" = "X${JP_TYPE_OBJ}" ]; then
+	if [ -z "${_JP_FIND_VAL_TYPE_TMP}" ]; then
+		prn_dbg "(jsonparser_get_key_value) Json parsed file($2) is something wrong(empty)."
+		return 1
+
+	elif [ "${_JP_FIND_VAL_TYPE_TMP}" = "${JP_TYPE_OBJ}" ]; then
 		#
 		# Return key name(after search key) list
 		#
@@ -866,7 +865,7 @@ jsonparser_get_key_value()
 		_JP_FIND_VAL_TMP=$(sed -e 's/%25%5c/\\\\/g' -e 's/%25%22/\\"/g' -e 's/%25%6e/\\n/g' -e 's/%20/ /g' -e 's/%25/%/g' "$2" | grep "^$1\"[^%]*\"%[[:space:]]\+" | sed -e "s/^${_JP_FIND_ESCAPED_KEY}\"\([^%]*\)\"%.*$/\"\1\"/g" | tr '\n' ' ' | sed -e 's/^[[:space:]]*//g' -e 's/^\(%20\)*//g' -e 's/[[:space:]]*$//g' -e 's/\(%20\)*$//g')
 		JSONPARSER_FIND_KEY_VAL=$(sed -e 's/%25%5c/\\\\/g' -e 's/%25%22/\\"/g' -e 's/%25%6e/\\n/g' -e 's/%20/ /g' -e 's/%25/%/g' "$2" | grep "^$1\"[^%]*\"%[[:space:]]\+" | sed -e "s/^${_JP_FIND_ESCAPED_KEY}\"\([^%]*\)\"%.*$/\"\1\"/g" -e 's/\\/\\\\/g' -e 's/ /\\s/g' | tr '\n' ' ' | sed -e 's/^[[:space:]]*//g' -e 's/^\(%20\)*//g' -e 's/[[:space:]]*$//g' -e 's/\(%20\)*$//g')
 
-	elif [ "X${_JP_FIND_VAL_TYPE_TMP}" = "X${JP_TYPE_ARR}" ]; then
+	elif [ "${_JP_FIND_VAL_TYPE_TMP}" = "${JP_TYPE_ARR}" ]; then
 		#
 		# Return all array key name(after search key) list
 		#
@@ -875,20 +874,19 @@ jsonparser_get_key_value()
 		_JP_FIND_VAL_TMP=$(sed -e 's/%25%5c/\\\\/g' -e 's/%25%22/\\"/g' -e 's/%25%6e/\\n/g' -e 's/%20/ /g' -e 's/%25/%/g' "$2" | grep "^$1[0-9]\+%[[:space:]]\+" | sed -e "s/^${_JP_FIND_ESCAPED_KEY}\([0-9]\+\)%.*$/\1/g" | tr '\n' ' ' | sed -e 's/^[[:space:]]*//g' -e 's/^\(%20\)*//g' -e 's/[[:space:]]*$//g' -e 's/\(%20\)*$//g')
 		JSONPARSER_FIND_KEY_VAL=$(sed -e 's/%25%5c/\\\\/g' -e 's/%25%22/\\"/g' -e 's/%25%6e/\\n/g' -e 's/%20/ /g' -e 's/%25/%/g' "$2" | grep "^$1[0-9]\+%[[:space:]]\+" | sed -e "s/^${_JP_FIND_ESCAPED_KEY}\([0-9]\+\)%.*$/\1/g" -e 's/\\/\\\\/g' -e 's/ /\\s/g' | tr '\n' ' ' | sed -e 's/^[[:space:]]*//g' -e 's/^\(%20\)*//g' -e 's/[[:space:]]*$//g' -e 's/\(%20\)*$//g')
 
-	elif [ "X${_JP_FIND_VAL_TYPE_TMP}" = "X${JP_TYPE_STR}" ]; then
+	elif [ "${_JP_FIND_VAL_TYPE_TMP}" = "${JP_TYPE_STR}" ]; then
 		# [NOTE]
 		# The string is returned in a double-quoted state. It is needed space charactor at head and tail.
 		#
 		_JP_FIND_VAL_TMP=$(pecho -n "${_JP_FIND_VAL_TMP}" | sed -e "s/^${JP_TYPE_STR}//g" )
-		# shellcheck disable=SC2034
 		JSONPARSER_FIND_STR_VAL=$(pecho -n "${_JP_FIND_VAL_TMP}" | sed -e 's/^"//g' -e 's/"$//g')
-	elif [ "X${_JP_FIND_VAL_TYPE_TMP}" = "X${JP_TYPE_NUM}" ]; then
+	elif [ "${_JP_FIND_VAL_TYPE_TMP}" = "${JP_TYPE_NUM}" ]; then
 		_JP_FIND_VAL_TMP=$(pecho -n "${_JP_FIND_VAL_TMP}" | sed -e "s/^${JP_TYPE_NUM}//g" )
-	elif [ "X${_JP_FIND_VAL_TYPE_TMP}" = "X${JP_TYPE_NULL}" ]; then
+	elif [ "${_JP_FIND_VAL_TYPE_TMP}" = "${JP_TYPE_NULL}" ]; then
 		_JP_FIND_VAL_TMP="null"
-	elif [ "X${_JP_FIND_VAL_TYPE_TMP}" = "X${JP_TYPE_TRUE}" ]; then
+	elif [ "${_JP_FIND_VAL_TYPE_TMP}" = "${JP_TYPE_TRUE}" ]; then
 		_JP_FIND_VAL_TMP="true"
-	elif [ "X${_JP_FIND_VAL_TYPE_TMP}" = "X${JP_TYPE_FALSE}" ]; then
+	elif [ "${_JP_FIND_VAL_TYPE_TMP}" = "${JP_TYPE_FALSE}" ]; then
 		_JP_FIND_VAL_TMP="false"
 	else
 		prn_dbg "(jsonparser_get_key_value) Json parsed file($2) is something wrong(unknown value type)."
@@ -918,7 +916,7 @@ jsonparser_dump_parsed_file()
 		prn_dbg "(jsonparser_dump_parsed_file) File paramter is wrong."
 		return 1
 	fi
-	if [ "X$2" = "X1" ]; then
+	if [ -n "$2" ] && [ "$2" = "1" ]; then
 		_JP_DUMP_SINGLE_LINE=1
 	else
 		_JP_DUMP_SINGLE_LINE=0
@@ -928,7 +926,7 @@ jsonparser_dump_parsed_file()
 	# Make temporary file
 	#
 	_JP_PAERSED_FORM_FILE=""
-	while [ "X${_JP_PAERSED_FORM_FILE}" = "X" ]; do
+	while [ -z "${_JP_PAERSED_FORM_FILE}" ]; do
 		_JP_PAERSED_FORM_FILE_SUFFIX=$((_JP_PAERSED_FORM_FILE_SUFFIX + 1))
 		_JP_PAERSED_FORM_FILE="/tmp/.k2hr3_parse_json_sub_$$_${_JP_PAERSED_FORM_FILE_SUFFIX}.tmp"
 		if [ -f "${_JP_PAERSED_FORM_FILE}" ]; then
@@ -939,14 +937,15 @@ jsonparser_dump_parsed_file()
 	#
 	# Dump from top level
 	#
-	jsonparser_get_json_part "" "" "$1" 0 "${_JP_DUMP_SINGLE_LINE}" "${_JP_PAERSED_FORM_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_get_json_part "" "" "$1" 0 "${_JP_DUMP_SINGLE_LINE}" "${_JP_PAERSED_FORM_FILE}"; then
 		prn_dbg "(jsonparser_dump_parsed_file) Failed to dump parse json file."
 		rm -f "${_JP_PAERSED_FORM_FILE}"
 		return 1
 	fi
-	if [ "X${_JP_DUMP_SINGLE_LINE}" != "X1" ] && [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
-		pecho '' >> "${_JP_PAERSED_FORM_FILE}"
+	if [ -z "${_JP_DUMP_SINGLE_LINE}" ] || [ "${_JP_DUMP_SINGLE_LINE}" != "1" ]; then
+		if [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" = "1" ]; then
+			pecho '' >> "${_JP_PAERSED_FORM_FILE}"
+		fi
 	fi
 	cat "${_JP_PAERSED_FORM_FILE}"
 	rm -f "${_JP_PAERSED_FORM_FILE}"
@@ -973,7 +972,7 @@ jsonparser_dump_key_parsed_file()
 		prn_dbg "(jsonparser_dump_key_parsed_file) File paramter is wrong."
 		return 1
 	fi
-	if [ "X$4" = "X1" ]; then
+	if [ -n "$4" ] && [ "$4" = "1" ]; then
 		_JP_DUMP_SINGLE_LINE=1
 	else
 		_JP_DUMP_SINGLE_LINE=0
@@ -983,7 +982,7 @@ jsonparser_dump_key_parsed_file()
 	# Make temporary file
 	#
 	_JP_PAERSED_FORM_FILE=""
-	while [ "X${_JP_PAERSED_FORM_FILE}" = "X" ]; do
+	while [ -z "${_JP_PAERSED_FORM_FILE}" ]; do
 		_JP_PAERSED_FORM_FILE_SUFFIX=$((_JP_PAERSED_FORM_FILE_SUFFIX + 1))
 		_JP_PAERSED_FORM_FILE="/tmp/.k2hr3_parse_json_sub_$$_${_JP_PAERSED_FORM_FILE_SUFFIX}.tmp"
 		if [ -f "${_JP_PAERSED_FORM_FILE}" ]; then
@@ -994,8 +993,7 @@ jsonparser_dump_key_parsed_file()
 	#
 	# Dump from top level
 	#
-	jsonparser_get_json_part "$1" "$2" "$3" 0 "${_JP_DUMP_SINGLE_LINE}" "${_JP_PAERSED_FORM_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_get_json_part "$1" "$2" "$3" 0 "${_JP_DUMP_SINGLE_LINE}" "${_JP_PAERSED_FORM_FILE}"; then
 		prn_dbg "(jsonparser_dump_key_parsed_file) Failed to dump parse json file."
 		rm -f "${_JP_PAERSED_FORM_FILE}"
 		return 1
@@ -1022,7 +1020,7 @@ jsonparser_dump_string()
 		prn_dbg "(jsonparser_dump_string) Paramter is wrong."
 		return 1
 	fi
-	if [ "X$2" = "X1" ]; then
+	if [ -n "$2" ] && [ "$2" = "1" ]; then
 		_JP_DUMP_SINGLE_LINE=1
 	else
 		_JP_DUMP_SINGLE_LINE=0
@@ -1031,8 +1029,7 @@ jsonparser_dump_string()
 	#
 	# Parse Json
 	#
-	jsonparser_parse_json_string "$1"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_string "$1"; then
 		prn_dbg "(jsonparser_dump_string) Failed to parse json string."
 		return 1
 	fi
@@ -1040,15 +1037,14 @@ jsonparser_dump_string()
 	#
 	# Dump from top level
 	#
-	jsonparser_dump_parsed_file "${JP_PAERSED_FILE}" "${_JP_DUMP_SINGLE_LINE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_dump_parsed_file "${JP_PAERSED_FILE}" "${_JP_DUMP_SINGLE_LINE}"; then
 		prn_dbg "(jsonparser_dump_string) Failed to dump parse json string."
-		if [ "X${JP_LEAVE_PARSED_FILE}" != "X1" ]; then
+		if [ -z "${JP_LEAVE_PARSED_FILE}" ] || [ "${JP_LEAVE_PARSED_FILE}" != "1" ]; then
 			rm -f "${JP_PAERSED_FILE}"
 		fi
 		return 1
 	fi
-	if [ "X${JP_LEAVE_PARSED_FILE}" != "X1" ]; then
+	if [ -z "${JP_LEAVE_PARSED_FILE}" ] || [ "${JP_LEAVE_PARSED_FILE}" != "1" ]; then
 		rm -f "${JP_PAERSED_FILE}"
 	fi
 

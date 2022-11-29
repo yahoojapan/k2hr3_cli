@@ -31,8 +31,7 @@
 #
 # Check curl
 #
-curl --version >/dev/null 2>/dev/null
-if [ $? -ne 0 ]; then
+if ! command -v curl >/dev/null 2>&1; then
 	# shellcheck disable=SC2034
 	K2HR3CLI_HAS_CURL=0
 else

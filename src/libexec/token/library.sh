@@ -68,7 +68,7 @@ complement_user_name()
 	completion_variable_auto "K2HR3CLI_USER" "K2HR3 User name: " 1
 	_TOKEN_LIB_RESULT_TMP=$?
 	prn_dbg "(complement_user_name) K2HR3 User name = \"${K2HR3CLI_USER}\"."
-	return ${_TOKEN_LIB_RESULT_TMP}
+	return "${_TOKEN_LIB_RESULT_TMP}"
 }
 
 #
@@ -87,7 +87,7 @@ complement_user_passphrase()
 	completion_variable_auto "K2HR3CLI_PASS" "K2HR3 User passphrase: " 1 1
 	_TOKEN_LIB_RESULT_TMP=$?
 	prn_dbg "(complement_user_passphrase) K2HR3 User passphrase = \"*****(${#K2HR3CLI_PASS})\"."
-	return ${_TOKEN_LIB_RESULT_TMP}
+	return "${_TOKEN_LIB_RESULT_TMP}"
 }
 
 #
@@ -106,7 +106,7 @@ get_openstack_token()
 	completion_variable_auto "K2HR3CLI_OPENSTACK_TOKEN" "OpenStack Token: " 1
 	_TOKEN_LIB_RESULT_TMP=$?
 	prn_dbg "(get_openstack_token) OpenStack Token = \"${K2HR3CLI_OPENSTACK_TOKEN}\"."
-	return ${_TOKEN_LIB_RESULT_TMP}
+	return "${_TOKEN_LIB_RESULT_TMP}"
 }
 
 #
@@ -125,7 +125,7 @@ get_oidc_token()
 	completion_variable_auto "K2HR3CLI_OIDC_TOKEN" "OpenID Connect(OIDC) Token: " 1
 	_TOKEN_LIB_RESULT_TMP=$?
 	prn_dbg "(get_oidc_token) OIDC Token = \"${K2HR3CLI_OIDC_TOKEN}\"."
-	return ${_TOKEN_LIB_RESULT_TMP}
+	return "${_TOKEN_LIB_RESULT_TMP}"
 }
 
 #
@@ -144,7 +144,7 @@ complement_tenant()
 	completion_variable_auto "K2HR3CLI_TENANT" "Tanant Name(id) for Scoped Token: " 1
 	_TOKEN_LIB_RESULT_TMP=$?
 	prn_dbg "(complement_tenant) Tanant Name(id) for Scoped Token = \"${K2HR3CLI_TENANT}\"."
-	return ${_TOKEN_LIB_RESULT_TMP}
+	return "${_TOKEN_LIB_RESULT_TMP}"
 }
 
 #
@@ -156,36 +156,33 @@ complement_tenant()
 select_credential_type_for_unscopedtoken()
 {
 	_TOKEN_UPSCOPED_SELECT_BASE=$(to_upper "$1")
-	if [ "X${_TOKEN_UPSCOPED_SELECT_BASE}" = "XCRED" ]; then
+
+	if [ -n "${_TOKEN_UPSCOPED_SELECT_BASE}" ] && [ "${_TOKEN_UPSCOPED_SELECT_BASE}" = "CRED" ]; then
 		#
 		# Force : Use user credential(either is not set)
 		#
-		complement_user_name
-		if [ $? -ne 0 ]; then
+		if ! complement_user_name; then
 			return 3
 		fi
-		complement_user_passphrase
-		if [ $? -ne 0 ]; then
+		if ! complement_user_passphrase; then
 			return 3
 		fi
 		return 0
 
-	elif [ "X${_TOKEN_UPSCOPED_SELECT_BASE}" = "XOP" ]; then
+	elif [ -n "${_TOKEN_UPSCOPED_SELECT_BASE}" ] && [ "${_TOKEN_UPSCOPED_SELECT_BASE}" = "OP" ]; then
 		#
 		# Force : Select openstack token
 		#
-		get_openstack_token
-		if [ $? -ne 0 ]; then
+		if ! get_openstack_token; then
 			return 3
 		fi
 		return 1
 
-	elif [ "X${_TOKEN_UPSCOPED_SELECT_BASE}" = "XOIDC" ]; then
+	elif [ -n "${_TOKEN_UPSCOPED_SELECT_BASE}" ] && [ "${_TOKEN_UPSCOPED_SELECT_BASE}" = "OIDC" ]; then
 		#
 		# Force : Select OIDC token
 		#
-		get_oidc_token
-		if [ $? -ne 0 ]; then
+		if ! get_oidc_token; then
 			return 3
 		fi
 		return 2
@@ -194,42 +191,40 @@ select_credential_type_for_unscopedtoken()
 		#
 		# Selection
 		#
-		if [ "X${K2HR3CLI_USER}" = "X" ] && [ "X${K2HR3CLI_PASS}" = "X" ] && [ "X${K2HR3CLI_OPENSTACK_TOKEN}" = "X" ] && [ "X${K2HR3CLI_OIDC_TOKEN}" = "X" ]; then
+		if [ -z "${K2HR3CLI_USER}" ] && [ -z "${K2HR3CLI_PASS}" ] && [ -z "${K2HR3CLI_OPENSTACK_TOKEN}" ] && [ -z "${K2HR3CLI_OIDC_TOKEN}" ]; then
 			#
 			# Need to choose
 			#
 			_TOKEN_LIBRARY_LOOP_FLAG=1
 			while [ "${_TOKEN_LIBRARY_LOOP_FLAG}" -eq 1 ]; do
 				_TOKEN_UNSCOPEDTOKEN_BASE_SELECT=""
-				completion_variable_auto "_TOKEN_UNSCOPEDTOKEN_BASE_SELECT" "Select either to get the K2HR3 Unscoped Token [K2HR3 user credential (cred) or OpenStack Token (op) or OpenID Connect Token (oidc)]: " 1
-				if [ $? -ne 0 ]; then
+				if ! completion_variable_auto "_TOKEN_UNSCOPEDTOKEN_BASE_SELECT" "Select either to get the K2HR3 Unscoped Token [K2HR3 user credential (cred) or OpenStack Token (op) or OpenID Connect Token (oidc)]: " 1; then
 					return 3
 				else
 					_TOKEN_UNSCOPEDTOKEN_BASE_SELECT=$(to_upper "${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}")
-					if [ "X${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "XCRED" ] || [ "X${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "XOP" ] || [ "X${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "XOIDC" ]; then
-						_TOKEN_LIBRARY_LOOP_FLAG=0
+					if [ -n "${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" ]; then
+						if [ "${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "CRED" ] || [ "${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "OP" ] || [ "${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "OIDC" ]; then
+							_TOKEN_LIBRARY_LOOP_FLAG=0
+						fi
 					fi
 				fi
 			done
-			if [ "X${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "XCRED" ] ;then
+			if [ "${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "CRED" ] ;then
 				#
 				# Select user credential
 				#
-				complement_user_name
-				if [ $? -ne 0 ]; then
+				if ! complement_user_name; then
 					return 3
 				fi
-				complement_user_passphrase
-				if [ $? -ne 0 ]; then
+				if ! complement_user_passphrase; then
 					return 3
 				fi
 				return 0
-			elif [ "X${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "XOP" ] ;then
+			elif [ "${_TOKEN_UNSCOPEDTOKEN_BASE_SELECT}" = "OP" ] ;then
 				#
 				# Select openstack token
 				#
-				get_openstack_token
-				if [ $? -ne 0 ]; then
+				if ! get_openstack_token; then
 					return 3
 				fi
 				return 1
@@ -238,26 +233,25 @@ select_credential_type_for_unscopedtoken()
 				#
 				# Select OIDC token
 				#
-				get_oidc_token
-				if [ $? -ne 0 ]; then
+				if ! get_oidc_token; then
 					return 3
 				fi
 				return 2
 			fi
 
-		elif [ "X${K2HR3CLI_USER}" != "X" ] && [ "X${K2HR3CLI_PASS}" != "X" ]; then
+		elif [ -n "${K2HR3CLI_USER}" ] && [ -n "${K2HR3CLI_PASS}" ]; then
 			#
 			# Use user credential(already set both)
 			#
 			return 0
 
-		elif [ "X${K2HR3CLI_OPENSTACK_TOKEN}" != "X" ]; then
+		elif [ -n "${K2HR3CLI_OPENSTACK_TOKEN}" ]; then
 			#
 			# Use openstack toekn(already set)
 			#
 			return 1
 
-		elif [ "X${K2HR3CLI_OIDC_TOKEN}" != "X" ]; then
+		elif [ -n "${K2HR3CLI_OIDC_TOKEN}" ]; then
 			#
 			# Use OIDC toekn(already set)
 			#
@@ -267,12 +261,10 @@ select_credential_type_for_unscopedtoken()
 			#
 			# Use user credential(either is not set)
 			#
-			complement_user_name
-			if [ $? -ne 0 ]; then
+			if ! complement_user_name; then
 				return 3
 			fi
-			complement_user_passphrase
-			if [ $? -ne 0 ]; then
+			if ! complement_user_passphrase; then
 				return 3
 			fi
 			return 0
@@ -299,7 +291,7 @@ complement_unscoped_token()
 	#
 	# Check Unscoped Token validation
 	#
-	if [ "X${K2HR3CLI_UNSCOPED_TOKEN}" != "X" ]; then
+	if [ -n "${K2HR3CLI_UNSCOPED_TOKEN}" ]; then
 		#
 		# Head request
 		#
@@ -309,11 +301,11 @@ complement_unscoped_token()
 		#
 		# Check result
 		#
-		if [ ${_TOKEN_REQUEST_RESULT} -eq 0 ]; then
+		if [ "${_TOKEN_REQUEST_RESULT}" -eq 0 ]; then
 			#
 			# Request : Success -> Check HTTP response code
 			#
-			if [ "X${K2HR3CLI_REQUEST_EXIT_CODE}" = "X204" ]; then
+			if [ -n "${K2HR3CLI_REQUEST_EXIT_CODE}" ] && [ "${K2HR3CLI_REQUEST_EXIT_CODE}" = "204" ]; then
 				#
 				# HTTP response code = 204
 				#
@@ -328,7 +320,7 @@ complement_unscoped_token()
 			prn_dbg "K2HR3 Unscoped token is invalid or expired."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-		elif [ ${_TOKEN_REQUEST_RESULT} -eq 1 ]; then
+		elif [ "${_TOKEN_REQUEST_RESULT}" -eq 1 ]; then
 			#
 			# Something error occured by curl
 			#
@@ -336,7 +328,7 @@ complement_unscoped_token()
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			return 1
 
-		else	# [ ${_TOKEN_REQUEST_RESULT} -eq 2 ]
+		else	# [ "${_TOKEN_REQUEST_RESULT}" -eq 2 ]
 			#
 			# fatal error
 			#
@@ -358,7 +350,7 @@ complement_unscoped_token()
 	#
 	# Get K2HR3 unscoped token
 	#
-	if [ ${_TOKEN_UPSCOPED_TOKEN_BASE} -eq 0 ]; then
+	if [ "${_TOKEN_UPSCOPED_TOKEN_BASE}" -eq 0 ]; then
 		#
 		# Get K2HR3 Unscoped token by User credential
 		#
@@ -366,7 +358,7 @@ complement_unscoped_token()
 		post_string_request "/v1/user/tokens" "${_TOKEN_REQUEST_BODY}" 1
 		_TOKEN_REQUEST_RESULT=$?
 
-	elif [ ${_TOKEN_UPSCOPED_TOKEN_BASE} -eq 1 ]; then
+	elif [ "${_TOKEN_UPSCOPED_TOKEN_BASE}" -eq 1 ]; then
 		#
 		# Get K2HR3 Unscoped token by OpenStack token
 		#
@@ -374,7 +366,7 @@ complement_unscoped_token()
 		post_string_request "/v1/user/tokens" "${_TOKEN_REQUEST_BODY}" 1 "x-auth-token:U=${K2HR3CLI_OPENSTACK_TOKEN}"
 		_TOKEN_REQUEST_RESULT=$?
 
-	elif [ ${_TOKEN_UPSCOPED_TOKEN_BASE} -eq 2 ]; then
+	elif [ "${_TOKEN_UPSCOPED_TOKEN_BASE}" -eq 2 ]; then
 		#
 		# Get K2HR3 Unscoped token by OIDC token
 		#
@@ -391,8 +383,7 @@ complement_unscoped_token()
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -402,8 +393,7 @@ complement_unscoped_token()
 	#
 	# Check Result
 	#
-	requtil_check_result "${_TOKEN_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_TOKEN_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"; then
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
 	fi
@@ -411,18 +401,17 @@ complement_unscoped_token()
 	#
 	# Check scoped value in json
 	#
-	jsonparser_get_key_value '%"scoped"%' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_get_key_value '%"scoped"%' "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to get K2HR3 unscoped token : \"scoped\" element is not existed in token api response."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
 	fi
-	if [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_TRUE}" ] && [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_FALSE}" ]; then
+	if [ -z "${JSONPARSER_FIND_VAL_TYPE}" ] || { [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_TRUE}" ] && [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_FALSE}" ]; }; then
 		prn_err "Failed to get K2HR3 unscoped token : \"scoped\" element is not \"false\"."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
 	fi
-	if [ "X${JSONPARSER_FIND_VAL}" != "Xfalse" ]; then
+	if [ -z "${JSONPARSER_FIND_VAL}" ] || [ "${JSONPARSER_FIND_VAL}" != "false" ]; then
 		prn_err "Failed to get K2HR3 unscoped token : \"scoped\" element is not \"false\"."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
@@ -431,13 +420,12 @@ complement_unscoped_token()
 	#
 	# Get token from json
 	#
-	jsonparser_get_key_value '%"token"%' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_get_key_value '%"token"%' "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to get K2HR3 unscoped token : \"token\" element is not existed in token api response."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
 	fi
-	if [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_STR}" ] || [ "X${JSONPARSER_FIND_STR_VAL}" = "X" ]; then
+	if [ -z "${JSONPARSER_FIND_VAL_TYPE}" ] || [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_STR}" ] || [ -z "${JSONPARSER_FIND_STR_VAL}" ]; then
 		prn_err "Failed to get K2HR3 unscoped token : \"token\" element is not string or empty."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
@@ -453,12 +441,12 @@ complement_unscoped_token()
 	#
 	# Set save configuration variable names
 	#
-	if [ ${_TOKEN_UPSCOPED_TOKEN_BASE} -eq 0 ]; then
+	if [ "${_TOKEN_UPSCOPED_TOKEN_BASE}" -eq 0 ]; then
 		add_config_update_var "K2HR3CLI_USER"
-		if [ "X${K2HR3CLI_OPT_SAVE_PASS}" = "X1" ]; then
+		if [ -n "${K2HR3CLI_OPT_SAVE_PASS}" ] && [ "${K2HR3CLI_OPT_SAVE_PASS}" = "1" ]; then
 			add_config_update_var "K2HR3CLI_PASS"
 		fi
-	elif [ ${_TOKEN_UPSCOPED_TOKEN_BASE} -eq 1 ]; then
+	elif [ "${_TOKEN_UPSCOPED_TOKEN_BASE}" -eq 1 ]; then
 		add_config_update_var "K2HR3CLI_OPENSTACK_TOKEN"
 	else
 		add_config_update_var "K2HR3CLI_OIDC_TOKEN"
@@ -488,8 +476,8 @@ complement_scoped_token()
 	#
 	# Check Scoped Token validation
 	#
-	if [ "X${K2HR3CLI_SCOPED_TOKEN}" != "X" ]; then
-		if [ "X${K2HR3CLI_SCOPED_TOKEN_VERIFIED}" = "X1" ]; then
+	if [ -n "${K2HR3CLI_SCOPED_TOKEN}" ]; then
+		if [ -n "${K2HR3CLI_SCOPED_TOKEN_VERIFIED}" ] && [ "${K2HR3CLI_SCOPED_TOKEN_VERIFIED}" = "1" ]; then
 			prn_dbg "(complement_scoped_token) Already K2HR3 Scoped token is verified = \"${K2HR3CLI_SCOPED_TOKEN}\"."
 			return 0
 		fi
@@ -503,11 +491,11 @@ complement_scoped_token()
 		#
 		# Check result
 		#
-		if [ ${_TOKEN_REQUEST_RESULT} -eq 0 ]; then
+		if [ "${_TOKEN_REQUEST_RESULT}" -eq 0 ]; then
 			#
 			# Request : Success -> Check HTTP response code
 			#
-			if [ "X${K2HR3CLI_REQUEST_EXIT_CODE}" = "X204" ]; then
+			if [ -n "${K2HR3CLI_REQUEST_EXIT_CODE}" ] && [ "${K2HR3CLI_REQUEST_EXIT_CODE}" = "204" ]; then
 				#
 				# HTTP response code = 204
 				#
@@ -523,7 +511,7 @@ complement_scoped_token()
 			prn_dbg "K2HR3 Scoped token is invalid or expired."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-		elif [ ${_TOKEN_REQUEST_RESULT} -eq 1 ]; then
+		elif [ "${_TOKEN_REQUEST_RESULT}" -eq 1 ]; then
 			#
 			# Something error occured by curl
 			#
@@ -531,7 +519,7 @@ complement_scoped_token()
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			return 1
 
-		else	# [ ${_TOKEN_REQUEST_RESULT} -eq 2 ]
+		else	# [ "${_TOKEN_REQUEST_RESULT}" -eq 2 ]
 			#
 			# fatal error
 			#
@@ -544,8 +532,7 @@ complement_scoped_token()
 	#
 	# Get Unscoped Token
 	#
-	complement_unscoped_token "$1"
-	if [ $? -ne 0 ]; then
+	if ! complement_unscoped_token "$1"; then
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		return 1
 	fi
@@ -553,8 +540,7 @@ complement_scoped_token()
 	#
 	# Check Tenant
 	#
-	complement_tenant
-	if [ $? -ne 0 ]; then
+	if ! complement_tenant; then
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		return 1
 	fi
@@ -572,8 +558,7 @@ complement_scoped_token()
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -583,8 +568,7 @@ complement_scoped_token()
 	#
 	# Check Result
 	#
-	requtil_check_result "${_TOKEN_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_TOKEN_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"; then
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
 	fi
@@ -592,18 +576,17 @@ complement_scoped_token()
 	#
 	# Check scoped value in json
 	#
-	jsonparser_get_key_value '%"scoped"%' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_get_key_value '%"scoped"%' "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to get K2HR3 Scoped token : \"scoped\" element is not existed in token api response."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
 	fi
-	if [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_TRUE}" ] && [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_FALSE}" ]; then
+	if [ -z "${JSONPARSER_FIND_VAL_TYPE}" ] || { [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_TRUE}" ] && [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_FALSE}" ]; }; then
 		prn_err "Failed to get K2HR3 Scoped token : \"scoped\" element is not \"true\"."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
 	fi
-	if [ "X${JSONPARSER_FIND_VAL}" != "Xtrue" ]; then
+	if [ -z "${JSONPARSER_FIND_VAL}" ] || [ "${JSONPARSER_FIND_VAL}" != "true" ]; then
 		prn_err "Failed to get K2HR3 Scoped token : \"scoped\" element is not \"true\"."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
@@ -612,13 +595,12 @@ complement_scoped_token()
 	#
 	# Get token from json
 	#
-	jsonparser_get_key_value '%"token"%' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_get_key_value '%"token"%' "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to get K2HR3 Scoped token : \"token\" element is not existed in token api response."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
 	fi
-	if [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_STR}" ] || [ "X${JSONPARSER_FIND_STR_VAL}" = "X" ]; then
+	if [ -z "${JSONPARSER_FIND_VAL_TYPE}" ] || [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_STR}" ] || [ -z "${JSONPARSER_FIND_STR_VAL}" ]; then
 		prn_err "Failed to get K2HR3 Scoped token : \"token\" element is not string or empty."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
