@@ -45,11 +45,10 @@ _SERVICE_COMMAND_SUB2_CLEAR="clear"
 #
 # Sub Command
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	K2HR3CLI_SUBCOMMAND=""
 else
 	#
@@ -64,13 +63,12 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 # Other Command(3'rd command)
 #
 K2HR3CLI_OTHERCOMMAND=""
-if [ "X${K2HR3CLI_SUBCOMMAND}" != "X" ]; then
-	if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ] || [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_VERIFY}" ] || [  "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_MEMBER}" ]; then
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+if [ -n "${K2HR3CLI_SUBCOMMAND}" ]; then
+	if [ "${K2HR3CLI_SUBCOMMAND}" = "${_SERVICE_COMMAND_SUB_TENANT}" ] || [ "${K2HR3CLI_SUBCOMMAND}" = "${_SERVICE_COMMAND_SUB_VERIFY}" ] || [ "${K2HR3CLI_SUBCOMMAND}" = "${_SERVICE_COMMAND_SUB_MEMBER}" ]; then
+		if ! parse_noprefix_option "$@"; then
 			exit 1
 		fi
-		if [ "X${K2HR3CLI_OPTION_NOPREFIX}" != "X" ]; then
+		if [ -n "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 			#
 			# Always using lower case
 			#
@@ -87,13 +85,16 @@ fi
 #
 # Get Scoped Token
 #
-complement_scoped_token
-if [ $? -ne 0 ]; then
+if ! complement_scoped_token; then
 	exit 1
 fi
 prn_dbg "${K2HR3CLI_SCOPED_TOKEN}"
 
-if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_CREATE}" ]; then
+if [ -z "${K2HR3CLI_SUBCOMMAND}" ]; then
+	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_SERVICE_COMMAND_SUB_CREATE}, ${_SERVICE_COMMAND_SUB_SHOW}, ${_SERVICE_COMMAND_SUB_DELETE}, ${_SERVICE_COMMAND_SUB_TENANT} or ${_SERVICE_COMMAND_SUB_VERIFY}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+	exit 1
+
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_SERVICE_COMMAND_SUB_CREATE}" ]; then
 	#
 	# SERVICE CREATE
 	#
@@ -102,8 +103,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_CREATE}" ]; then
 	# Get service name(or path)
 	#
 	_SERVICE_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the service name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -122,8 +122,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_CREATE}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -133,8 +132,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_CREATE}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -145,7 +143,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_CREATE}" ]; then
 	#
 	prn_msg "${CGRN}Succeed${CDEF} : Create \"${_SERVICE_PATH}\" Service"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_SHOW}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_SERVICE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# SERVICE SHOW
 	#
@@ -154,8 +152,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_SHOW}" ]; then
 	# Get service name(or path)
 	#
 	_SERVICE_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the service name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -171,8 +168,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -182,8 +178,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -191,15 +186,14 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Display service value in json
 	#
-	jsonparser_dump_key_parsed_file '%' '"service"' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_dump_key_parsed_file '%' '"service"' "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to get \"service\" element in response."
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
 	rm -f "${JP_PAERSED_FILE}"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_DELETE}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_SERVICE_COMMAND_SUB_DELETE}" ]; then
 	#
 	# SERVICE DELETE
 	#
@@ -208,8 +202,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_DELETE}" ]; then
 	# Get service name(or path)
 	#
 	_SERVICE_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the service name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -225,8 +218,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_DELETE}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -236,8 +228,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_DELETE}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -248,11 +239,15 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_DELETE}" ]; then
 	#
 	prn_msg "${CGRN}Succeed${CDEF} : Delete \"${_SERVICE_PATH}\" Service"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 	#
 	# TENANT
 	#
-	if [ "X${K2HR3CLI_OTHERCOMMAND}" = "X${_SERVICE_COMMAND_SUB2_ADD}" ]; then
+	if [ -z "${K2HR3CLI_OTHERCOMMAND}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must also specify the parameter(${_SERVICE_COMMAND_SUB2_ADD}, ${_SERVICE_COMMAND_SUB2_CHECK} or ${_SERVICE_COMMAND_SUB2_DELETE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_OTHERCOMMAND}" = "${_SERVICE_COMMAND_SUB2_ADD}" ]; then
 		#
 		# TENANT ADD
 		#
@@ -261,8 +256,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		# Get service name(or path)
 		#
 		_SERVICE_PATH=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the service name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -274,8 +268,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		# Get tenant
 		#
 		_SERVICE_TENANT=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the tenant, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -295,8 +288,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -306,8 +298,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -318,7 +309,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		prn_msg "${CGRN}Succeed${CDEF} : Add \"${_SERVICE_TENANT}\" tenant to \"${_SERVICE_PATH}\" Service"
 
-	elif [ "X${K2HR3CLI_OTHERCOMMAND}" = "X${_SERVICE_COMMAND_SUB2_CHECK}" ]; then
+	elif [ "${K2HR3CLI_OTHERCOMMAND}" = "${_SERVICE_COMMAND_SUB2_CHECK}" ]; then
 		#
 		# TENANT CHECK
 		#
@@ -327,8 +318,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		# Get service name(or path)
 		#
 		_SERVICE_PATH=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the service name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -340,8 +330,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		# Get tenant
 		#
 		_SERVICE_TENANT=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the tenant, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -359,8 +348,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -370,8 +358,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -382,7 +369,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		prn_msg "${CGRN}Succeed${CDEF} : \"${_SERVICE_TENANT}\" is \"${_SERVICE_PATH}\" Service member"
 
-	elif [ "X${K2HR3CLI_OTHERCOMMAND}" = "X${_SERVICE_COMMAND_SUB2_DELETE}" ]; then
+	elif [ "${K2HR3CLI_OTHERCOMMAND}" = "${_SERVICE_COMMAND_SUB2_DELETE}" ]; then
 		#
 		# TENANT DELETE
 		#
@@ -391,8 +378,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		# Get service name(or path)
 		#
 		_SERVICE_PATH=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the service name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -404,8 +390,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		# Get tenant
 		#
 		_SERVICE_TENANT=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the tenant, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -421,8 +406,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -432,8 +416,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -441,8 +424,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		# Get member tenant list(array)
 		#
-		jsonparser_get_key_value '%"service"%"tenant"%' "${JP_PAERSED_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_get_key_value '%"service"%"tenant"%' "${JP_PAERSED_FILE}"; then
 			prn_err "Failed to get \"service\"->\"tenant\" element in response."
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
@@ -457,19 +439,17 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		_SERVICE_TENANT_MEMBER_POS=${JSONPARSER_FIND_KEY_VAL}
 		for _SERVICE_MEMBERS_ARR_POS in ${_SERVICE_TENANT_MEMBER_POS}; do
 			_SERVICE_MEMBERS_ARR_POS_RAW=$(pecho -n "${_SERVICE_MEMBERS_ARR_POS}" | sed -e 's/\([^\\]\)\\s/\1 /g' -e 's/\\\\/\\/g')
-			jsonparser_get_key_value '%"service"%"tenant"%' "${_SERVICE_MEMBERS_ARR_POS_RAW}" "${JP_PAERSED_FILE}"
-			if [ $? -eq 0 ]; then
-				if [ "X${JSONPARSER_FIND_VAL_TYPE}" = "X${JP_TYPE_STR}" ]; then
 
-					pecho -n "${JSONPARSER_FIND_VAL}" | grep -q "${_SERVICE_TENANT}$"
-					if [ $? -eq 0 ]; then
+			if jsonparser_get_key_value '%"service"%"tenant"%' "${_SERVICE_MEMBERS_ARR_POS_RAW}" "${JP_PAERSED_FILE}"; then
+				if [ -n "${JSONPARSER_FIND_VAL_TYPE}" ] && [ -n "${JP_TYPE_STR}" ] && [ "${JSONPARSER_FIND_VAL_TYPE}" = "${JP_TYPE_STR}" ]; then
+					if pecho -n "${JSONPARSER_FIND_VAL}" | grep -q "${_SERVICE_TENANT}$"; then
 						#
 						# Found target tenant name
 						#
 						continue
 					fi
 
-					if [ ${_SERVICE_REST_MEMBERS_ISSET} -ne 0 ]; then
+					if [ "${_SERVICE_REST_MEMBERS_ISSET}" -ne 0 ]; then
 						_SERVICE_REST_MEMBERS_ARR="${_SERVICE_REST_MEMBERS_ARR},${JSONPARSER_FIND_VAL}"
 					else
 						_SERVICE_REST_MEMBERS_ARR="${_SERVICE_REST_MEMBERS_ARR}${JSONPARSER_FIND_VAL}"
@@ -486,7 +466,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		# Set tenant url arguments
 		#
-		if [ ${_SERVICE_REST_MEMBERS_ISSET} -eq 0 ]; then
+		if [ "${_SERVICE_REST_MEMBERS_ISSET}" -eq 0 ]; then
 			#
 			# Clear all tenant member
 			#
@@ -506,8 +486,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -517,8 +496,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -529,19 +507,20 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_TENANT}" ]; then
 		#
 		prn_msg "${CGRN}Succeed${CDEF} : Delete \"${_SERVICE_TENANT}\" from \"${_SERVICE_PATH}\" Service"
 
-	elif [ "X${K2HR3CLI_OTHERCOMMAND}" = "X" ]; then
-		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must also specify the parameter(${_SERVICE_COMMAND_SUB2_ADD}, ${_SERVICE_COMMAND_SUB2_CHECK} or ${_SERVICE_COMMAND_SUB2_DELETE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-		exit 1
 	else
 		prn_err "Unknown parameter(\"${K2HR3CLI_OTHERCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_VERIFY}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_SERVICE_COMMAND_SUB_VERIFY}" ]; then
 	#
 	# VERIFY
 	#
-	if [ "X${K2HR3CLI_OTHERCOMMAND}" = "X${_SERVICE_COMMAND_SUB2_UPDATE}" ]; then
+	if [ -z "${K2HR3CLI_OTHERCOMMAND}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must also specify the parameter(${_SERVICE_COMMAND_SUB2_UPDATE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_OTHERCOMMAND}" = "${_SERVICE_COMMAND_SUB2_UPDATE}" ]; then
 		#
 		# VERIFY UPDATE
 		#
@@ -550,8 +529,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_VERIFY}" ]; then
 		# Get service name(or path)
 		#
 		_SERVICE_PATH=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the service name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -563,8 +541,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_VERIFY}" ]; then
 		# Get verify url
 		#
 		_SERVICE_VERIFY=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the verify url, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -583,8 +560,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_VERIFY}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -594,8 +570,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_VERIFY}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -606,25 +581,25 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_VERIFY}" ]; then
 		#
 		prn_msg "${CGRN}Succeed${CDEF} : Update \"${_SERVICE_VERIFY}\" verify url in \"${_SERVICE_PATH}\" Service"
 
-	elif [ "X${K2HR3CLI_OTHERCOMMAND}" = "X" ]; then
-		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must also specify the parameter(${_SERVICE_COMMAND_SUB2_UPDATE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-		exit 1
 	else
 		prn_err "Unknown parameter(\"${K2HR3CLI_OTHERCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_MEMBER}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_SERVICE_COMMAND_SUB_MEMBER}" ]; then
 	#
 	# MEMBER
 	#
-	if [ "X${K2HR3CLI_OTHERCOMMAND}" = "X${_SERVICE_COMMAND_SUB2_CLEAR}" ]; then
+	if [ -z "${K2HR3CLI_OTHERCOMMAND}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must also specify the parameter(${_SERVICE_COMMAND_SUB2_CLEAR}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_OTHERCOMMAND}" = "${_SERVICE_COMMAND_SUB2_CLEAR}" ]; then
 		#
 		# CLEAR MEMBER'S SERVICE
 		#
 		_SERVICE_PATH=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the service name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -641,8 +616,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_MEMBER}" ]; then
 		# Get member tenant
 		#
 		_SERVICE_TENANT=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the tenant, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -660,8 +634,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_MEMBER}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -671,8 +644,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_MEMBER}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_SERVICE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -683,17 +655,11 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_SERVICE_COMMAND_SUB_MEMBER}" ]; then
 		#
 		prn_msg "${CGRN}Succeed${CDEF} : Clear \"${_SERVICE_TENANT}\" member Service(${_SERVICE_PATH})"
 
-	elif [ "X${K2HR3CLI_OTHERCOMMAND}" = "X" ]; then
-		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must also specify the parameter(${_SERVICE_COMMAND_SUB2_CLEAR}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-		exit 1
 	else
 		prn_err "Unknown parameter(\"${K2HR3CLI_OTHERCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X" ]; then
-	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_SERVICE_COMMAND_SUB_CREATE}, ${_SERVICE_COMMAND_SUB_SHOW}, ${_SERVICE_COMMAND_SUB_DELETE}, ${_SERVICE_COMMAND_SUB_TENANT} or ${_SERVICE_COMMAND_SUB_VERIFY}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-	exit 1
 else
 	prn_err "Unknown subcommand(\"${K2HR3CLI_SUBCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1

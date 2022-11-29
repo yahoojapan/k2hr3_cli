@@ -35,9 +35,7 @@
 if [ -z "${K2HR3CLI_MSGLEVEL_VALUE}" ]; then
 	K2HR3CLI_MSGLEVEL_VALUE=2
 else
-	# shellcheck disable=SC2003
-	expr "${K2HR3CLI_MSGLEVEL_VALUE}" + 1 >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if echo "${K2HR3CLI_MSGLEVEL_VALUE}" | grep -q "[^0-9]"; then
 		#
 		# Wrong value -> overwrite default value
 		#
@@ -55,15 +53,17 @@ fi
 #
 set_msglevel()
 {
-	if [ "X$1" = "X0" ] || [ "X$1" = "Xslt" ] || [ "X$1" = "XSLT" ] || [ "X$1" = "Xsilent" ] || [ "X$1" = "XSILENT" ]; then
+	if [ -z "$1" ]; then
+		return 1
+	elif [ "$1" = "0" ] || [ "$1" = "slt" ] || [ "$1" = "SLT" ] || [ "$1" = "silent" ] || [ "$1" = "SILENT" ]; then
 		K2HR3CLI_MSGLEVEL_VALUE=0
-	elif [ "X$1" = "X1" ] || [ "X$1" = "Xerr" ] || [ "X$1" = "XERR" ] || [ "X$1" = "Xerror" ] || [ "X$1" = "XERROR" ]; then
+	elif [ "$1" = "1" ] || [ "$1" = "err" ] || [ "$1" = "ERR" ] || [ "$1" = "error" ] || [ "$1" = "ERROR" ]; then
 		K2HR3CLI_MSGLEVEL_VALUE=1
-	elif [ "X$1" = "X2" ] || [ "X$1" = "Xwan" ] || [ "X$1" = "XWAN" ] || [ "X$1" = "Xwarn" ] || [ "X$1" = "XWARN" ] || [ "X$1" = "Xwarning" ] || [ "X$1" = "XWARNING" ]; then
+	elif [ "$1" = "2" ] || [ "$1" = "wan" ] || [ "$1" = "WAN" ] || [ "$1" = "warn" ] || [ "$1" = "WARN" ] || [ "$1" = "warning" ] || [ "$1" = "WARNING" ]; then
 		K2HR3CLI_MSGLEVEL_VALUE=2
-	elif [ "X$1" = "X3" ] || [ "X$1" = "Xinf" ] || [ "X$1" = "XINF" ] || [ "X$1" = "Xinfo" ] || [ "X$1" = "XINFO" ] || [ "X$1" = "Xinformation" ] || [ "X$1" = "XINFORMATION" ]; then
+	elif [ "$1" = "3" ] || [ "$1" = "inf" ] || [ "$1" = "INF" ] || [ "$1" = "info" ] || [ "$1" = "INFO" ] || [ "$1" = "information" ] || [ "$1" = "INFORMATION" ]; then
 		K2HR3CLI_MSGLEVEL_VALUE=3
-	elif [ "X$1" = "X4" ] || [ "X$1" = "Xdbg" ] || [ "X$1" = "XDBG" ] || [ "X$1" = "Xdebug" ] || [ "X$1" = "XDEBUG" ]; then
+	elif [ "$1" = "4" ] || [ "$1" = "dbg" ] || [ "$1" = "DBG" ] || [ "$1" = "debug" ] || [ "$1" = "DEBUG" ]; then
 		K2HR3CLI_MSGLEVEL_VALUE=4
 	else
 		return 1
@@ -84,7 +84,7 @@ set_msglevel()
 #
 print_message()
 {
-	if [ "X$1" = "Xdate" ]; then
+	if [ -n "$1" ] && [ "$1" = "date" ]; then
 		if [ -z "${K2HR3CLI_OPT_NODATE}" ]; then
 			_PRINT_DATE=$(date +%FT%T%z)
 			_PRINT_DATE="${_PRINT_DATE} "
@@ -99,14 +99,14 @@ print_message()
 	else
 		_PRINT_STDERR=0
 	fi
-	if [ "X$3" = "X" ]; then
+	if [ -z "$3" ]; then
 		_PRINT_LEVEL=""
 	else
 		_PRINT_LEVEL="$3 "
 	fi
 	shift 3
 
-	if [ ${_PRINT_STDERR} -eq 1 ]; then
+	if [ "${_PRINT_STDERR}" -eq 1 ]; then
 		echo "${_PRINT_DATE}${_PRINT_LEVEL}$*" 1>&2
 	else
 		echo "${_PRINT_DATE}${_PRINT_LEVEL}$*"
@@ -120,7 +120,7 @@ print_message()
 #
 prn_msg()
 {
-	if [ ${K2HR3CLI_MSGLEVEL_VALUE} -gt 0 ]; then
+	if [ "${K2HR3CLI_MSGLEVEL_VALUE}" -gt 0 ]; then
 		print_message "" 1 "" "$@"
 	fi
 }
@@ -132,7 +132,7 @@ prn_msg()
 #
 prn_msg_stderr()
 {
-	if [ ${K2HR3CLI_MSGLEVEL_VALUE} -gt 0 ]; then
+	if [ "${K2HR3CLI_MSGLEVEL_VALUE}" -gt 0 ]; then
 		print_message "" 2 "" "$@"
 	fi
 }
@@ -218,15 +218,13 @@ prn_info()
 # Escape sequence
 #
 if [ -t 1 ]; then
-	# shellcheck disable=SC2034
 	CBLD=$(printf '\033[1m')
 	CREV=$(printf '\033[7m')
 	CRED=$(printf '\033[31m')
 	CYEL=$(printf '\033[33m')
 	CGRN=$(printf '\033[32m')
 	CDEF=$(printf '\033[0m')
-elif [ "X${K2HR3CLI_FORCE_COLOR}" = "X1" ]; then
-	# shellcheck disable=SC2034
+elif [ -n "${K2HR3CLI_FORCE_COLOR}" ] && [ "${K2HR3CLI_FORCE_COLOR}" = "1" ]; then
 	CBLD=$(printf '\033[1m')
 	CREV=$(printf '\033[7m')
 	CRED=$(printf '\033[31m')
@@ -234,7 +232,6 @@ elif [ "X${K2HR3CLI_FORCE_COLOR}" = "X1" ]; then
 	CGRN=$(printf '\033[32m')
 	CDEF=$(printf '\033[0m')
 else
-	# shellcheck disable=SC2034
 	CBLD=""
 	CREV=""
 	CRED=""
@@ -246,9 +243,8 @@ fi
 #
 # Check environments
 #
-if [ "X${K2HR3CLI_MSGLEVEL}" != "X" ]; then
-	set_msglevel "${K2HR3CLI_MSGLEVEL}"
-	if [ $? -ne 0 ]; then
+if [ -n "${K2HR3CLI_MSGLEVEL}" ]; then
+	if ! set_msglevel "${K2HR3CLI_MSGLEVEL}"; then
 		prn_warn "K2HR3CLI_MSGLEVEL environment has unknown value : ${K2HR3CLI_MSGLEVEL}"
 	fi
 fi

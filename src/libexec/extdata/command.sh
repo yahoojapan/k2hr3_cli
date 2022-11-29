@@ -29,12 +29,11 @@ _EXTDATA_ZIP_TMP_FILE="${_EXTDATA_UNZIP_TMP_FILE}.gz"
 #
 # Path parameter
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the extdata name, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the extdata name, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1
 fi
@@ -45,12 +44,11 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 #
 # Register Path parameter
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the register path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the register path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1
 fi
@@ -61,12 +59,11 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 #
 # User Agent parameter
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the user-agent, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the user-agent, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1
 fi
@@ -84,7 +81,7 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 #
 # Check curlbody option
 #
-if [ "X${K2HR3CLI_OPT_CURLBODY}" = "X1" ]; then
+if [ -n "${K2HR3CLI_OPT_CURLBODY}" ] && [ "${K2HR3CLI_OPT_CURLBODY}" = "1" ]; then
 	prn_warn "\"${K2HR3CLI_COMMON_OPT_CURLBODY_LONG}(${K2HR3CLI_COMMON_OPT_CURLBODY_SHORT})\" option is specified, but this command can not display curl body data which is binary data. Then this option is ignored."
 	K2HR3CLI_OPT_CURLBODY=0
 fi
@@ -104,8 +101,7 @@ _EXTDATA_REQUEST_RESULT=$?
 #
 # Check result
 #
-requtil_check_result "${_EXTDATA_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${K2HR3CLI_REQUEST_RESULT_FILE}" "200" 1
-if [ $? -ne 0 ]; then
+if ! requtil_check_result "${_EXTDATA_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${K2HR3CLI_REQUEST_RESULT_FILE}" "200" 1; then
 	rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 	exit 1
 fi
@@ -113,18 +109,16 @@ fi
 #
 # Result
 #
-if [ "X${K2HR3CLI_OPT_OUTPUT}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPT_OUTPUT}" ]; then
 	#
 	# Copy result to temporary file
 	#
-	cp "${K2HR3CLI_REQUEST_RESULT_FILE}" "${_EXTDATA_ZIP_TMP_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! cp "${K2HR3CLI_REQUEST_RESULT_FILE}" "${_EXTDATA_ZIP_TMP_FILE}"; then
 		prn_err "The command succeeded, but failed to output the result to a temporary file. Please check the output file path, permissions, etc."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
 	fi
-	gzip -f -d "${_EXTDATA_ZIP_TMP_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! gzip -f -d "${_EXTDATA_ZIP_TMP_FILE}"; then
 		prn_err "Failed to unzip a temporary result file."
 		rm -f "${_EXTDATA_ZIP_TMP_FILE}"
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -147,8 +141,7 @@ else
 	#
 	# Copy result to output file
 	#
-	cp "${K2HR3CLI_REQUEST_RESULT_FILE}" "${K2HR3CLI_OPT_OUTPUT}"
-	if [ $? -ne 0 ]; then
+	if ! cp "${K2HR3CLI_REQUEST_RESULT_FILE}" "${K2HR3CLI_OPT_OUTPUT}"; then
 		prn_err "The command succeeded, but failed to output the result to a file. Please check the output file path, permissions, etc."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1

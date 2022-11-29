@@ -44,11 +44,10 @@ _ROLE_COMMAND_SUB2_CHECK="check"
 #
 # Sub Command
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	K2HR3CLI_SUBCOMMAND=""
 else
 	#
@@ -63,13 +62,12 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 # Other Command(3'rd command)
 #
 K2HR3CLI_OTHERCOMMAND=""
-if [ "X${K2HR3CLI_SUBCOMMAND}" != "X" ]; then
-	if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_HOST}" ] || [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+if [ -n "${K2HR3CLI_SUBCOMMAND}" ]; then
+	if [ "${K2HR3CLI_SUBCOMMAND}" = "${_ROLE_COMMAND_SUB_HOST}" ] || [ "${K2HR3CLI_SUBCOMMAND}" = "${_ROLE_COMMAND_SUB_TOKEN}" ]; then
+		if ! parse_noprefix_option "$@"; then
 			exit 1
 		fi
-		if [ "X${K2HR3CLI_OPTION_NOPREFIX}" != "X" ]; then
+		if [ -n "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 			#
 			# Always using lower case
 			#
@@ -86,15 +84,18 @@ fi
 #
 # Get Scoped Token
 #
-if [ "X${K2HR3CLI_SUBCOMMAND}" != "X${_ROLE_COMMAND_SUB_TOKEN}" ] && [ "X${K2HR3CLI_OTHERCOMMAND}" != "X${_ROLE_COMMAND_SUB2_CHECK}" ]; then
-	complement_scoped_token
-	if [ $? -ne 0 ]; then
+if [ -z "${K2HR3CLI_SUBCOMMAND}" ] || { [ "${K2HR3CLI_SUBCOMMAND}" != "${_ROLE_COMMAND_SUB_TOKEN}" ] && [ "${K2HR3CLI_OTHERCOMMAND}" != "${_ROLE_COMMAND_SUB2_CHECK}" ]; }; then
+	if ! complement_scoped_token; then
 		exit 1
 	fi
 	prn_dbg "${K2HR3CLI_SCOPED_TOKEN}"
 fi
 
-if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_CREATE}" ]; then
+if [ -z "${K2HR3CLI_SUBCOMMAND}" ]; then
+	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_ROLE_COMMAND_SUB_CREATE}, ${_ROLE_COMMAND_SUB_SHOW}, ${_ROLE_COMMAND_SUB_DELETE}, ${_ROLE_COMMAND_SUB_HOST} or ${_ROLE_COMMAND_SUB_TOKEN}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+	exit 1
+
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_ROLE_COMMAND_SUB_CREATE}" ]; then
 	#
 	# ROLE CREATE
 	#
@@ -103,8 +104,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_CREATE}" ]; then
 	# Get role name(or path)
 	#
 	_ROLE_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the role name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -125,8 +125,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_CREATE}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -136,8 +135,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_CREATE}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -148,7 +146,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_CREATE}" ]; then
 	#
 	prn_msg "${CGRN}Succeed${CDEF} : Create \"${_ROLE_PATH}\" Role"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_SHOW}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_ROLE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# ROLE SHOW
 	#
@@ -157,8 +155,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_SHOW}" ]; then
 	# Get role name(or path)
 	#
 	_ROLE_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the role name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -177,8 +174,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -188,8 +184,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -197,15 +192,14 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Display role value in json
 	#
-	jsonparser_dump_key_parsed_file '%' '"role"' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_dump_key_parsed_file '%' '"role"' "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to get \"role\" element in response."
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
 	rm -f "${JP_PAERSED_FILE}"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_DELETE}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_ROLE_COMMAND_SUB_DELETE}" ]; then
 	#
 	# ROLE DELETE
 	#
@@ -214,8 +208,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_DELETE}" ]; then
 	# Get role name(or path)
 	#
 	_ROLE_PATH=""
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+	if ! parse_noprefix_option "$@"; then
 		prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the role name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
@@ -231,8 +224,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_DELETE}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -242,8 +234,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_DELETE}" ]; then
 	#
 	# Check result
 	#
-	requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -254,11 +245,15 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_DELETE}" ]; then
 	#
 	prn_msg "${CGRN}Succeed${CDEF} : Delete \"${_ROLE_PATH}\" Role"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_HOST}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_ROLE_COMMAND_SUB_HOST}" ]; then
 	#
 	# HOST(role member)
 	#
-	if [ "X${K2HR3CLI_OTHERCOMMAND}" = "X${_ROLE_COMMAND_SUB2_ADD}" ]; then
+	if [ -z "${K2HR3CLI_OTHERCOMMAND}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must also specify the parameter(${_ROLE_COMMAND_SUB2_ADD} or ${_ROLE_COMMAND_SUB2_DELETE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_OTHERCOMMAND}" = "${_ROLE_COMMAND_SUB2_ADD}" ]; then
 		#
 		# HOST ADD
 		#
@@ -267,8 +262,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_HOST}" ]; then
 		# Get role name(or path)
 		#
 		_ROLE_PATH=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the role name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -291,8 +285,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_HOST}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -302,8 +295,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_HOST}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "201"; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -314,7 +306,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_HOST}" ]; then
 		#
 		prn_msg "${CGRN}Succeed${CDEF} : Add \"${K2HR3CLI_OPT_HOST}\" to \"${_ROLE_PATH}\" member"
 
-	elif [ "X${K2HR3CLI_OTHERCOMMAND}" = "X${_ROLE_COMMAND_SUB2_DELETE}" ]; then
+	elif [ "${K2HR3CLI_OTHERCOMMAND}" = "${_ROLE_COMMAND_SUB2_DELETE}" ]; then
 		#
 		# HOST DELETE
 		#
@@ -323,8 +315,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_HOST}" ]; then
 		# Get role name(or path)
 		#
 		_ROLE_PATH=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the role name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -347,8 +338,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_HOST}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -358,8 +348,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_HOST}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -370,24 +359,24 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_HOST}" ]; then
 		#
 		prn_msg "${CGRN}Succeed${CDEF} : Delete \"${K2HR3CLI_OPT_HOST}\" from \"${_ROLE_PATH}\" member"
 
-	elif [ "X${K2HR3CLI_OTHERCOMMAND}" = "X" ]; then
-		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must also specify the parameter(${_ROLE_COMMAND_SUB2_ADD} or ${_ROLE_COMMAND_SUB2_DELETE}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-		exit 1
 	else
 		prn_err "Unknown parameter(\"${K2HR3CLI_OTHERCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 	#
 	# TOKEN(role token)
 	#
-	if [ "X${K2HR3CLI_OTHERCOMMAND}" = "X${_ROLE_COMMAND_SUB2_CREATE}" ]; then
+	if [ -z "${K2HR3CLI_OTHERCOMMAND}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must also specify the parameter(${_ROLE_COMMAND_SUB2_ADD}, ${_ROLE_COMMAND_SUB2_CREATE}, ${_ROLE_COMMAND_SUB2_DELETE}, ${_ROLE_COMMAND_SUB2_SHOW} or ${_ROLE_COMMAND_SUB2_CHECK}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_OTHERCOMMAND}" = "${_ROLE_COMMAND_SUB2_CREATE}" ]; then
 		#
 		# TOKEN CREATE
 		#
-		complement_scoped_token
-		if [ $? -ne 0 ]; then
+		if ! complement_scoped_token; then
 			exit 1
 		fi
 		prn_dbg "${K2HR3CLI_SCOPED_TOKEN}"
@@ -396,8 +385,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		# Get role name(or path)
 		#
 		_ROLE_PATH=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the role name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -416,8 +404,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -427,8 +414,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -436,8 +422,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Check token value in json
 		#
-		jsonparser_get_key_value '%"token"%' "${JP_PAERSED_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_get_key_value '%"token"%' "${JP_PAERSED_FILE}"; then
 			prn_err "Failed to get \"token\" element in response."
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
@@ -447,8 +432,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Check registerpath value in json
 		#
-		jsonparser_get_key_value '%"registerpath"%' "${JP_PAERSED_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_get_key_value '%"registerpath"%' "${JP_PAERSED_FILE}"; then
 			prn_err "Failed to get \"registerpath\" element in response."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -465,18 +449,16 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Display
 		#
-		jsonparser_dump_string "${_ROLE_TOKEN_RESULT}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_dump_string "${_ROLE_TOKEN_RESULT}"; then
 			prn_err "Failed to display role token information."
 			exit 1
 		fi
 
-	elif [ "X${K2HR3CLI_OTHERCOMMAND}" = "X${_ROLE_COMMAND_SUB2_DELETE}" ]; then
+	elif [ "${K2HR3CLI_OTHERCOMMAND}" = "${_ROLE_COMMAND_SUB2_DELETE}" ]; then
 		#
 		# TOKEN DELETE
 		#
-		complement_scoped_token
-		if [ $? -ne 0 ]; then
+		if ! complement_scoped_token; then
 			exit 1
 		fi
 		prn_dbg "${K2HR3CLI_SCOPED_TOKEN}"
@@ -485,8 +467,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		# Get first parameter
 		#
 		_ROLE_TOKEN=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify role token, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -502,8 +483,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -513,8 +493,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -525,12 +504,11 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		prn_msg "${CGRN}Succeed${CDEF} : Delete Role Token : \"${_ROLE_TOKEN}\""
 
-	elif [ "X${K2HR3CLI_OTHERCOMMAND}" = "X${_ROLE_COMMAND_SUB2_SHOW}" ]; then
+	elif [ "${K2HR3CLI_OTHERCOMMAND}" = "${_ROLE_COMMAND_SUB2_SHOW}" ]; then
 		#
 		# TOKEN SHOW
 		#
-		complement_scoped_token
-		if [ $? -ne 0 ]; then
+		if ! complement_scoped_token; then
 			exit 1
 		fi
 		prn_dbg "${K2HR3CLI_SCOPED_TOKEN}"
@@ -539,8 +517,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		# Get role name(or path)
 		#
 		_ROLE_PATH=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the role name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -559,8 +536,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -570,8 +546,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -579,15 +554,14 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Display tokens value in json
 		#
-		jsonparser_dump_key_parsed_file '%' '"tokens"' "${JP_PAERSED_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_dump_key_parsed_file '%' '"tokens"' "${JP_PAERSED_FILE}"; then
 			prn_err "Failed to get \"tokens\" element in response."
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
 		rm -f "${JP_PAERSED_FILE}"
 
-	elif [ "X${K2HR3CLI_OTHERCOMMAND}" = "X${_ROLE_COMMAND_SUB2_CHECK}" ]; then
+	elif [ "${K2HR3CLI_OTHERCOMMAND}" = "${_ROLE_COMMAND_SUB2_CHECK}" ]; then
 		#
 		# TOKEN CEHCK
 		#
@@ -596,8 +570,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		# Get role name(or path)
 		#
 		_ROLE_PATH=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must specify the role name or yrn path, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -609,8 +582,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		# Get role token
 		#
 		_ROLE_TOKEN=""
-		parse_noprefix_option "$@"
-		if [ $? -ne 0 ]; then
+		if ! parse_noprefix_option "$@"; then
 			prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must specify the role token, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 			exit 1
 		fi
@@ -626,8 +598,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Parse response body
 		#
-		jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
+		if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			prn_err "Failed to parse result."
 			rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			exit 1
@@ -637,8 +608,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		# Check result
 		#
-		requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1
-		if [ $? -ne 0 ]; then
+		if ! requtil_check_result "${_ROLE_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1; then
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
 		fi
@@ -649,17 +619,11 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_ROLE_COMMAND_SUB_TOKEN}" ]; then
 		#
 		prn_msg "${CGRN}Succeed${CDEF} : Role Token \"${_ROLE_TOKEN}\" for \"${_ROLE_PATH}\" Role"
 
-	elif [ "X${K2HR3CLI_OTHERCOMMAND}" = "X" ]; then
-		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_OTHERCOMMAND}\" must also specify the parameter(${_ROLE_COMMAND_SUB2_ADD}, ${_ROLE_COMMAND_SUB2_CREATE}, ${_ROLE_COMMAND_SUB2_DELETE}, ${_ROLE_COMMAND_SUB2_SHOW} or ${_ROLE_COMMAND_SUB2_CHECK}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-		exit 1
 	else
 		prn_err "Unknown parameter(\"${K2HR3CLI_OTHERCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X" ]; then
-	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_ROLE_COMMAND_SUB_CREATE}, ${_ROLE_COMMAND_SUB_SHOW}, ${_ROLE_COMMAND_SUB_DELETE}, ${_ROLE_COMMAND_SUB_HOST} or ${_ROLE_COMMAND_SUB_TOKEN}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-	exit 1
 else
 	prn_err "Unknown subcommand(\"${K2HR3CLI_SUBCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1

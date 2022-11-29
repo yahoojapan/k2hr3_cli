@@ -40,12 +40,12 @@
 #
 check_mode_string()
 {
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		return 1
 	fi
 
 	for _MODELIST_ONE in ${K2HR3CLI_MODES}; do
-		if [ "X${_MODELIST_ONE}" = "X$1" ]; then
+		if [ -n "${_MODELIST_ONE}" ] && [ "${_MODELIST_ONE}" = "$1" ]; then
 			#
 			# Found
 			#
@@ -79,7 +79,7 @@ for _MODELIST_ONEDIR in "${LIBEXECDIR}"/*; do
 		"${COMMON_DIRNAME}")
 			;;
 		*)
-			if [ "X${_MODELIST_TMP}" = "X" ]; then
+			if [ -z "${_MODELIST_TMP}" ]; then
 				_MODELIST_TMP=${_MODELIST_ONEDIR}
 			else
 				_MODELIST_TMP="${_MODELIST_TMP} ${_MODELIST_ONEDIR}"
@@ -99,7 +99,7 @@ for _MODELIST_ONEDIR in ${_MODELIST_TMP}; do
 	#
 	# Set
 	#
-	if [ "X${K2HR3CLI_MODES}" = "X" ]; then
+	if [ -z "${K2HR3CLI_MODES}" ]; then
 		K2HR3CLI_MODES=${_MODELIST_ONEDIR}
 	else
 		K2HR3CLI_MODES="${K2HR3CLI_MODES} ${_MODELIST_ONEDIR}"

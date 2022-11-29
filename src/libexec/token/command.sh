@@ -47,11 +47,10 @@ _TOKEN_COMMAND_TYPE_TOKEN="token"
 #
 # Sub-command
 #
-parse_noprefix_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_noprefix_option "$@"; then
 	exit 1
 fi
-if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 	K2HR3CLI_SUBCOMMAND=""
 else
 	#
@@ -66,12 +65,11 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 # Type(3'rd command)
 #
 K2HR3CLI_COMMAND_TYPE=""
-if [ "X${K2HR3CLI_SUBCOMMAND}" != "X" ] && [ "X${K2HR3CLI_SUBCOMMAND}" != "X${_TOKEN_COMMAND_SUB_CHECK}" ]; then
-	parse_noprefix_option "$@"
-	if [ $? -ne 0 ]; then
+if [ -n "${K2HR3CLI_SUBCOMMAND}" ] && [ "${K2HR3CLI_SUBCOMMAND}" != "${_TOKEN_COMMAND_SUB_CHECK}" ]; then
+	if ! parse_noprefix_option "$@"; then
 		exit 1
 	fi
-	if [ "X${K2HR3CLI_OPTION_NOPREFIX}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 		#
 		# Always using lower case
 		#
@@ -96,11 +94,19 @@ fi
 #--------------------------------------------------------------
 # Processing
 #--------------------------------------------------------------
-if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
+if [ -z "${K2HR3CLI_SUBCOMMAND}" ]; then
+	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_TOKEN_COMMAND_SUB_CREATE} and ${_TOKEN_COMMAND_SUB_SHOW}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+	exit 1
+
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 	#
 	# TOKEN CREATE
 	#
-	if [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_UTOKEN_CRED}" ]; then
+	if [ -z "${K2HR3CLI_COMMAND_TYPE}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the type(${_TOKEN_COMMAND_TYPE_UTOKEN_CRED}, ${_TOKEN_COMMAND_TYPE_UTOKEN_OPTOKEN}, ${_TOKEN_COMMAND_TYPE_UTOKEN_OIDCTOKEN}, ${_TOKEN_COMMAND_TYPE_TOKEN_CRED}, ${_TOKEN_COMMAND_TYPE_TOKEN_UTOKEN}, ${_TOKEN_COMMAND_TYPE_TOKEN_OPTOKEN} and ${_TOKEN_COMMAND_TYPE_TOKEN_OIDCTOKEN}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_COMMAND_TYPE}" = "${_TOKEN_COMMAND_TYPE_UTOKEN_CRED}" ]; then
 		#
 		# Create Unscoped Token from Credential
 		#
@@ -109,8 +115,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Get Unscoped Token
 		#
-		complement_unscoped_token "cred"
-		if [ $? -ne 0 ]; then
+		if ! complement_unscoped_token "cred"; then
 			exit 1
 		fi
 		prn_msg "${K2HR3CLI_UNSCOPED_TOKEN}"
@@ -118,25 +123,22 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Save to configuration(it need)
 		#
-		if [ "X${K2HR3CLI_USER}" != "X" ]; then
-			config_default_set_key "K2HR3CLI_USER" "${K2HR3CLI_USER}"
-			if [ $? -ne 0 ]; then
+		if [ -n "${K2HR3CLI_USER}" ]; then
+			if ! config_default_set_key "K2HR3CLI_USER" "${K2HR3CLI_USER}"; then
 				exit 1
 			fi
 
-			if [ "X${K2HR3CLI_OPT_SAVE_PASS}" = "X1" ] && [ "X${K2HR3CLI_PASS}" != "X" ]; then
-				config_default_set_key "K2HR3CLI_PASS" "${K2HR3CLI_PASS}"
-				if [ $? -ne 0 ]; then
+			if [ -n "${K2HR3CLI_OPT_SAVE_PASS}" ] && [ "${K2HR3CLI_OPT_SAVE_PASS}" = "1" ] && [ -n "${K2HR3CLI_PASS}" ]; then
+				if ! config_default_set_key "K2HR3CLI_PASS" "${K2HR3CLI_PASS}"; then
 					exit 1
 				fi
 			fi
 		fi
-		config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"; then
 			exit 1
 		fi
 
-	elif [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_UTOKEN_OPTOKEN}" ]; then
+	elif [ "${K2HR3CLI_COMMAND_TYPE}" = "${_TOKEN_COMMAND_TYPE_UTOKEN_OPTOKEN}" ]; then
 		#
 		# Create Unscoped Token from OpenStack Token
 		#
@@ -145,8 +147,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Get Unscoped Token
 		#
-		complement_unscoped_token "op"
-		if [ $? -ne 0 ]; then
+		if ! complement_unscoped_token "op"; then
 			exit 1
 		fi
 		prn_msg "${K2HR3CLI_UNSCOPED_TOKEN}"
@@ -154,16 +155,14 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Save to configuration(it need)
 		#
-		config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"; then
 			exit 1
 		fi
-		config_default_set_key "K2HR3CLI_OPENSTACK_TOKEN" "${K2HR3CLI_OPENSTACK_TOKEN}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_OPENSTACK_TOKEN" "${K2HR3CLI_OPENSTACK_TOKEN}"; then
 			exit 1
 		fi
 
-	elif [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_UTOKEN_OIDCTOKEN}" ]; then
+	elif [ "${K2HR3CLI_COMMAND_TYPE}" = "${_TOKEN_COMMAND_TYPE_UTOKEN_OIDCTOKEN}" ]; then
 		#
 		# Create Unscoped Token from OIDC Token
 		#
@@ -172,8 +171,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Get Unscoped Token
 		#
-		complement_unscoped_token "oidc"
-		if [ $? -ne 0 ]; then
+		if ! complement_unscoped_token "oidc"; then
 			exit 1
 		fi
 		prn_msg "${K2HR3CLI_UNSCOPED_TOKEN}"
@@ -181,16 +179,14 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Save to configuration(it need)
 		#
-		config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"; then
 			exit 1
 		fi
-		config_default_set_key "K2HR3CLI_OIDC_TOKEN" "${K2HR3CLI_OIDC_TOKEN}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_OIDC_TOKEN" "${K2HR3CLI_OIDC_TOKEN}"; then
 			exit 1
 		fi
 
-	elif [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_TOKEN_CRED}" ]; then
+	elif [ "${K2HR3CLI_COMMAND_TYPE}" = "${_TOKEN_COMMAND_TYPE_TOKEN_CRED}" ]; then
 		#
 		# Create Scoped Token from Credential
 		#
@@ -199,8 +195,7 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Get Scoped Token
 		#
-		complement_scoped_token "cred"
-		if [ $? -ne 0 ]; then
+		if ! complement_scoped_token "cred"; then
 			exit 1
 		fi
 		prn_msg "${K2HR3CLI_SCOPED_TOKEN}"
@@ -208,36 +203,31 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Save to configuration(it need)
 		#
-		if [ "X${K2HR3CLI_USER}" != "X" ]; then
-			config_default_set_key "K2HR3CLI_USER" "${K2HR3CLI_USER}"
-			if [ $? -ne 0 ]; then
+		if [ -n "${K2HR3CLI_USER}" ]; then
+			if ! config_default_set_key "K2HR3CLI_USER" "${K2HR3CLI_USER}"; then
 				exit 1
 			fi
 
-			if [ "X${K2HR3CLI_OPT_SAVE_PASS}" = "X1" ] && [ "X${K2HR3CLI_PASS}" != "X" ]; then
-				config_default_set_key "K2HR3CLI_PASS" "${K2HR3CLI_PASS}"
-				if [ $? -ne 0 ]; then
+			if [ -n "${K2HR3CLI_OPT_SAVE_PASS}" ] && [ "${K2HR3CLI_OPT_SAVE_PASS}" = "1" ] && [ -n "${K2HR3CLI_PASS}" ]; then
+				if ! config_default_set_key "K2HR3CLI_PASS" "${K2HR3CLI_PASS}"; then
 					exit 1
 				fi
 			fi
 		fi
 
-		if [ "X${K2HR3CLI_UNSCOPED_TOKEN}" != "X" ]; then
-			config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"
-			if [ $? -ne 0 ]; then
+		if [ -n "${K2HR3CLI_UNSCOPED_TOKEN}" ]; then
+			if ! config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"; then
 				exit 1
 			fi
 		fi
-		config_default_set_key "K2HR3CLI_TENANT" "${K2HR3CLI_TENANT}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_TENANT" "${K2HR3CLI_TENANT}"; then
 			exit 1
 		fi
-		config_default_set_key "K2HR3CLI_SCOPED_TOKEN" "${K2HR3CLI_SCOPED_TOKEN}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_SCOPED_TOKEN" "${K2HR3CLI_SCOPED_TOKEN}"; then
 			exit 1
 		fi
 
-	elif [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_TOKEN_UTOKEN}" ]; then
+	elif [ "${K2HR3CLI_COMMAND_TYPE}" = "${_TOKEN_COMMAND_TYPE_TOKEN_UTOKEN}" ]; then
 		#
 		# Create Scoped Token from Unscoped Token
 		#
@@ -246,16 +236,14 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Get Unscoped Token
 		#
-		complement_unscoped_token "abort"
-		if [ $? -ne 0 ]; then
+		if ! complement_unscoped_token "abort"; then
 			exit 1
 		fi
 
 		#
 		# Get Scoped Token
 		#
-		complement_scoped_token
-		if [ $? -ne 0 ]; then
+		if ! complement_scoped_token; then
 			exit 1
 		fi
 		prn_msg "${K2HR3CLI_SCOPED_TOKEN}"
@@ -263,35 +251,30 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Save to configuration(it need)
 		#
-		if [ "X${K2HR3CLI_USER}" != "X" ]; then
-			config_default_set_key "K2HR3CLI_USER" "${K2HR3CLI_USER}"
-			if [ $? -ne 0 ]; then
+		if [ -n "${K2HR3CLI_USER}" ]; then
+			if ! config_default_set_key "K2HR3CLI_USER" "${K2HR3CLI_USER}"; then
 				exit 1
 			fi
 
-			if [ "X${K2HR3CLI_OPT_SAVE_PASS}" = "X1" ] && [ "X${K2HR3CLI_PASS}" != "X" ]; then
-				config_default_set_key "K2HR3CLI_PASS" "${K2HR3CLI_PASS}"
-				if [ $? -ne 0 ]; then
+			if [ -n "${K2HR3CLI_OPT_SAVE_PASS}" ] && [ "${K2HR3CLI_OPT_SAVE_PASS}" = "1" ] && [ -n "${K2HR3CLI_PASS}" ]; then
+				if ! config_default_set_key "K2HR3CLI_PASS" "${K2HR3CLI_PASS}"; then
 					exit 1
 				fi
 			fi
 		fi
-		if [ "X${K2HR3CLI_UNSCOPED_TOKEN}" != "X" ]; then
-			config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"
-			if [ $? -ne 0 ]; then
+		if [ -n "${K2HR3CLI_UNSCOPED_TOKEN}" ]; then
+			if ! config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"; then
 				exit 1
 			fi
 		fi
-		config_default_set_key "K2HR3CLI_TENANT" "${K2HR3CLI_TENANT}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_TENANT" "${K2HR3CLI_TENANT}"; then
 			exit 1
 		fi
-		config_default_set_key "K2HR3CLI_SCOPED_TOKEN" "${K2HR3CLI_SCOPED_TOKEN}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_SCOPED_TOKEN" "${K2HR3CLI_SCOPED_TOKEN}"; then
 			exit 1
 		fi
 
-	elif [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_TOKEN_OPTOKEN}" ]; then
+	elif [ "${K2HR3CLI_COMMAND_TYPE}" = "${_TOKEN_COMMAND_TYPE_TOKEN_OPTOKEN}" ]; then
 		#
 		# Create Scoped Token from OpenStack Token
 		#
@@ -300,16 +283,14 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Get Unscoped Token
 		#
-		complement_unscoped_token "op"
-		if [ $? -ne 0 ]; then
+		if ! complement_unscoped_token "op"; then
 			exit 1
 		fi
 
 		#
 		# Get Scoped Token
 		#
-		complement_scoped_token
-		if [ $? -ne 0 ]; then
+		if ! complement_scoped_token; then
 			exit 1
 		fi
 		prn_msg "${K2HR3CLI_SCOPED_TOKEN}"
@@ -317,27 +298,22 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Save to configuration(it need)
 		#
-		if [ "X${K2HR3CLI_UNSCOPED_TOKEN}" != "X" ]; then
-			config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"
-			if [ $? -ne 0 ]; then
+		if [ -n "${K2HR3CLI_UNSCOPED_TOKEN}" ]; then
+			if ! config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"; then
 				exit 1
 			fi
 		fi
-		config_default_set_key "K2HR3CLI_TENANT" "${K2HR3CLI_TENANT}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_TENANT" "${K2HR3CLI_TENANT}"; then
 			exit 1
 		fi
-		config_default_set_key "K2HR3CLI_SCOPED_TOKEN" "${K2HR3CLI_SCOPED_TOKEN}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_SCOPED_TOKEN" "${K2HR3CLI_SCOPED_TOKEN}"; then
 			exit 1
 		fi
-		config_default_set_key "K2HR3CLI_OPENSTACK_TOKEN" "${K2HR3CLI_OPENSTACK_TOKEN}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_OPENSTACK_TOKEN" "${K2HR3CLI_OPENSTACK_TOKEN}"; then
 			exit 1
 		fi
 
-#//TEST
-	elif [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_TOKEN_OIDCTOKEN}" ]; then
+	elif [ "${K2HR3CLI_COMMAND_TYPE}" = "${_TOKEN_COMMAND_TYPE_TOKEN_OIDCTOKEN}" ]; then
 		#
 		# Create Scoped Token from OIDC Token
 		#
@@ -346,16 +322,14 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Get Unscoped Token
 		#
-		complement_unscoped_token "oidc"
-		if [ $? -ne 0 ]; then
+		if ! complement_unscoped_token "oidc"; then
 			exit 1
 		fi
 
 		#
 		# Get Scoped Token
 		#
-		complement_scoped_token
-		if [ $? -ne 0 ]; then
+		if ! complement_scoped_token; then
 			exit 1
 		fi
 		prn_msg "${K2HR3CLI_SCOPED_TOKEN}"
@@ -363,47 +337,42 @@ if [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CREATE}" ]; then
 		#
 		# Save to configuration(it need)
 		#
-		if [ "X${K2HR3CLI_UNSCOPED_TOKEN}" != "X" ]; then
-			config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"
-			if [ $? -ne 0 ]; then
+		if [ -n "${K2HR3CLI_UNSCOPED_TOKEN}" ]; then
+			if ! config_default_set_key "K2HR3CLI_UNSCOPED_TOKEN" "${K2HR3CLI_UNSCOPED_TOKEN}"; then
 				exit 1
 			fi
 		fi
-		config_default_set_key "K2HR3CLI_TENANT" "${K2HR3CLI_TENANT}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_TENANT" "${K2HR3CLI_TENANT}"; then
 			exit 1
 		fi
-		config_default_set_key "K2HR3CLI_SCOPED_TOKEN" "${K2HR3CLI_SCOPED_TOKEN}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_SCOPED_TOKEN" "${K2HR3CLI_SCOPED_TOKEN}"; then
 			exit 1
 		fi
-		config_default_set_key "K2HR3CLI_OIDC_TOKEN" "${K2HR3CLI_OIDC_TOKEN}"
-		if [ $? -ne 0 ]; then
+		if ! config_default_set_key "K2HR3CLI_OIDC_TOKEN" "${K2HR3CLI_OIDC_TOKEN}"; then
 			exit 1
 		fi
 
 	else
-		if [ "X${K2HR3CLI_COMMAND_TYPE}" = "X" ]; then
-			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the type(${_TOKEN_COMMAND_TYPE_UTOKEN_CRED}, ${_TOKEN_COMMAND_TYPE_UTOKEN_OPTOKEN}, ${_TOKEN_COMMAND_TYPE_UTOKEN_OIDCTOKEN}, ${_TOKEN_COMMAND_TYPE_TOKEN_CRED}, ${_TOKEN_COMMAND_TYPE_TOKEN_UTOKEN}, ${_TOKEN_COMMAND_TYPE_TOKEN_OPTOKEN} and ${_TOKEN_COMMAND_TYPE_TOKEN_OIDCTOKEN}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-		else
-			prn_err "Unknown type(\"${K2HR3CLI_COMMAND_TYPE}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-		fi
+		prn_err "Unknown type(\"${K2HR3CLI_COMMAND_TYPE}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
 
 	#
 	# Save to configuration for K2HR3CLI_API_URI (it need)
 	#
-	config_default_set_key "K2HR3CLI_API_URI" "${K2HR3CLI_API_URI}"
-	if [ $? -ne 0 ]; then
+	if ! config_default_set_key "K2HR3CLI_API_URI" "${K2HR3CLI_API_URI}"; then
 		exit 1
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_SHOW}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 	#
 	# SHOW TENANT LIST
 	#
-	if [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_UTOKEN}" ]; then
+	if [ -z "${K2HR3CLI_COMMAND_TYPE}" ]; then
+		prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the type(${_TOKEN_COMMAND_TYPE_UTOKEN} and ${_TOKEN_COMMAND_TYPE_TOKEN}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
+		exit 1
+
+	elif [ "${K2HR3CLI_COMMAND_TYPE}" = "${_TOKEN_COMMAND_TYPE_UTOKEN}" ]; then
 		#
 		# Get tenant list by Unscoped Token
 		#
@@ -411,8 +380,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 		#
 		# Get Unscoped Token
 		#
-		complement_unscoped_token
-		if [ $? -ne 0 ]; then
+		if ! complement_unscoped_token; then
 			exit 1
 		fi
 
@@ -422,7 +390,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 		get_request "/v1/user/tokens" 1 "x-auth-token:U=${K2HR3CLI_UNSCOPED_TOKEN}"
 		_TOKEN_REQUEST_RESULT=$?
 
-	elif [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_TOKEN}" ]; then
+	elif [ "${K2HR3CLI_COMMAND_TYPE}" = "${_TOKEN_COMMAND_TYPE_TOKEN}" ]; then
 		#
 		# Get tenant list by Scoped Token
 		#
@@ -430,8 +398,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 		#
 		# Get Scoped Token
 		#
-		complement_scoped_token
-		if [ $? -ne 0 ]; then
+		if ! complement_scoped_token; then
 			exit 1
 		fi
 
@@ -442,20 +409,14 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 		_TOKEN_REQUEST_RESULT=$?
 
 	else
-		if [ "X${K2HR3CLI_COMMAND_TYPE}" = "X" ]; then
-			# shellcheck disable=SC2153
-			prn_err "\"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_SUBCOMMAND}\" must also specify the type(${_TOKEN_COMMAND_TYPE_UTOKEN}, ${_TOKEN_COMMAND_TYPE_OPTOKEN} and ${_TOKEN_COMMAND_TYPE_OIDCTOKEN}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-		else
-			prn_err "Unknown type(\"${K2HR3CLI_COMMAND_TYPE}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-		fi
+		prn_err "Unknown type(\"${K2HR3CLI_COMMAND_TYPE}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 		exit 1
 	fi
 
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -465,8 +426,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Check Result
 	#
-	requtil_check_result "${_TOKEN_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_TOKEN_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "200"; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -474,25 +434,24 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Check scoped value in json
 	#
-	jsonparser_get_key_value '%"scoped"%' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_get_key_value '%"scoped"%' "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to get tenant list : \"scoped\" element is not existed in token api response."
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
 
 	_TOKEN_TENANT_SHOW_TMP=${JSONPARSER_FIND_VAL}
-	if [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_UTOKEN}" ]; then
+	if [ "${K2HR3CLI_COMMAND_TYPE}" = "${_TOKEN_COMMAND_TYPE_UTOKEN}" ]; then
 		_TOKEN_TENANT_SHOW_SCOPE_TMP="false"
 	else
 		_TOKEN_TENANT_SHOW_SCOPE_TMP="true"
 	fi
-	if [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_TRUE}" ] && [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_FALSE}" ]; then
+	if [ -z "${JSONPARSER_FIND_VAL_TYPE}" ] || { [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_TRUE}" ] && [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_FALSE}" ]; }; then
 		prn_err "Failed to get tenant list : \"scoped\" element is not \"${_TOKEN_TENANT_SHOW_SCOPE_TMP}\"."
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
-	if [ "X${_TOKEN_TENANT_SHOW_TMP}" != "X${_TOKEN_TENANT_SHOW_SCOPE_TMP}" ]; then
+	if [ -z "${_TOKEN_TENANT_SHOW_TMP}" ] || [ "${_TOKEN_TENANT_SHOW_TMP}" != "${_TOKEN_TENANT_SHOW_SCOPE_TMP}" ]; then
 		prn_err "Failed to get tenant list : \"scoped\" element is not \"${_TOKEN_TENANT_SHOW_SCOPE_TMP}\"."
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
@@ -501,9 +460,8 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Check user value in json
 	#
-	if [ "X${K2HR3CLI_COMMAND_TYPE}" = "X${_TOKEN_COMMAND_TYPE_TOKEN}" ]; then
-		jsonparser_get_key_value '%"user"%' "${JP_PAERSED_FILE}"
-		if [ $? -ne 0 ]; then
+	if [ "${K2HR3CLI_COMMAND_TYPE}" = "${_TOKEN_COMMAND_TYPE_TOKEN}" ]; then
+		if ! jsonparser_get_key_value '%"user"%' "${JP_PAERSED_FILE}"; then
 			prn_err "Failed to get tenant list : \"user\" element is not existed in token api response."
 			rm -f "${JP_PAERSED_FILE}"
 			exit 1
@@ -513,9 +471,13 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 		# ${K2HR3CLI_USER} may remain empty if obtained from ScopedToken. 
 		# Check only when ${K2HR3CLI_USER}is not empty.
 		#
-		if [ "X${K2HR3CLI_USER}" != "X" ]; then
+		if [ -n "${K2HR3CLI_USER}" ]; then
 			_TOKEN_TENANT_SHOW_TMP=$(to_upper "${JSONPARSER_FIND_STR_VAL}")
 			_TOKEN_TENANT_SHOW_TMP2=$(to_upper "${K2HR3CLI_USER}")
+
+			# [NOTE]
+			# Since the condition becomes complicated, use "X"(temporary word).
+			#
 			if [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_STR}" ] || [ "X${_TOKEN_TENANT_SHOW_TMP}" != "X${_TOKEN_TENANT_SHOW_TMP2}" ]; then
 				prn_err "Failed to get tenant list : \"user\" element is not \"false\"."
 				rm -f "${JP_PAERSED_FILE}"
@@ -527,24 +489,23 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 	#
 	# Display tenant list from json
 	#
-	jsonparser_dump_key_parsed_file '%' '"tenants"' "${JP_PAERSED_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_dump_key_parsed_file '%' '"tenants"' "${JP_PAERSED_FILE}"; then
 		prn_err "Failed to get tenant list : \"tenants\" element is not existed in token api response."
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
 	rm -f "${JP_PAERSED_FILE}"
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CHECK}" ]; then
+elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_TOKEN_COMMAND_SUB_CHECK}" ]; then
 	#
 	# CHECK(HEAD) TOKEN
 	#
-	if [ "X${K2HR3CLI_SCOPED_TOKEN}" != "X" ]; then
+	if [ -n "${K2HR3CLI_SCOPED_TOKEN}" ]; then
 		_TOKEN_TENANT_TARGET_TOKEN="${K2HR3CLI_SCOPED_TOKEN}"
 		_TOKEN_TENANT_TARGET_IS_SCOPED=1
 		prn_dbg "Check the Unscoped Token : \"${_TOKEN_TENANT_TARGET_TOKEN}\""
 	else
-		if [ "X${K2HR3CLI_UNSCOPED_TOKEN}" != "X" ]; then
+		if [ -n "${K2HR3CLI_UNSCOPED_TOKEN}" ]; then
 			_TOKEN_TENANT_TARGET_TOKEN="${K2HR3CLI_UNSCOPED_TOKEN}"
 			_TOKEN_TENANT_TARGET_IS_SCOPED=0
 			prn_dbg "Check the Scoped Token : \"${_TOKEN_TENANT_TARGET_TOKEN}\""
@@ -562,8 +523,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CHECK}" ]; then
 	#
 	# Parse response body
 	#
-	jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_parse_json_file "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 		prn_err "Failed to parse result."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
@@ -573,8 +533,7 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CHECK}" ]; then
 	#
 	# Check Result
 	#
-	requtil_check_result "${_TOKEN_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1
-	if [ $? -ne 0 ]; then
+	if ! requtil_check_result "${_TOKEN_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${JP_PAERSED_FILE}" "204" 1; then
 		rm -f "${JP_PAERSED_FILE}"
 		exit 1
 	fi
@@ -583,15 +542,12 @@ elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X${_TOKEN_COMMAND_SUB_CHECK}" ]; then
 	#
 	# HTTP response code = 204
 	#
-	if [ ${_TOKEN_TENANT_TARGET_IS_SCOPED} -eq 1 ]; then
+	if [ "${_TOKEN_TENANT_TARGET_IS_SCOPED}" -eq 1 ]; then
 		prn_msg "${CGRN}K2HR3 Scoped token is VALID${CDEF} : TOKEN=\"${_TOKEN_TENANT_TARGET_TOKEN}\""
 	else
 		prn_msg "${CGRN}K2HR3 Unscoped token is VALID${CDEF} : TOKEN=\"${_TOKEN_TENANT_TARGET_TOKEN}\""
 	fi
 
-elif [ "X${K2HR3CLI_SUBCOMMAND}" = "X" ]; then
-	prn_err "\"${BINNAME} ${K2HR3CLI_MODE}\" must also specify the subcommand(${_TOKEN_COMMAND_SUB_CREATE} and ${_TOKEN_COMMAND_SUB_SHOW}), please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
-	exit 1
 else
 	prn_err "Unknown subcommand(\"${K2HR3CLI_SUBCOMMAND}\") is specified, please run \"${BINNAME} ${K2HR3CLI_MODE} ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT})\" for confirmation."
 	exit 1

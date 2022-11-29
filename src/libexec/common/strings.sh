@@ -31,7 +31,7 @@
 _K2HR3_CLI_ECHO_EXP=1
 # shellcheck disable=SC2039,SC3037
 _K2HR3_CLI_ECHO_TMP=$(echo -e "" | tr -d ' ')
-if [ "X${_K2HR3_CLI_ECHO_TMP}" = "X-e" ]; then
+if [ -n "${_K2HR3_CLI_ECHO_TMP}" ] && [ "${_K2HR3_CLI_ECHO_TMP}" = "-e" ]; then
 	_K2HR3_CLI_ECHO_EXP=0
 fi
 
@@ -50,14 +50,14 @@ fi
 #
 pecho()
 {
-	if [ "X$1" = "X-e" ]; then
+	if [ -n "$1" ] && [ "$1" = "-e" ]; then
 		if [ "${_K2HR3_CLI_ECHO_EXP}" -eq 1 ]; then
 			# shellcheck disable=SC2039,SC3037
 			echo -e "$*"
 		else
 			echo "$*"
 		fi
-	elif [ "X$1" = "X-n" ]; then
+	elif [ -n "$1" ] && [ "$1" = "-n" ]; then
 		shift
 		if [ $# -lt 1 ]; then
 			printf ''
@@ -84,8 +84,7 @@ check_backquote_in_file()
 	if [ -f "$1" ]; then
 		return 0
 	fi
-	sed 's/#.*$//g' "$1" 2>/dev/null | grep -q '`'
-	if [ $? -eq 0 ]; then
+	if sed 's/#.*$//g' "$1" 2>/dev/null | grep -q '`'; then
 		return 1
 	fi
 	return 0
@@ -145,13 +144,12 @@ is_positive_number()
 		return 1
 	fi
 	_CHECK_NUMBER_TMP=$(pecho -n "$1" | sed -e 's/[.]//g')
-	if [ "X${_CHECK_NUMBER_TMP}" = "X" ]; then
+	if [ -z "${_CHECK_NUMBER_TMP}" ]; then
 		return 0
 	fi
 
 	# shellcheck disable=SC2003
-	expr "${_CHECK_NUMBER_TMP}" + 1 >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! expr "${_CHECK_NUMBER_TMP}" + 1 >/dev/null 2>&1; then
 		return 1
 	fi
 	return 0
@@ -169,13 +167,12 @@ is_negative_number()
 		return 1
 	fi
 	_CHECK_NUMBER_TMP=$(pecho -n "$1" | sed -e 's/[.]//g')
-	if [ "X${_CHECK_NUMBER_TMP}" = "X" ]; then
+	if [ -z "${_CHECK_NUMBER_TMP}" ]; then
 		return 0
 	fi
 
 	#shellcheck disable=SC2003
-	expr "${_CHECK_NUMBER_TMP}" - 1 >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! expr "${_CHECK_NUMBER_TMP}" - 1 >/dev/null 2>&1; then
 		return 1
 	fi
 	return 0
@@ -198,7 +195,7 @@ filter_null_string()
 		pecho -n ""
 	fi
 	_FILTER_NULL_TMP=$(to_upper "$1")
-	if [ "X${_FILTER_NULL_TMP}" = "XNULL" ]; then
+	if [ -n "${_FILTER_NULL_TMP}" ] && [ "${_FILTER_NULL_TMP}" = "NULL" ]; then
 		pecho -n ""
 	fi
 	pecho -n "$1"
@@ -223,7 +220,7 @@ compare_part_string()
 		return 1
 	fi
 	if [ $# -gt 2 ]; then
-		if [ "X$3" = "X1" ]; then
+		if [ -n "$3" ] && [ "$3" = "1" ]; then
 			_COMP_PART_STR_TMP=$(to_upper "$1")
 			_COMP_PART_STR_CHECK_TMP=$(to_upper "$2")
 		else

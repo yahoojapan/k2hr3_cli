@@ -74,8 +74,7 @@ jsonparser_dump_string "${TEST_INPUT_JSON_STR}" > "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -101,8 +100,7 @@ jsonparser_dump_string "${TEST_INPUT_JSON_STR}" > "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -128,8 +126,7 @@ jsonparser_dump_string "${TEST_INPUT_JSON_STR}" > "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -150,12 +147,10 @@ TEST_INPUT_JSON_STR='{"result":true,"message":null,"children":[{"name":"service"
 #
 # Run
 #
-jsonparser_parse_json_string "${TEST_INPUT_JSON_STR}"
-if [ $? -ne 0 ]; then
+if ! jsonparser_parse_json_string "${TEST_INPUT_JSON_STR}"; then
 	pecho "Failed to parse string." > "${SUB_TEST_PART_FILE}"
 else
-	jsonparser_dump_key_parsed_file '%' '"children"' "${JP_PAERSED_FILE}" > "${SUB_TEST_PART_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! jsonparser_dump_key_parsed_file '%' '"children"' "${JP_PAERSED_FILE}" > "${SUB_TEST_PART_FILE}"; then
 		pecho "Not found \"children\" key in json string" > "${SUB_TEST_PART_FILE}"
 	else
 		#
@@ -169,8 +164,7 @@ fi
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -196,8 +190,7 @@ jsonparser_dump_string "${TEST_INPUT_JSON_STR}" > "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
@@ -223,20 +216,18 @@ jsonparser_dump_string "${TEST_INPUT_JSON_STR}" > "${SUB_TEST_PART_FILE}"
 #
 # Check result
 #
-test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"
-if [ $? -ne 0 ]; then
+if ! test_processing_result "$?" "${SUB_TEST_PART_FILE}" "${TEST_TITLE}"; then
 	TEST_EXIT_CODE=1
 fi
 
 #---------------------------------------------------------------------
 # Check update log
 #---------------------------------------------------------------------
-test_update_snapshot
-if [ $? -ne 0 ]; then
+if ! test_update_snapshot; then
 	TEST_EXIT_CODE=1
 fi
 
-exit ${TEST_EXIT_CODE}
+exit "${TEST_EXIT_CODE}"
 
 #
 # Local variables:

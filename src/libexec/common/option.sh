@@ -26,9 +26,7 @@
 # [NOTE]
 # These options are not checked in parse_common_option function.
 #
-# shellcheck disable=SC2034
 K2HR3CLI_COMMON_OPT_CONFIG_SHORT="-c"
-# shellcheck disable=SC2034
 K2HR3CLI_COMMON_OPT_CONFIG_LONG="--config"
 
 #
@@ -204,7 +202,7 @@ escape_all_options()
 	K2HR3CLI_OPTION_PARSER_REST=""
 	_OPTION_IS_SET=0
 	while [ $# -gt 0 ]; do
-		if [ "X$1" != "X" ]; then
+		if [ -n "$1" ]; then
 			_OPTION_TMP=$(pecho -n "$1" | sed -e 's/%/%25/g' -e 's/ /%20/g')
 			if [ "${_OPTION_IS_SET}" -eq 0 ]; then
 				K2HR3CLI_OPTION_PARSER_REST=${_OPTION_TMP}
@@ -224,12 +222,12 @@ escape_all_options()
 #
 is_option_prefix()
 {
-	if [ "X$1" = "X" ]; then
+	if [ -z "$1" ]; then
 		return 1
 	fi
 	_OPTION_TMP=$(pecho -n "$1" | cut -b 1)
 
-	if [ "X${_OPTION_TMP}" = "X-" ]; then
+	if [ -n "${_OPTION_TMP}" ] && [ "${_OPTION_TMP}" = "-" ]; then
 		#
 		# option prefix start '-'.(ex. "--option" or "-o")
 		#
@@ -266,13 +264,16 @@ get_option2_value()
 		_OPTION_TMP=$(pecho -n "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 		_OPTION_TMP=$(to_lower "${_OPTION_TMP}")
 
+		# [NOTE]
+		# Since the condition becomes complicated, use "X"(temporary word).
+		#
 		if [ "X${_OPTION_TMP}" = "X${_OPTION_KEYWORD1}" ] || [ "X${_OPTION_TMP}" = "X${_OPTION_KEYWORD2}" ]; then
 			if [ "X${_OPTION_TMP}" = "X${_OPTION_KEYWORD1}" ]; then
 				_OPTION_KEYWORD_TMP=${_OPTION_KEYWORD1}
 			else
 				_OPTION_KEYWORD_TMP=${_OPTION_KEYWORD2}
 			fi
-			if [ "X${_OPTION_VALUE}" != "X" ]; then
+			if [ -n "${_OPTION_VALUE}" ]; then
 				prn_info "already specified ${_OPTION_KEYWORD_TMP} option with value(${_OPTION_VALUE})."
 				return 1
 			fi
@@ -283,7 +284,7 @@ get_option2_value()
 			fi
 			_OPTION_VALUE=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 		else
-			if [ "X${K2HR3CLI_OPTION_PARSER_REST}" = "X" ]; then
+			if [ -z "${K2HR3CLI_OPTION_PARSER_REST}" ]; then
 				K2HR3CLI_OPTION_PARSER_REST="$1"
 			else
 				K2HR3CLI_OPTION_PARSER_REST="${K2HR3CLI_OPTION_PARSER_REST} $1"
@@ -292,10 +293,10 @@ get_option2_value()
 		shift
 	done
 
-	if [ "X${_OPTION_VALUE}" = "X" ]; then
-		if [ "X${_OPTION_KEYWORD1}" != "X" ] && [ "X${_OPTION_KEYWORD2}" != "X" ]; then
+	if [ -z "${_OPTION_VALUE}" ]; then
+		if [ -n "${_OPTION_KEYWORD1}" ] && [ -n "${_OPTION_KEYWORD2}" ]; then
 			prn_dbg "${_OPTION_KEYWORD1} or ${_OPTION_KEYWORD2} option is not found."
-		elif [ "X${_OPTION_KEYWORD1}" != "X" ]; then
+		elif [ -n "${_OPTION_KEYWORD1}" ]; then
 			prn_dbg "${_OPTION_KEYWORD1} option is not found."
 		else
 			prn_dbg "${_OPTION_KEYWORD2} option is not found."
@@ -303,7 +304,6 @@ get_option2_value()
 		return 0
 	fi
 
-	# shellcheck disable=SC2034
 	K2HR3_OPTION_VALUE=${_OPTION_VALUE}
 
 	return 0
@@ -324,13 +324,11 @@ parse_noprefix_option()
 	K2HR3CLI_OPTION_PARSER_REST=""
 	K2HR3CLI_OPTION_NOPREFIX=
 	while [ $# -gt 0 ]; do
-		is_option_prefix "$1"
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! is_option_prefix "$1"; then
 			K2HR3CLI_OPTION_NOPREFIX=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
 			shift
-			if [ "X${K2HR3CLI_OPTION_PARSER_REST}" = "X" ]; then
+			if [ -z "${K2HR3CLI_OPTION_PARSER_REST}" ]; then
 				# shellcheck disable=SC2124
 				K2HR3CLI_OPTION_PARSER_REST="$@"
 			else
@@ -339,7 +337,7 @@ parse_noprefix_option()
 			fi
 			return 0
 		else
-			if [ "X${K2HR3CLI_OPTION_PARSER_REST}" = "X" ]; then
+			if [ -z "${K2HR3CLI_OPTION_PARSER_REST}" ]; then
 				K2HR3CLI_OPTION_PARSER_REST="$1"
 			else
 				K2HR3CLI_OPTION_PARSER_REST="${K2HR3CLI_OPTION_PARSER_REST} $1"
@@ -369,18 +367,15 @@ parse_mode_option()
 	K2HR3CLI_OPTION_PARSER_REST=""
 	K2HR3CLI_OPTION_NOPREFIX=
 	while [ $# -gt 0 ]; do
-		is_option_prefix "$1"
-		if [ $? -ne 0 ]; then
-			check_mode_string "$1"
-			if [ $? -ne 0 ]; then
+		if ! is_option_prefix "$1"; then
+			if ! check_mode_string "$1"; then
 				prn_err "Unknown mode($1) is specified. Specify the mode with one of the following: ${K2HR3CLI_MODES}"
 				return 1
 			fi
-			# shellcheck disable=SC2034
 			K2HR3CLI_OPTION_NOPREFIX=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
 			shift
-			if [ "X${K2HR3CLI_OPTION_PARSER_REST}" = "X" ]; then
+			if [ -z "${K2HR3CLI_OPTION_PARSER_REST}" ]; then
 				# shellcheck disable=SC2124
 				K2HR3CLI_OPTION_PARSER_REST="$@"
 			else
@@ -389,7 +384,7 @@ parse_mode_option()
 			fi
 			return 0
 		else
-			if [ "X${K2HR3CLI_OPTION_PARSER_REST}" = "X" ]; then
+			if [ -z "${K2HR3CLI_OPTION_PARSER_REST}" ]; then
 				K2HR3CLI_OPTION_PARSER_REST="$1"
 			else
 				K2HR3CLI_OPTION_PARSER_REST="${K2HR3CLI_OPTION_PARSER_REST} $1"
@@ -515,84 +510,94 @@ parse_common_option()
 		_OPTION_TMP=$(pecho -n "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 		_OPTION_TMP=$(to_lower "${_OPTION_TMP}")
 
-		if [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_HELP_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_HELP_LONG}" ]; then
+		# [NOTE]
+		# Since the condition becomes complicated, use "X"(temporary word).
+		#
+		if [ -z "${_OPTION_TMP}" ]; then
+			if [ -z "${K2HR3CLI_OPTION_PARSER_REST}" ]; then
+				K2HR3CLI_OPTION_PARSER_REST="$1"
+			else
+				K2HR3CLI_OPTION_PARSER_REST="${K2HR3CLI_OPTION_PARSER_REST} $1"
+			fi
+
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_HELP_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_HELP_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_HELP}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_HELP_LONG}(${K2HR3CLI_COMMON_OPT_HELP_SHORT}) option."
 				return 1
 			fi
 			K2HR3CLI_OPT_HELP=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_VERSION_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_VERSION_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_VERSION_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_VERSION_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_VERSION}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_VERSION_LONG}(${K2HR3CLI_COMMON_OPT_VERSION_SHORT}) option."
 				return 1
 			fi
 			K2HR3CLI_OPT_VERSION=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_INTERACTIVE_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_INTERACTIVE_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_INTERACTIVE_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_INTERACTIVE_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_INTERACTIVE}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_INTERACTIVE_LONG}(${K2HR3CLI_COMMON_OPT_INTERACTIVE_SHORT}) or ${K2HR3CLI_COMMON_OPT_NOINTERACTIVE_LONG}(${K2HR3CLI_COMMON_OPT_NOINTERACTIVE_SHORT}) option."
 				return 1
 			fi
 			K2HR3CLI_OPT_INTERACTIVE=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_NOINTERACTIVE_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_NOINTERACTIVE_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_NOINTERACTIVE_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_NOINTERACTIVE_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_INTERACTIVE}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_INTERACTIVE_LONG}(${K2HR3CLI_COMMON_OPT_INTERACTIVE_SHORT}) or ${K2HR3CLI_COMMON_OPT_NOINTERACTIVE_LONG}(${K2HR3CLI_COMMON_OPT_NOINTERACTIVE_SHORT}) option."
 				return 1
 			fi
 			K2HR3CLI_OPT_INTERACTIVE=0
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_NODATE_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_NODATE_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_NODATE_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_NODATE_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_NODATE}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_NODATE_LONG}(${K2HR3CLI_COMMON_OPT_NODATE_SHORT}) option."
 				return 1
 			fi
 			K2HR3CLI_OPT_NODATE=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_NOCOLOR_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_NOCOLOR_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_NOCOLOR_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_NOCOLOR_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_NOCOLOR}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_NOCOLOR_LONG}(${K2HR3CLI_COMMON_OPT_NOCOLOR_SHORT}) option."
 				return 1
 			fi
 			K2HR3CLI_OPT_NOCOLOR=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_JSON_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_JSON_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_JSON_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_JSON_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_JSON}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_JSON_LONG}(${K2HR3CLI_COMMON_OPT_JSON_SHORT}) option."
 				return 1
 			fi
 			K2HR3CLI_OPT_JSON=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_CURLDBG_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_CURLDBG_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_CURLDBG_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_CURLDBG_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_CURLDBG}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_CURLDBG_LONG}(${K2HR3CLI_COMMON_OPT_CURLDBG_SHORT}) option."
 				return 1
 			fi
 			K2HR3CLI_OPT_CURLDBG=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_CURLBODY_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_CURLBODY_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_CURLBODY_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_CURLBODY_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_CURLBODY}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_CURLBODY_LONG}(${K2HR3CLI_COMMON_OPT_CURLBODY_SHORT}) option."
 				return 1
 			fi
 			K2HR3CLI_OPT_CURLBODY=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_SAVE_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_SAVE_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_SAVE_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_SAVE_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_SAVE}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_SAVE_LONG}(${K2HR3CLI_COMMON_OPT_SAVE_SHORT}) option."
 				return 1
 			fi
 			K2HR3CLI_OPT_SAVE=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_SAVE_PASS_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_SAVE_PASS_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_SAVE_PASS_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_SAVE_PASS_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_SAVE_PASS}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_SAVE_PASS_LONG}(${K2HR3CLI_COMMON_OPT_SAVE_PASS_SHORT}) option."
 				return 1
 			fi
 			K2HR3CLI_OPT_SAVE_PASS=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_MSGLEVEL_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMON_OPT_MSGLEVEL_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_MSGLEVEL_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_MSGLEVEL_LONG}" ]; then
 			if [ -n "${_OPT_TMP_MSGLEVEL}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMON_OPT_MSGLEVEL_LONG}(${K2HR3CLI_COMMON_OPT_MSGLEVEL_SHORT}) option."
 				return 1
@@ -604,7 +609,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_MSGLEVEL=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_API_URI_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_API_URI_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_API_URI_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_API_URI_LONG}" ]; then
 			if [ -n "${_OPT_TMP_API_URI}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_API_URI_LONG}(${K2HR3CLI_COMMAND_OPT_API_URI_SHORT}) option."
 				return 1
@@ -622,12 +627,12 @@ parse_common_option()
 			_OPTION_TMP_CHAR=${#_OPTION_TMP_CHAR}
 			if [ "${_OPTION_TMP_CHAR}" -gt 0 ]; then
 				_OPTION_TMP_CHAR=$(pecho -n "${_OPT_TMP_API_URI}" | cut -b "${_OPTION_TMP_CHAR}" 2>/dev/null)
-				if [ "X${_OPTION_TMP_CHAR}" != "X" ] && [ "X${_OPTION_TMP_CHAR}" != "X/" ]; then
+				if [ -z "${_OPTION_TMP_CHAR}" ] || [ "${_OPTION_TMP_CHAR}" != "/" ]; then
 					_OPT_TMP_API_URI="${_OPT_TMP_API_URI}/"
 				fi
 			fi
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_USER_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_USER_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_USER_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_USER_LONG}" ]; then
 			if [ -n "${_OPT_TMP_USER}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_USER_LONG}(${K2HR3CLI_COMMAND_OPT_USER_SHORT}) option."
 				return 1
@@ -639,7 +644,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_USER=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_PASS_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_PASS_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_PASS_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_PASS_LONG}" ]; then
 			if [ -n "${_OPT_TMP_PASS}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_PASS_LONG}(${K2HR3CLI_COMMAND_OPT_PASS_SHORT}) option."
 				return 1
@@ -651,7 +656,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_PASS=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_TENANT_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_TENANT_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_TENANT_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_TENANT_LONG}" ]; then
 			if [ -n "${_OPT_TMP_TENANT}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_TENANT_LONG}(${K2HR3CLI_COMMAND_OPT_TENANT_SHORT}) option."
 				return 1
@@ -663,7 +668,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_TENANT=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_UNSCOPED_TOKEN_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_UNSCOPED_TOKEN_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_UNSCOPED_TOKEN_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_UNSCOPED_TOKEN_LONG}" ]; then
 			if [ -n "${_OPT_TMP_UNSCOPED_TOKEN}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_UNSCOPED_TOKEN_LONG}(${K2HR3CLI_COMMAND_OPT_UNSCOPED_TOKEN_SHORT}) option."
 				return 1
@@ -675,7 +680,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_UNSCOPED_TOKEN=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_SCOPED_TOKEN_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_SCOPED_TOKEN_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_SCOPED_TOKEN_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_SCOPED_TOKEN_LONG}" ]; then
 			if [ -n "${_OPT_TMP_SCOPED_TOKEN}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_SCOPED_TOKEN_LONG}(${K2HR3CLI_COMMAND_OPT_SCOPED_TOKEN_SHORT}) option."
 				return 1
@@ -687,7 +692,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_SCOPED_TOKEN=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_OPENSTACK_TOKEN_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_OPENSTACK_TOKEN_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_OPENSTACK_TOKEN_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_OPENSTACK_TOKEN_LONG}" ]; then
 			if [ -n "${_OPT_TMP_OPENSTACK_TOKEN}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_OPENSTACK_TOKEN_LONG}(${K2HR3CLI_COMMAND_OPT_OPENSTACK_TOKEN_SHORT}) option."
 				return 1
@@ -699,7 +704,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_OPENSTACK_TOKEN=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_SHORT}" ] || [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_LONG}" ]; then
 			if [ -n "${_OPT_TMP_OIDC_TOKEN}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_LONG}(${K2HR3CLI_COMMAND_OPT_OIDC_TOKEN_SHORT}) option."
 				return 1
@@ -711,14 +716,14 @@ parse_common_option()
 			fi
 			_OPT_TMP_OIDC_TOKEN=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_EXPAND_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_EXPAND_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_EXPAND}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_EXPAND_LONG} option."
 				return 1
 			fi
 			K2HR3CLI_OPT_EXPAND=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_POLICIES_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_POLICIES_LONG}" ]; then
 			if [ -n "${_OPT_TMP_POLICIES}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_POLICIES_LONG} option."
 				return 1
@@ -730,7 +735,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_POLICIES=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_ALIAS_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_ALIAS_LONG}" ]; then
 			if [ -n "${_OPT_TMP_ALIAS}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_ALIAS_LONG} option."
 				return 1
@@ -742,7 +747,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_ALIAS=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_HOST_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_HOST_LONG}" ]; then
 			if [ -n "${_OPT_TMP_HOST}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_HOST_LONG} option."
 				return 1
@@ -754,7 +759,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_HOST=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_PORT_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_PORT_LONG}" ]; then
 			if [ -n "${_OPT_TMP_PORT}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_PORT_LONG} option."
 				return 1
@@ -766,7 +771,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_PORT=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_CUK_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_CUK_LONG}" ]; then
 			if [ -n "${_OPT_TMP_CUK}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_CUK_LONG} option."
 				return 1
@@ -778,7 +783,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_CUK=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_EXTRA_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_EXTRA_LONG}" ]; then
 			if [ -n "${_OPT_TMP_EXTRA}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_EXTRA_LONG} option."
 				return 1
@@ -790,7 +795,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_EXTRA=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_TAG_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_TAG_LONG}" ]; then
 			if [ -n "${_OPT_TMP_TAG}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_TAG_LONG} option."
 				return 1
@@ -802,7 +807,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_TAG=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_EXPIRE_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_EXPIRE_LONG}" ]; then
 			if [ -n "${_OPT_TMP_EXPIRE}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_EXPIRE_LONG} option."
 				return 1
@@ -814,7 +819,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_EXPIRE=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_TYPE_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_TYPE_LONG}" ]; then
 			if [ -n "${_OPT_TMP_TYPE}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_TYPE_LONG} option."
 				return 1
@@ -826,7 +831,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_TYPE=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_DATA_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_DATA_LONG}" ]; then
 			if [ -n "${_OPT_TMP_DATA}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_DATA_LONG} option."
 				return 1
@@ -838,7 +843,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_DATA=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_DATAFILE_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_DATAFILE_LONG}" ]; then
 			if [ -n "${_OPT_TMP_DATAFILE}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_DATAFILE_LONG} option."
 				return 1
@@ -854,7 +859,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_DATAFILE=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_KEYS_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_KEYS_LONG}" ]; then
 			if [ -n "${_OPT_TMP_KEYS}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_KEYS_LONG} option."
 				return 1
@@ -866,7 +871,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_KEYS=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_SERVICE_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_SERVICE_LONG}" ]; then
 			if [ -n "${_OPT_TMP_SERVICE}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_SERVICE_LONG} option."
 				return 1
@@ -878,7 +883,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_SERVICE=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_RESOURCE_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_RESOURCE_LONG}" ]; then
 			if [ -n "${_OPT_TMP_RESOURCE}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_RESOURCE_LONG} option."
 				return 1
@@ -890,7 +895,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_RESOURCE=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_KEYNAMES_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_KEYNAMES_LONG}" ]; then
 			if [ -n "${_OPT_TMP_KEYNAMES}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_KEYNAMES_LONG} option."
 				return 1
@@ -902,7 +907,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_KEYNAMES=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_ALIASES_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_ALIASES_LONG}" ]; then
 			if [ -n "${_OPT_TMP_ALIASES}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_ALIASES_LONG} option."
 				return 1
@@ -914,7 +919,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_ALIASES=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_EFFECT_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_EFFECT_LONG}" ]; then
 			if [ -n "${_OPT_TMP_EFFECT}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_EFFECT_LONG} option."
 				return 1
@@ -926,7 +931,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_EFFECT=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_ACTION_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_ACTION_LONG}" ]; then
 			if [ -n "${_OPT_TMP_ACTION}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_ACTION_LONG} option."
 				return 1
@@ -938,14 +943,14 @@ parse_common_option()
 			fi
 			_OPT_TMP_ACTION=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_CLEAR_TENANT_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_CLEAR_TENANT_LONG}" ]; then
 			if [ -n "${_OPT_TMP_CLEAR_TENANT}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_CLEAR_TENANT_LONG} option."
 				return 1
 			fi
 			_OPT_TMP_CLEAR_TENANT=1
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_VERIFY_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_VERIFY_LONG}" ]; then
 			if [ -n "${_OPT_TMP_VERIFY}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_VERIFY_LONG} option."
 				return 1
@@ -957,7 +962,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_VERIFY=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_CIP_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_CIP_LONG}" ]; then
 			if [ -n "${_OPT_TMP_CIP}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_CIP_LONG} option."
 				return 1
@@ -969,7 +974,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_CIP=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_CPORT_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_CPORT_LONG}" ]; then
 			if [ -n "${_OPT_TMP_CPORT}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_CPORT_LONG} option."
 				return 1
@@ -981,7 +986,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_CPORT=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_CROLE_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_CROLE_LONG}" ]; then
 			if [ -n "${_OPT_TMP_CROLE}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_CROLE_LONG} option."
 				return 1
@@ -993,7 +998,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_CROLE=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_CCUK_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_CCUK_LONG}" ]; then
 			if [ -n "${_OPT_TMP_CCUK}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_CCUK_LONG} option."
 				return 1
@@ -1005,7 +1010,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_CCUK=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_SPORT_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_SPORT_LONG}" ]; then
 			if [ -n "${_OPT_TMP_SPORT}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_SPORT_LONG} option."
 				return 1
@@ -1017,7 +1022,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_SPORT=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_SROLE_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_SROLE_LONG}" ]; then
 			if [ -n "${_OPT_TMP_SROLE}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_SROLE_LONG} option."
 				return 1
@@ -1029,7 +1034,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_SROLE=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_SCUK_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_SCUK_LONG}" ]; then
 			if [ -n "${_OPT_TMP_SCUK}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_SCUK_LONG} option."
 				return 1
@@ -1041,7 +1046,7 @@ parse_common_option()
 			fi
 			_OPT_TMP_SCUK=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
 
-		elif [ "X${_OPTION_TMP}" = "X${K2HR3CLI_COMMAND_OPT_OUTPUT_LONG}" ]; then
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_OUTPUT_LONG}" ]; then
 			if [ -n "${_OPT_TMP_OUTPUT}" ]; then
 				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_OUTPUT_LONG} option."
 				return 1
@@ -1056,8 +1061,7 @@ parse_common_option()
 			#
 			# Check file path
 			#
-			pecho -n "${_OPT_TMP_OUTPUT_TMP}" | grep -q "/"
-			if [ $? -ne 0 ]; then
+			if ! pecho -n "${_OPT_TMP_OUTPUT_TMP}" | grep -q "/"; then
 				_OPT_TMP_OUTPUT_TMP="./${_OPT_TMP_OUTPUT_TMP}"
 			fi
 			_OPT_TMP_OUTPUT_DIR_TMP=$(dirname "$0")
@@ -1069,7 +1073,7 @@ parse_common_option()
 			_OPT_TMP_OUTPUT="${_OPT_TMP_OUTPUT_TMP}"
 
 		else
-			if [ "X${K2HR3CLI_OPTION_PARSER_REST}" = "X" ]; then
+			if [ -z "${K2HR3CLI_OPTION_PARSER_REST}" ]; then
 				K2HR3CLI_OPTION_PARSER_REST="$1"
 			else
 				K2HR3CLI_OPTION_PARSER_REST="${K2HR3CLI_OPTION_PARSER_REST} $1"
@@ -1089,8 +1093,7 @@ parse_common_option()
 		#
 		# Set K2HR3CLI_MSGLEVEL variable in following function.
 		#
-		set_msglevel "${_OPT_TMP_MSGLEVEL}"
-		if [ $? -ne 0 ]; then
+		if ! set_msglevel "${_OPT_TMP_MSGLEVEL}"; then
 			prn_err "Unknown ${K2HR3CLI_COMMON_OPT_MSGLEVEL_LONG}(${K2HR3CLI_COMMON_OPT_MSGLEVEL_SHORT}) option parameter(${_OPT_TMP_MSGLEVEL}) is specified."
 			return 1
 		fi
@@ -1098,167 +1101,126 @@ parse_common_option()
 
 	if [ -n "${_OPT_TMP_API_URI}" ]; then
 		_OPT_TMP_API_URI=$(filter_null_string "${_OPT_TMP_API_URI}")
-
-		if [ "X${_OPT_TMP_API_URI}" != "X${K2HR3CLI_API_URI}" ]; then
+		if [ -z "${_OPT_TMP_API_URI}" ] || [ "${_OPT_TMP_API_URI}" != "${K2HR3CLI_API_URI}" ]; then
 			add_config_update_var "K2HR3CLI_API_URI"
 		fi
 		K2HR3CLI_API_URI=${_OPT_TMP_API_URI}
 	fi
 	if [ -n "${_OPT_TMP_TENANT}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_TENANT=$(filter_null_string "${_OPT_TMP_TENANT}")
 	fi
 	if [ -n "${_OPT_TMP_UNSCOPED_TOKEN}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_UNSCOPED_TOKEN=$(filter_null_string "${_OPT_TMP_UNSCOPED_TOKEN}")
-		# shellcheck disable=SC2034
 		K2HR3CLI_SCOPED_TOKEN=""
 	fi
 	if [ -n "${_OPT_TMP_SCOPED_TOKEN}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_SCOPED_TOKEN=$(filter_null_string "${_OPT_TMP_SCOPED_TOKEN}")
 	fi
 	if [ -n "${_OPT_TMP_OPENSTACK_TOKEN}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPENSTACK_TOKEN=$(filter_null_string "${_OPT_TMP_OPENSTACK_TOKEN}")
 	fi
 	if [ -n "${_OPT_TMP_OIDC_TOKEN}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OIDC_TOKEN=$(filter_null_string "${_OPT_TMP_OIDC_TOKEN}")
 	fi
 	if [ -n "${_OPT_TMP_USER}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_USER=$(filter_null_string "${_OPT_TMP_USER}")
-		# shellcheck disable=SC2034
 		K2HR3CLI_UNSCOPED_TOKEN=""
-		# shellcheck disable=SC2034
 		K2HR3CLI_SCOPED_TOKEN=""
 	fi
 	if [ -n "${_OPT_TMP_PASS}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_PASS=$(filter_null_string "${_OPT_TMP_PASS}")
-		# shellcheck disable=SC2034
 		K2HR3CLI_UNSCOPED_TOKEN=""
-		# shellcheck disable=SC2034
 		K2HR3CLI_SCOPED_TOKEN=""
 	fi
 	if [ -n "${_OPT_TMP_POLICIES}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_POLICIES=$(filter_null_string "${_OPT_TMP_POLICIES}")
 	fi
 	if [ -n "${_OPT_TMP_ALIAS}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_ALIAS=$(filter_null_string "${_OPT_TMP_ALIAS}")
 	fi
 	if [ -n "${_OPT_TMP_HOST}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_HOST=$(filter_null_string "${_OPT_TMP_HOST}")
 	fi
 	if [ -n "${_OPT_TMP_PORT}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_PORT=$(filter_null_string "${_OPT_TMP_PORT}")
 	fi
 	if [ -n "${_OPT_TMP_CUK}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_CUK=$(filter_null_string "${_OPT_TMP_CUK}")
 	fi
 	if [ -n "${_OPT_TMP_EXTRA}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_EXTRA=$(filter_null_string "${_OPT_TMP_EXTRA}")
 	fi
 	if [ -n "${_OPT_TMP_TAG}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_TAG=$(filter_null_string "${_OPT_TMP_TAG}")
 	fi
 	if [ -n "${_OPT_TMP_EXPIRE}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_EXPIRE=${_OPT_TMP_EXPIRE}
 	fi
 	if [ -n "${_OPT_TMP_TYPE}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_TYPE=$(filter_null_string "${_OPT_TMP_TYPE}")
 	fi
 	if [ -n "${_OPT_TMP_DATA}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_DATA=$(filter_null_string "${_OPT_TMP_DATA}")
 	fi
 	if [ -n "${_OPT_TMP_DATAFILE}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_DATAFILE=${_OPT_TMP_DATAFILE}
 	fi
 	if [ -n "${_OPT_TMP_KEYS}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_KEYS=$(filter_null_string "${_OPT_TMP_KEYS}")
 	fi
 	if [ -n "${_OPT_TMP_SERVICE}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_SERVICE=$(filter_null_string "${_OPT_TMP_SERVICE}")
 	fi
 	if [ -n "${_OPT_TMP_RESOURCE}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_RESOURCE=$(filter_null_string "${_OPT_TMP_RESOURCE}")
 	fi
 	if [ -n "${_OPT_TMP_KEYNAMES}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_KEYNAMES=$(filter_null_string "${_OPT_TMP_KEYNAMES}")
 	fi
 	if [ -n "${_OPT_TMP_ALIASES}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_ALIASES=$(filter_null_string "${_OPT_TMP_ALIASES}")
 	fi
 	if [ -n "${_OPT_TMP_EFFECT}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_EFFECT=$(filter_null_string "${_OPT_TMP_EFFECT}")
 	fi
 	if [ -n "${_OPT_TMP_ACTION}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_ACTION=$(filter_null_string "${_OPT_TMP_ACTION}")
 	fi
 	if [ -n "${_OPT_TMP_CLEAR_TENANT}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_CLEAR_TENANT=${_OPT_TMP_CLEAR_TENANT}
 	fi
 	if [ -n "${_OPT_TMP_VERIFY}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_VERIFY=$(filter_null_string "${_OPT_TMP_VERIFY}")
 	fi
 	if [ -n "${_OPT_TMP_CIP}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_CIP=$(filter_null_string "${_OPT_TMP_CIP}")
 	fi
 	if [ -n "${_OPT_TMP_CPORT}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_CPORT=$(filter_null_string "${_OPT_TMP_CPORT}")
 	fi
 	if [ -n "${_OPT_TMP_CROLE}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_CROLE=$(filter_null_string "${_OPT_TMP_CROLE}")
 	fi
 	if [ -n "${_OPT_TMP_CCUK}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_CCUK=$(filter_null_string "${_OPT_TMP_CCUK}")
 	fi
 	if [ -n "${_OPT_TMP_SPORT}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_SPORT=$(filter_null_string "${_OPT_TMP_SPORT}")
 	fi
 	if [ -n "${_OPT_TMP_SROLE}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_SROLE=$(filter_null_string "${_OPT_TMP_SROLE}")
 	fi
 	if [ -n "${_OPT_TMP_SCUK}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_SCUK=$(filter_null_string "${_OPT_TMP_SCUK}")
 	fi
 	if [ -n "${_OPT_TMP_OUTPUT}" ]; then
-		# shellcheck disable=SC2034
 		K2HR3CLI_OPT_OUTPUT=${_OPT_TMP_OUTPUT}
 	fi
 
 	#
 	# Check conflict about data and datafile options
 	#
-	if [ "X${K2HR3CLI_OPT_DATA}" != "X" ] && [ "X${K2HR3CLI_OPT_DATAFILE}" != "X" ]; then
+	if [ -n "${K2HR3CLI_OPT_DATA}" ] && [ -n "${K2HR3CLI_OPT_DATAFILE}" ]; then
 		prn_err "${K2HR3CLI_COMMAND_OPT_DATA_LONG} and ${K2HR3CLI_COMMAND_OPT_DATAFILE_LONG} option cannot be specified at the same time."
 		return 1
 	fi
@@ -1292,7 +1254,10 @@ parse_common_option()
 				break
 			fi
 			_OPT_TMP_URI_LAST_CH=$(pecho -n "${K2HR3CLI_API_URI}" | cut -b "${_OPT_TMP_URI_LAST_POS}")
-			if [ "X${_OPT_TMP_URI_LAST_CH}" = "X/" ] || [ "X${_OPT_TMP_URI_LAST_CH}" = "X " ] || [ "X${_OPT_TMP_URI_LAST_CH}" = "X${K2HR3CLI_TAB_WORD}" ]; then
+
+			if [ -z "${_OPT_TMP_URI_LAST_CH}" ]; then
+				break
+			elif [ "${_OPT_TMP_URI_LAST_CH}" = "/" ] || [ "${_OPT_TMP_URI_LAST_CH}" = " " ] || [ "${_OPT_TMP_URI_LAST_CH}" = "${K2HR3CLI_TAB_WORD}" ]; then
 				if [ "${_OPT_TMP_URI_LAST_POS}" -gt 1 ]; then
 					_OPT_TMP_URI_LAST_POS=$((_OPT_TMP_URI_LAST_POS - 1))
 					K2HR3CLI_API_URI=$(pecho -n "${K2HR3CLI_API_URI}" | cut -c 1-"${_OPT_TMP_URI_LAST_POS}")

@@ -30,7 +30,7 @@ LIBEXECDIR="/usr/libexec/k2hr3"
 #
 # Override libexec directory path for testing, etc
 #
-if [ "X${K2HR3CLI_LIBEXEC_DIR}" != "X" ]; then
+if [ -n "${K2HR3CLI_LIBEXEC_DIR}" ]; then
 	if [ -d "${K2HR3CLI_LIBEXEC_DIR}" ]; then
 		LIBEXECDIR=${K2HR3CLI_LIBEXEC_DIR}
 	fi
@@ -161,7 +161,7 @@ fi
 # [NOTE]
 # K2HR3CLI_REQUEST_FILE environment is override default file.
 #
-if [ "X${K2HR3CLI_REQUEST_FILE}" != "X" ]; then
+if [ -n "${K2HR3CLI_REQUEST_FILE}" ]; then
 	if [ ! -f "${K2HR3CLI_REQUEST_FILE}" ]; then
 		prn_err "Could not find ${K2HR3CLI_REQUEST_FILE} request file which is specified K2HR3CLI_REQUEST_FILE environment."
 		exit 1
@@ -206,15 +206,14 @@ set -- ${K2HR3CLI_OPTION_PARSER_REST}
 # Before loading this file, we must first check the option to
 # specify a configuration file.
 #
-get_option2_value "${K2HR3CLI_COMMON_OPT_CONFIG_SHORT}" "${K2HR3CLI_COMMON_OPT_CONFIG_LONG}" "$@"
-if [ $? -ne 0 ]; then
+if ! get_option2_value "${K2HR3CLI_COMMON_OPT_CONFIG_SHORT}" "${K2HR3CLI_COMMON_OPT_CONFIG_LONG}" "$@"; then
 	prn_err "The specified option is invalid."
 	exit 1
 else
 	# shellcheck disable=SC2086
 	set -- ${K2HR3CLI_OPTION_PARSER_REST}
 fi
-if [ "X${K2HR3_OPTION_VALUE}" != "X" ]; then
+if [ -n "${K2HR3_OPTION_VALUE}" ]; then
 	#
 	# Found option and set result value to K2HR3CLI_OPT_CONFIG
 	#
@@ -239,8 +238,7 @@ fi
 #
 # Common options
 #
-parse_common_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_common_option "$@"; then
 	exit 1
 else
 	# shellcheck disable=SC2086
@@ -250,11 +248,10 @@ fi
 #
 # Mode options
 #
-parse_mode_option "$@"
-if [ $? -ne 0 ]; then
+if ! parse_mode_option "$@"; then
 	exit 1
 else
-	if [ "X${K2HR3CLI_OPTION_NOPREFIX}" = "X" ]; then
+	if [ -z "${K2HR3CLI_OPTION_NOPREFIX}" ]; then
 		K2HR3CLI_MODE=""
 	else
 		K2HR3CLI_MODE=${K2HR3CLI_OPTION_NOPREFIX}
@@ -271,14 +268,14 @@ if [ "${K2HR3CLI_HAS_CURL}" -ne 1 ]; then
 	exit 1
 fi
 
-if [ "X${K2HR3CLI_API_URI}" = "X" ]; then
+if [ -z "${K2HR3CLI_API_URI}" ]; then
 	prn_warn "The URI for K2HR3 REST API is not specified, some commands require this. Please specify with the ${K2HR3CLI_COMMAND_OPT_API_URI_LONG}(${K2HR3CLI_COMMAND_OPT_API_URI_SHORT}) option, K2HR3CLI_API_URI environment variable, or configuration."
 fi
 
 #--------------------------------------------------------------
 # Main
 #--------------------------------------------------------------
-if [ "X${K2HR3CLI_OPT_VERSION}" = "X1" ]; then
+if [ -n "${K2HR3CLI_OPT_VERSION}" ] && [ "${K2HR3CLI_OPT_VERSION}" = "1" ]; then
 	#
 	# Version
 	#
@@ -307,7 +304,7 @@ if [ "X${K2HR3CLI_OPT_VERSION}" = "X1" ]; then
 		fi
 	done
 
-elif [ "X${K2HR3CLI_MODE}" != "X" ]; then
+elif [ -n "${K2HR3CLI_MODE}" ]; then
 	#
 	# Run mode
 	#

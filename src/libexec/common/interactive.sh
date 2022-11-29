@@ -43,27 +43,26 @@ line_input()
 	_INTERACTIVE_HIDE_INPUT=0
 
 	if [ $# -gt 0 ]; then
-		if [ "X$1" != "X" ]; then
+		if [ -n "$1" ]; then
 			_INTERACTIVE_PROMPT="$1"
 		fi
 	fi
 	shift
 	if [ $# -gt 0 ]; then
-		if [ "X$1" = "X1" ]; then
+		if [ -n "$1" ] && [ "$1" = "1" ]; then
 			_INTERACTIVE_HIDE_INPUT=1
 		fi
 	fi
 
 	pecho -n "${_INTERACTIVE_PROMPT}"
-	if [ ${_INTERACTIVE_HIDE_INPUT} -eq 1 ]; then
+	if [ "${_INTERACTIVE_HIDE_INPUT}" -eq 1 ]; then
 		stty -echo
 	fi
 
 	read -r K2HR3CLI_INTERACTIVE_INPUT
 
-	if [ ${_INTERACTIVE_HIDE_INPUT} -eq 1 ]; then
+	if [ "${_INTERACTIVE_HIDE_INPUT}" -eq 1 ]; then
 		stty echo
-		# shellcheck disable=SC2034
 		for _INTERACTIVE_TMP_POS in $(seq 1 ${#K2HR3CLI_INTERACTIVE_INPUT}); do
 			pecho -n "*"
 		done
@@ -85,7 +84,7 @@ pass_input()
 {
 	_INTERACTIVE_PROMPT_PASS="Input passphrase: "
 	if [ $# -gt 0 ]; then
-		if [ "X$1" != "X" ]; then
+		if [ -n "$1" ]; then
 			_INTERACTIVE_PROMPT_PASS="$1"
 		fi
 	fi
@@ -107,7 +106,7 @@ normal_input()
 {
 	_INTERACTIVE_PROMPT_NORMAL="Input: "
 	if [ $# -gt 0 ]; then
-		if [ "X$1" != "X" ]; then
+		if [ -n "$1" ]; then
 			_INTERACTIVE_PROMPT_NORMAL="$1"
 		fi
 	fi
@@ -139,19 +138,19 @@ completion_variable()
 	_INTERACTIVE_COMPLETE_LOOP=0
 	_INTERACTIVE_COMPLETE_HIDE=0
 	if [ $# -gt 0 ]; then
-		if [ "X$1" != "X" ]; then
+		if [ -n "$1" ]; then
 			_INTERACTIVE_COMPLETE_PROMPT="$1"
 		fi
 	fi
 	shift
 	if [ $# -gt 0 ]; then
-		if [ "X$1" = "X1" ]; then
+		if [ -n "$1" ] && [ "$1" = "1" ]; then
 			_INTERACTIVE_COMPLETE_LOOP=1
 		fi
 	fi
 	shift
 	if [ $# -gt 0 ]; then
-		if [ "X$1" = "X1" ]; then
+		if [ -n "$1" ] && [ "$1" = "1" ]; then
 			_INTERACTIVE_COMPLETE_HIDE=1
 		fi
 	fi
@@ -160,7 +159,7 @@ completion_variable()
 	# Check current variable
 	#
 	_INTERACTIVE_COMPLETE_VALUE=$(eval pecho -n '$'"${_INTERACTIVE_COMPLETE_VARNAME}")
-	if [ "X${_INTERACTIVE_COMPLETE_VALUE}" != "X" ]; then
+	if [ -n "${_INTERACTIVE_COMPLETE_VALUE}" ]; then
 		return 0
 	fi
 
@@ -168,11 +167,11 @@ completion_variable()
 	# Input
 	#
 	_INTERACTIVE_COMPLETE_FIRST=1
-	while [ ${_INTERACTIVE_COMPLETE_LOOP} -eq 1 ] || [ ${_INTERACTIVE_COMPLETE_FIRST} -eq 1 ]; do
+	while [ "${_INTERACTIVE_COMPLETE_LOOP}" -eq 1 ] || [ "${_INTERACTIVE_COMPLETE_FIRST}" -eq 1 ]; do
 		_INTERACTIVE_COMPLETE_FIRST=0
 
 		pecho -n "${_INTERACTIVE_COMPLETE_PROMPT}"
-		if [ ${_INTERACTIVE_COMPLETE_HIDE} -eq 1 ]; then
+		if [ "${_INTERACTIVE_COMPLETE_HIDE}" -eq 1 ]; then
 			stty -echo
 		fi
 
@@ -180,21 +179,19 @@ completion_variable()
 		read -r "${_INTERACTIVE_COMPLETE_VARNAME}"
 
 		_INTERACTIVE_COMPLETE_VALUE=$(eval pecho -n '$'"${_INTERACTIVE_COMPLETE_VARNAME}")
-		if [ ${_INTERACTIVE_COMPLETE_HIDE} -eq 1 ]; then
+		if [ "${_INTERACTIVE_COMPLETE_HIDE}" -eq 1 ]; then
 			stty echo
-			# shellcheck disable=SC2034
 			for _INTERACTIVE_TMP_POS in $(seq 1 ${#_INTERACTIVE_COMPLETE_VALUE}); do
 				pecho -n "*"
 			done
 			pecho ""
 		fi
 
-		if [ "X${_INTERACTIVE_COMPLETE_VALUE}" != "X" ]; then
+		if [ -n "${_INTERACTIVE_COMPLETE_VALUE}" ]; then
 			#
 			# Check back quote for shell executable charactor
 			#
-			pecho -n "${_INTERACTIVE_COMPLETE_VALUE}" | grep -q '`'
-			if [ $? -eq 0 ]; then
+			if pecho -n "${_INTERACTIVE_COMPLETE_VALUE}" | grep -q '`'; then
 				prn_err "Contains a character('\`') that cannot be specified."
 				_INTERACTIVE_COMPLETE_VALUE=""
 			else
@@ -203,7 +200,7 @@ completion_variable()
 		fi
 	done
 
-	if [ "X${_INTERACTIVE_COMPLETE_VALUE}" = "X" ]; then
+	if [ -z "${_INTERACTIVE_COMPLETE_VALUE}" ]; then
 		return 1
 	fi
 	return 0
@@ -232,19 +229,18 @@ completion_variable_auto()
 	#
 	_INTERACTIVE_AUTO_COMPLETE_VARNAME="$1"
 	_INTERACTIVE_AUTO_COMPLETE_VALUE=$(eval pecho -n '$'"${_INTERACTIVE_AUTO_COMPLETE_VARNAME}")
-	if [ "X${_INTERACTIVE_AUTO_COMPLETE_VALUE}" = "X" ]; then
+	if [ -z "${_INTERACTIVE_AUTO_COMPLETE_VALUE}" ]; then
 		#
 		# Not found variable
 		#
-		if [ "X${K2HR3CLI_OPT_INTERACTIVE}" != "X1" ]; then
+		if [ -z "${K2HR3CLI_OPT_INTERACTIVE}" ] || [ "${K2HR3CLI_OPT_INTERACTIVE}" != "1" ]; then
 			return 1
 		fi
 
 		#
 		# Interactive mode
 		#
-		completion_variable "$1" "$2" "$3" "$4"
-		if [ $? -ne 0 ]; then
+		if ! completion_variable "$1" "$2" "$3" "$4"; then
 			return 1
 		fi
 	fi

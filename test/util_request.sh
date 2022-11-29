@@ -44,7 +44,7 @@ K2HR3CLI_REQUEST_RESULT_FILE="/tmp/.${BINNAME}_$$_curl.result"
 # The function specified by "TEST_CREATE_DUMMY_RESPONSE_FUNC" should call the
 # "create_dummy_response" function internally.
 #
-if [ "X${TEST_CREATE_DUMMY_RESPONSE_FUNC}" = "X" ]; then
+if [ -z "${TEST_CREATE_DUMMY_RESPONSE_FUNC}" ]; then
 	export TEST_CREATE_DUMMY_RESPONSE_FUNC="create_dummy_response"
 fi
 
@@ -76,15 +76,14 @@ util_search_header()
 	_UTIL_SEARCH_HEADER_KEYWORD=$(to_upper "$1")
 	shift
 
-	if [ "X${_UTIL_SEARCH_HEADER_KEYWORD}" = "X" ]; then
+	if [ -z "${_UTIL_SEARCH_HEADER_KEYWORD}" ]; then
 		pecho -n ""
 		return 1
 	fi
 
 	while [ $# -gt 0 ]; do
 		_UTIL_ONE_HEADER_PAIR=$(to_upper "$1")
-		pecho -n "${_UTIL_ONE_HEADER_PAIR}" | grep -q "^${_UTIL_SEARCH_HEADER_KEYWORD}"
-		if [ $? -eq 0 ]; then
+		if pecho -n "${_UTIL_ONE_HEADER_PAIR}" | grep -q "^${_UTIL_SEARCH_HEADER_KEYWORD}"; then
 			_UTIL_ONE_HEADER_VALUE=$(pecho -n "$1" | sed -e 's/:/ /g' | awk '{print $2}')
 			pecho -n "${_UTIL_ONE_HEADER_VALUE}"
 			return 0
@@ -105,18 +104,17 @@ util_search_header()
 #
 util_search_usertoken()
 {
-	_UTIL_SEARCH_TOKEN=$(util_search_header "x-auth-token" "$@")
-	if [ $? -ne 0 ]; then
+	if ! _UTIL_SEARCH_TOKEN=$(util_search_header "x-auth-token" "$@"); then
 		prn_dbg "Not found \"x-auth-token\" header"
 		return 1
 	fi
 	_UTIL_SEARCH_TOKEN_TMP=$(pecho -n "${_UTIL_SEARCH_TOKEN}" | cut -c 1-2)
-	if [ "X${_UTIL_SEARCH_TOKEN_TMP}" != "XU=" ]; then
+	if [ -z "${_UTIL_SEARCH_TOKEN_TMP}" ] || [ "${_UTIL_SEARCH_TOKEN_TMP}" != "U=" ]; then
 		prn_err "\"x-auth-token\" header value does not start \"U=\"(x-auth-token: ${_UTIL_SEARCH_TOKEN})."
 		return 1
 	fi
 	_UTIL_SEARCH_TOKEN_TMP=$(pecho -n "${_UTIL_SEARCH_TOKEN}" | cut -c 3-)
-	if [ "X${_UTIL_SEARCH_TOKEN_TMP}" = "X" ]; then
+	if [ -z "${_UTIL_SEARCH_TOKEN_TMP}" ]; then
 		prn_err "\"x-auth-token\" header value is empty(x-auth-token: ${_UTIL_SEARCH_TOKEN})."
 		return 1
 	fi
@@ -134,18 +132,17 @@ util_search_usertoken()
 #
 util_search_roletoken()
 {
-	_UTIL_SEARCH_TOKEN=$(util_search_header "x-auth-token" "$@")
-	if [ $? -ne 0 ]; then
+	if ! _UTIL_SEARCH_TOKEN=$(util_search_header "x-auth-token" "$@"); then
 		prn_dbg "Not found \"x-auth-token\" header"
 		return 1
 	fi
 	_UTIL_SEARCH_TOKEN_TMP=$(pecho -n "${_UTIL_SEARCH_TOKEN}" | cut -c 1-2)
-	if [ "X${_UTIL_SEARCH_TOKEN_TMP}" != "XR=" ]; then
+	if [ -z "${_UTIL_SEARCH_TOKEN_TMP}" ] || [ "${_UTIL_SEARCH_TOKEN_TMP}" != "R=" ]; then
 		prn_err "\"x-auth-token\" header value does not start \"U=\"(x-auth-token: ${_UTIL_SEARCH_TOKEN})."
 		return 1
 	fi
 	_UTIL_SEARCH_TOKEN_TMP=$(pecho -n "${_UTIL_SEARCH_TOKEN}" | cut -c 3-)
-	if [ "X${_UTIL_SEARCH_TOKEN_TMP}" = "X" ]; then
+	if [ -z "${_UTIL_SEARCH_TOKEN_TMP}" ]; then
 		prn_err "\"x-auth-token\" header value is empty(x-auth-token: ${_UTIL_SEARCH_TOKEN})."
 		return 1
 	fi
@@ -167,7 +164,7 @@ util_search_urlarg()
 	_UTIL_SEARCH_KEYWORD=$(to_upper "$1")
 	shift
 
-	if [ "X${_UTIL_SEARCH_KEYWORD}" = "X" ]; then
+	if [ -z "${_UTIL_SEARCH_KEYWORD}" ]; then
 		pecho -n ""
 		return 1
 	fi
@@ -175,8 +172,7 @@ util_search_urlarg()
 	_UTIL_SEARCH_PARSED_ARGS=$(pecho -n "$@" | sed 's/[?|&]/ /g')
 	for _UTIL_ONE_ARG_PAIR in ${_UTIL_SEARCH_PARSED_ARGS}; do
 		_UTIL_ONE_ARG_PAIR_TMP=$(to_upper "${_UTIL_ONE_ARG_PAIR}")
-		pecho -n "${_UTIL_ONE_ARG_PAIR_TMP}" | grep -q "^${_UTIL_SEARCH_KEYWORD}"
-		if [ $? -eq 0 ]; then
+		if pecho -n "${_UTIL_ONE_ARG_PAIR_TMP}" | grep -q "^${_UTIL_SEARCH_KEYWORD}"; then
 			_UTIL_ONE_ARG_VALUE=$(pecho -n "${_UTIL_ONE_ARG_PAIR}" | sed -e 's/=/ /g' | awk '{print $2}')
 			pecho -n "${_UTIL_ONE_ARG_VALUE}"
 			return 0
@@ -203,8 +199,7 @@ util_create_zip_file()
 	pecho "TEMPORARY FILE FOR ZIP RESULT BY USERDATA/EXTDATA"	>  "${_UTIL_TMP_UNZIP_FILE}"
 	pecho "CREATED BY K2HR3 CLI TEST UTILITY"					>> "${_UTIL_TMP_UNZIP_FILE}"
 
-	gzip "${_UTIL_TMP_UNZIP_FILE}"
-	if [ $? -ne 0 ]; then
+	if ! gzip "${_UTIL_TMP_UNZIP_FILE}"; then
 		prn_err "Failed to create zip file(${_UTIL_TMP_ZIP_FILE})."
 		rm -f "${_UTIL_TMP_UNZIP_FILE}"
 		return 1
@@ -246,7 +241,7 @@ create_dummy_response()
 	# Check Parameters
 	#
 	_DUMMY_METHOD="$1"
-	if [ "X${_DUMMY_METHOD}" != "XGET" ] && [ "X${_DUMMY_METHOD}" != "XHEAD" ] && [ "X${_DUMMY_METHOD}" != "XPUT" ] && [ "X${_DUMMY_METHOD}" != "XPOST" ] && [ "X${_DUMMY_METHOD}" != "XDELETE" ]; then
+	if [ -z "${_DUMMY_METHOD}" ] || { [ "${_DUMMY_METHOD}" != "GET" ] && [ "${_DUMMY_METHOD}" != "HEAD" ] && [ "${_DUMMY_METHOD}" != "PUT" ] && [ "${_DUMMY_METHOD}" != "POST" ] && [ "${_DUMMY_METHOD}" != "DELETE" ]; }; then
 		prn_err "Unknown Method($1) options for calling requet."
 		return 2
 	fi
@@ -254,8 +249,7 @@ create_dummy_response()
 	_DUMMY_URL_FULL="$2"
 	_DUMMY_URL_PATH=$(pecho -n "${_DUMMY_URL_FULL}" | sed -e 's/?.*$//g' -e 's/&.*$//g')
 
-	pecho -n "${_DUMMY_URL_FULL}" | grep -q '[?|&]'
-	if [ $? -eq 0 ]; then
+	if pecho -n "${_DUMMY_URL_FULL}" | grep -q '[?|&]'; then
 		_DUMMY_URL_ARGS=$(pecho -n "${_DUMMY_URL_FULL}" | sed -e 's/^.*?//g')
 	else
 		_DUMMY_URL_ARGS=""
@@ -264,7 +258,6 @@ create_dummy_response()
 
 	_DUMMY_BODY_STRING="$3"
 	_DUMMY_BODY_FILE="$4"
-	# shellcheck disable=SC2034
 	_DUMMY_CONTENT_TYPE="$5"
 	if [ $# -le 5 ]; then
 		shift $#
@@ -278,46 +271,40 @@ create_dummy_response()
 	#------------------------------------------------------
 	# Version
 	#------------------------------------------------------
-	if [ "X${_DUMMY_URL_PATH}" = "X/" ]; then
+	if [ -n "${_DUMMY_URL_PATH}" ] && [ "${_DUMMY_URL_PATH}" = "/" ]; then
 		#
 		# Version(/)
 		#
-		if [ "X${_DUMMY_METHOD}" != "XGET" ]; then
-			# shellcheck disable=SC2034
+		if [ -z "${_DUMMY_METHOD}" ] || [ "${_DUMMY_METHOD}" != "GET" ]; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Not allowed Method(${_DUMMY_METHOD})."
 			return 1
 		fi
-		if [ "X${_DUMMY_URL_ARGS}" != "X" ]; then
-			# shellcheck disable=SC2034
+		if [ -n "${_DUMMY_URL_ARGS}" ]; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "There is an unnecessary URL arguments.(${_DUMMY_URL_ARGS})."
 			return 1
 		fi
 
-		# shellcheck disable=SC2034
 		K2HR3CLI_REQUEST_EXIT_CODE=200
 		_UTIL_RESPONSE_CONTENT='{"version":["v1"]}'
 		pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-	elif [ "X${_DUMMY_URL_PATH}" = "X/v1" ]; then
+	elif [ -n "${_DUMMY_URL_PATH}" ] && [ "${_DUMMY_URL_PATH}" = "/v1" ]; then
 		#
 		# Version(/v1)
 		#
-		if [ "X${_DUMMY_METHOD}" != "XGET" ]; then
-			# shellcheck disable=SC2034
+		if [ -z "${_DUMMY_METHOD}" ] || [ "${_DUMMY_METHOD}" != "GET" ]; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Not allowed Method(${_DUMMY_METHOD})."
 			return 1
 		fi
-		if [ "X${_DUMMY_URL_ARGS}" != "X" ]; then
-			# shellcheck disable=SC2034
+		if [ -n "${_DUMMY_URL_ARGS}" ]; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "There is an unnecessary URL arguments.(${_DUMMY_URL_ARGS})."
 			return 1
 		fi
 
-		# shellcheck disable=SC2034
 		K2HR3CLI_REQUEST_EXIT_CODE=200
 		_UTIL_RESPONSE_CONTENT='{"version":{"/":["GET"],"/v1":["GET"]},"usertoken":{"/v1/user/tokens":["HEAD","GET","POST"]},"host":{"/v1/host":["GET","PUT","POST","DELETE"],"/v1/host/{port}":["PUT","POST","DELETE"],"/v1/host/FQDN":["DELETE"],"/v1/host/FQDN:{port}":["DELETE"],"/v1/host/IP":["DELETE"],"/v1/host/IP:{port}":["DELETE"]},"role":{"/v1/role":["PUT","POST"],"/v1/role/{role}":["HEAD","GET","PUT","POST","DELETE"],"/v1/role/token/{role}":["GET"]},"resource":{"/v1/resource":["PUT","POST"],"/v1/resource/{resource}":["HEAD","GET","DELETE"]},"policy":{"/v1/policy":["PUT","POST"],"/v1/policy/{policy}":["HEAD","GET","DELETE"]},"list":{"/v1/list":["HEAD","GET"],"/v1/list/{role,resource,policy}/{path}":["HEAD","GET"]}}'
 		pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -325,37 +312,33 @@ create_dummy_response()
 	#------------------------------------------------------
 	# Token
 	#------------------------------------------------------
-	elif [ "X${_DUMMY_URL_PATH}" = "X/v1/user/tokens" ]; then
+	elif [ -n "${_DUMMY_URL_PATH}" ] && [ "${_DUMMY_URL_PATH}" = "/v1/user/tokens" ]; then
 		#
 		# Token(/v1/user/tokens)
 		#
-		if [ "X${_DUMMY_METHOD}" = "XHEAD" ]; then
+		if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "HEAD" ]; then
 			#
 			# HEAD Token(/v1/user/tokens)
 			#
-			if [ "X${_DUMMY_URL_ARGS}" != "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -n "${_DUMMY_URL_ARGS}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "There is an unnecessary URL arguments.(${_DUMMY_URL_ARGS})."
 				return 1
 			fi
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
-				# shellcheck disable=SC2034
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				return 1
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=204
 			_UTIL_RESPONSE_CONTENT=''
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-		elif [ "X${_DUMMY_METHOD}" = "XPUT" ]; then
+		elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "PUT" ]; then
 			#
 			# PUT Token(/v1/user/tokens)
 			#
-			if [ "X${_DUMMY_URL_ARGS}" != "X" ]; then
+			if [ -n "${_DUMMY_URL_ARGS}" ]; then
 				#
 				# From user credential or unscoped token
 				#
@@ -364,58 +347,50 @@ create_dummy_response()
 				_UTIL_TMP_TENANT=$(util_search_urlarg "tenantname" "${_DUMMY_URL_ARGS}")
 				prn_dbg "(create_dummy_response) all url args(${_DUMMY_URL_ARGS}) => username(${_UTIL_TMP_USERNAME}) + password(${_UTIL_TMP_PASSPHRASE}) + tenantname(${_UTIL_TMP_TENANT})"
 
-				if [ "X${_UTIL_TMP_USERNAME}" != "X" ] && [ "X${_UTIL_TMP_PASSPHRASE}" != "X" ] && [ "X${_UTIL_TMP_TENANT}" != "X" ]; then
+				if [ -n "${_UTIL_TMP_USERNAME}" ] && [ -n "${_UTIL_TMP_PASSPHRASE}" ] && [ -n "${_UTIL_TMP_TENANT}" ]; then
 					#
 					# Scoped token from user credential
 					#
 					_UTIL_TMP_HEAD_VALUE=$(util_search_header "x-auth-token" "$@")
-					if [ "X${_UTIL_TMP_HEAD_VALUE}" != "X" ]; then
-						# shellcheck disable=SC2034
+					if [ -n "${_UTIL_TMP_HEAD_VALUE}" ]; then
 						K2HR3CLI_REQUEST_EXIT_CODE=400
 						prn_err "There is an unnecessary \"x-auth-token\" header.(${_UTIL_TMP_HEAD_VALUE})."
 						return 1
 					fi
 
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=201
 					_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":true,\"token\":\"TEST_TOKEN_SCOPED_FOR_TENANT_${_UTIL_TMP_TENANT}_USER_${_UTIL_TMP_USERNAME}\"}"
 					pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-				elif [ "X${_UTIL_TMP_USERNAME}" != "X" ] && [ "X${_UTIL_TMP_PASSPHRASE}" != "X" ] && [ "X${_UTIL_TMP_TENANT}" = "X" ]; then
+				elif [ -n "${_UTIL_TMP_USERNAME}" ] && [ -n "${_UTIL_TMP_PASSPHRASE}" ] && [ -z "${_UTIL_TMP_TENANT}" ]; then
 					#
 					# Unscoped token from user credential
 					#
 					_UTIL_TMP_HEAD_VALUE=$(util_search_header "x-auth-token" "$@")
-					if [ "X${_UTIL_TMP_HEAD_VALUE}" != "X" ]; then
-						# shellcheck disable=SC2034
+					if [ -n "${_UTIL_TMP_HEAD_VALUE}" ]; then
 						K2HR3CLI_REQUEST_EXIT_CODE=400
 						prn_err "There is an unnecessary \"x-auth-token\" header.(${_UTIL_TMP_HEAD_VALUE})."
 						return 1
 					fi
 
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=201
 					_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":false,\"token\":\"TEST_TOKEN_UNSCOPED_FOR_USER_${_UTIL_TMP_USERNAME}\"}"
 					pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-				elif [ "X${_UTIL_TMP_USERNAME}" = "X" ] && [ "X${_UTIL_TMP_PASSPHRASE}" = "X" ] && [ "X${_UTIL_TMP_TENANT}" != "X" ]; then
+				elif [ -z "${_UTIL_TMP_USERNAME}" ] && [ -z "${_UTIL_TMP_PASSPHRASE}" ] && [ -n "${_UTIL_TMP_TENANT}" ]; then
 					#
 					# Scoped token from unscoped token
 					#
-					_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-					if [ $? -ne 0 ]; then
-						# shellcheck disable=SC2034
+					if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 						K2HR3CLI_REQUEST_EXIT_CODE=400
 						return 1
 					fi
 
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=201
 					_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":true,\"token\":\"TEST_TOKEN_SCOPED_FOR_TENANT_${_UTIL_TMP_TENANT}_UNSCOPED_${_UTIL_TMP_TOKENVAL}\"}"
 					pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
 				else
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "Username or Password or Tanantname are wrong in URL arguments."
 					return 1
@@ -425,19 +400,16 @@ create_dummy_response()
 				#
 				# From oprnstack or OIDC token
 				#
-				_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-				if [ $? -ne 0 ]; then
-					# shellcheck disable=SC2034
+				if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					return 1
 				fi
 				_UTIL_TMP_TENANT=$(util_search_header "tenantname" "${_DUMMY_URL_ARGS}")
 
-				if [ "X${_UTIL_TMP_TENANT}" = "X" ]; then
+				if [ -z "${_UTIL_TMP_TENANT}" ]; then
 					#
 					# Unscoped token from openstack or OIDC token
 					#
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=201
 					_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":false,\"token\":\"TEST_TOKEN_UNSCOPED_FOR_OTHER_${_UTIL_TMP_TOKENVAL}\"}"
 					pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -446,50 +418,42 @@ create_dummy_response()
 					#
 					# Scoped token from openstack or OIDC token
 					#
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=201
 					_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":true,\"token\":\"TEST_TOKEN_SCOPED_FOR_TENANT_${_UTIL_TMP_TENANT}_OTHER_${_UTIL_TMP_TOKENVAL}\"}"
 					pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 				fi
 			fi
 
-		elif [ "X${_DUMMY_METHOD}" = "XPOST" ]; then
+		elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "POST" ]; then
 			#
 			# POST Token(/v1/user/tokens)
 			#
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				_UTIL_TMP_TOKENVAL=""
 			fi
 
 			_UTIL_TMP_USERNAME=""
 			_UTIL_TMP_PASSPHRASE=""
 			_UTIL_TMP_TENANT=""
-			if [ "X${_DUMMY_BODY_STRING}" != "X" ]; then
-				jsonparser_parse_json_string "${_DUMMY_BODY_STRING}"
-				if [ $? -eq 0 ]; then
-					jsonparser_get_key_value '%"auth"%"tenantName"%' "${JP_PAERSED_FILE}"
-					if [ $? -eq 0 ]; then
+			if [ -n "${_DUMMY_BODY_STRING}" ]; then
+				if jsonparser_parse_json_string "${_DUMMY_BODY_STRING}"; then
+					if jsonparser_get_key_value '%"auth"%"tenantName"%' "${JP_PAERSED_FILE}"; then
 						_UTIL_TMP_TENANT=${JSONPARSER_FIND_STR_VAL}
 					fi
 
-					jsonparser_get_key_value '%"auth"%"passwordCredentials"%"username"%' "${JP_PAERSED_FILE}"
-					if [ $? -eq 0 ]; then
+					if jsonparser_get_key_value '%"auth"%"passwordCredentials"%"username"%' "${JP_PAERSED_FILE}"; then
 						_UTIL_TMP_USERNAME=${JSONPARSER_FIND_STR_VAL}
 					fi
 
-					jsonparser_get_key_value '%"auth"%"passwordCredentials"%"password"%' "${JP_PAERSED_FILE}"
-					if [ $? -eq 0 ]; then
+					if jsonparser_get_key_value '%"auth"%"passwordCredentials"%"password"%' "${JP_PAERSED_FILE}"; then
 						_UTIL_TMP_PASSPHRASE=${JSONPARSER_FIND_STR_VAL}
 					fi
 
-					if [ "X${_UTIL_TMP_USERNAME}" != "X" ] && [ "X${_UTIL_TMP_PASSPHRASE}" = "X" ]; then
-						# shellcheck disable=SC2034
+					if [ -n "${_UTIL_TMP_USERNAME}" ] && [ -z "${_UTIL_TMP_PASSPHRASE}" ]; then
 						K2HR3CLI_REQUEST_EXIT_CODE=400
 						prn_err "Credential is specified, but passphrase is empty."
 						return 1
-					elif [ "X${_UTIL_TMP_USERNAME}" = "X" ] && [ "X${_UTIL_TMP_PASSPHRASE}" != "X" ]; then
-						# shellcheck disable=SC2034
+					elif [ -z "${_UTIL_TMP_USERNAME}" ] && [ -n "${_UTIL_TMP_PASSPHRASE}" ]; then
 						K2HR3CLI_REQUEST_EXIT_CODE=400
 						prn_err "Credential is specified, but username is empty."
 						return 1
@@ -498,22 +462,20 @@ create_dummy_response()
 				rm -f "${JP_PAERSED_FILE}"
 			fi
 
-			if [ "X${_UTIL_TMP_USERNAME}" != "X" ]; then
+			if [ -n "${_UTIL_TMP_USERNAME}" ]; then
 				#
 				# Specified User Credential
 				#
-				if [ "X${_UTIL_TMP_TOKENVAL}" != "X" ]; then
-					# shellcheck disable=SC2034
+				if [ -n "${_UTIL_TMP_TOKENVAL}" ]; then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "There is an unnecessary \"x-auth-token\" header.(${_UTIL_TMP_HEAD_VALUE})."
 					return 1
 				fi
 
-				if [ "X${_UTIL_TMP_TENANT}" = "X" ]; then
+				if [ -z "${_UTIL_TMP_TENANT}" ]; then
 					#
 					# Create Unscoped Token from credential
 					#
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=201
 					_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":false,\"token\":\"TEST_TOKEN_UNSCOPED_FOR_USER_${_UTIL_TMP_USERNAME}\"}"
 					pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -521,18 +483,16 @@ create_dummy_response()
 					#
 					# Create Scoped Token from credential
 					#
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=201
 					_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":true,\"token\":\"TEST_TOKEN_SCOPED_FOR_TENANT_${_UTIL_TMP_TENANT}_USER_${_UTIL_TMP_USERNAME}\"}"
 					pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 				fi
 
-			elif [ "X${_UTIL_TMP_TENANT}" != "X" ]; then
+			elif [ -n "${_UTIL_TMP_TENANT}" ]; then
 				#
 				# Specified only tenant
 				#
-				if [ "X${_UTIL_TMP_TOKENVAL}" = "X" ]; then
-					# shellcheck disable=SC2034
+				if [ -z "${_UTIL_TMP_TOKENVAL}" ]; then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "There is no \"x-auth-token\" header."
 					return 1
@@ -541,7 +501,6 @@ create_dummy_response()
 				#
 				# Create Scoped Token from unscoped token(or OpenStack/OIDC token)
 				#
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=201
 				_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":true,\"token\":\"TEST_TOKEN_SCOPED_FOR_TENANT_${_UTIL_TMP_TENANT}_UNSCOPED_${_UTIL_TMP_TOKENVAL}\"}"
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -550,8 +509,7 @@ create_dummy_response()
 				#
 				# Specified nothing
 				#
-				if [ "X${_UTIL_TMP_TOKENVAL}" = "X" ]; then
-					# shellcheck disable=SC2034
+				if [ -z "${_UTIL_TMP_TOKENVAL}" ]; then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "Username or Password or Tanantname or Token are not specified."
 					return 1
@@ -560,36 +518,30 @@ create_dummy_response()
 				#
 				# Create Unscoped Token from OpenStack/OIDC token(or unscoped token)
 				#
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=201
 				_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"scoped\":false,\"token\":\"TEST_TOKEN_UNSCOPED_FOR_OTHER_${_UTIL_TMP_TOKENVAL}\"}"
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			fi
 
-		elif [ "X${_DUMMY_METHOD}" = "XGET" ]; then
+		elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "GET" ]; then
 			#
 			# GET Token(/v1/user/tokens)
 			#
-			if [ "X${_DUMMY_URL_ARGS}" != "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -n "${_DUMMY_URL_ARGS}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "There is an unnecessary URL arguments.(${_DUMMY_URL_ARGS})."
 				return 1
 			fi
 
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
-				# shellcheck disable=SC2034
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				return 1
 			fi
 
-			pecho "${_UTIL_TMP_TOKENVAL}" | grep -q '^TEST_TOKEN_SCOPED'
-			if [ $? -eq 0 ]; then
+			if pecho "${_UTIL_TMP_TOKENVAL}" | grep -q '^TEST_TOKEN_SCOPED'; then
 				#
 				# Get tenant list from scoped token
 				#
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=200
 				_UTIL_RESPONSE_CONTENT='{"result":true,"message":"succeed","scoped":true,"user":"test","tenants":[{"name":"test1","display":"test1"}]}'
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -598,14 +550,12 @@ create_dummy_response()
 				#
 				# Get tenant list from unscoped token(same result as scoped token)
 				#
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=200
 				_UTIL_RESPONSE_CONTENT='{"result":true,"message":"succeed","scoped":false,"user":"test","tenants":[{"name":"test1","display":"test1"},{"name":"test2","display":"test2"}]}'
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 			fi
 
 		else
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Not allowed Method(${_DUMMY_METHOD})."
 			return 1
@@ -618,8 +568,7 @@ create_dummy_response()
 		#
 		# List(/v1/list/...)
 		#
-		if [ "X${_DUMMY_METHOD}" != "XGET" ]; then
-			# shellcheck disable=SC2034
+		if [ -z "${_DUMMY_METHOD}" ] || [ "${_DUMMY_METHOD}" != "GET" ]; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Not allowed Method(${_DUMMY_METHOD})."
 			return 1
@@ -631,14 +580,13 @@ create_dummy_response()
 		_UTIL_TMP_EXPAND=$(util_search_urlarg "expand" "${_DUMMY_URL_ARGS}")
 		prn_dbg "(create_dummy_response) all url args(${_DUMMY_URL_ARGS}) => expand(${_UTIL_TMP_EXPAND})"
 		_UTIL_TMP_EXPAND=$(to_upper "${_UTIL_TMP_EXPAND}")
-		if [ "X${_UTIL_TMP_EXPAND}" = "XTRUE" ]; then
+		if [ -n "${_UTIL_TMP_EXPAND}" ] && [ "${_UTIL_TMP_EXPAND}" = "TRUE" ]; then
 			_UTIL_TMP_EXPAND=1
-		elif [ "X${_UTIL_TMP_EXPAND}" = "XFALSE" ]; then
+		elif [ -n "${_UTIL_TMP_EXPAND}" ] && [ "${_UTIL_TMP_EXPAND}" = "FALSE" ]; then
 			_UTIL_TMP_EXPAND=0
-		elif [ "X${_UTIL_TMP_EXPAND}" = "X" ]; then
+		elif [ -z "${_UTIL_TMP_EXPAND}" ]; then
 			_UTIL_TMP_EXPAND=0
 		else
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "\"expand\" URL argument value is wrong.(${_DUMMY_URL_ARGS})."
 			return 1
@@ -647,9 +595,7 @@ create_dummy_response()
 		#
 		# Scoped token
 		#
-		_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			return 1
 		fi
@@ -660,14 +606,13 @@ create_dummy_response()
 		_DUMMY_URL_PATH_AFTER_PART=$(pecho -n "${_DUMMY_URL_PATH}" | sed -e 's#/v1/list/##g')
 		_DUMMY_URL_PATH_FIRST_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $1}')
 		_DUMMY_URL_PATH_SECOND_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $2}')
-		if [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "X" ]; then
-			# shellcheck disable=SC2034
+		if [ -z "${_DUMMY_URL_PATH_FIRST_PART}" ]; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Url first path is empty(${_DUMMY_URL_PATH})."
 			return 1
 		fi
 
-		if [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "Xservice" ]; then
+		if [ "${_DUMMY_URL_PATH_FIRST_PART}" = "service" ]; then
 			#
 			# List(/v1/list/service/...)
 			#
@@ -677,17 +622,16 @@ create_dummy_response()
 			# ex.	'{"result":true,"message":null,"children":[{"name":"test_service","children":[],"owner":true}]}'
 			#		'{"result":true,"message":null,"children":[{"name":"test_service","children":[]}]}'
 			#
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=200
 			_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"children":[{"name":"test_service","children":[],"owner":true}]}'
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-		elif [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "Xresource" ]; then
+		elif [ "${_DUMMY_URL_PATH_FIRST_PART}" = "resource" ]; then
 			#
 			# List(/v1/list/resource/...)
 			#
-			if [ "X${_DUMMY_URL_PATH_SECOND_PART}" = "X" ]; then
-				if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+			if [ -z "${_DUMMY_URL_PATH_SECOND_PART}" ]; then
+				if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 					#
 					# no-Service / no-Resource / not expand
 					#
@@ -699,7 +643,7 @@ create_dummy_response()
 					_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"children":[{"name":"autocluster","children":[{"name":"server","children":[]},{"name":"slave","children":[]}]},{"name":"test_resource","children":[]},{"name":"test_sub_resource","children":[]}]}'
 				fi
 			else
-				if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+				if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 					#
 					# no-Service / Resource / not expand
 					#
@@ -712,12 +656,12 @@ create_dummy_response()
 				fi
 			fi
 
-		elif [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "Xpolicy" ]; then
+		elif [ "${_DUMMY_URL_PATH_FIRST_PART}" = "policy" ]; then
 			#
 			# List(/v1/list/policy/...)
 			#
-			if [ "X${_DUMMY_URL_PATH_SECOND_PART}" = "X" ]; then
-				if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+			if [ -z "${_DUMMY_URL_PATH_SECOND_PART}" ]; then
+				if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 					#
 					# no-Service / no-Policy / not expand
 					#
@@ -729,7 +673,7 @@ create_dummy_response()
 					_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"children":[{"name":"autocluster","children":[]},{"name":"test_policy","children":[]},{"name":"test_sub_policy","children":[]}]}'
 				fi
 			else
-				if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+				if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 					#
 					# no-Service / Policy / not expand
 					#
@@ -742,12 +686,12 @@ create_dummy_response()
 				fi
 			fi
 
-		elif [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "Xrole" ]; then
+		elif [ "${_DUMMY_URL_PATH_FIRST_PART}" = "role" ]; then
 			#
 			# List(/v1/list/role/...)
 			#
-			if [ "X${_DUMMY_URL_PATH_SECOND_PART}" = "X" ]; then
-				if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+			if [ -z "${_DUMMY_URL_PATH_SECOND_PART}" ]; then
+				if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 					#
 					# no-Service / no-Role / not expand
 					#
@@ -759,7 +703,7 @@ create_dummy_response()
 					_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"children":[{"name":"autocluster","children":[{"name":"server","children":[]},{"name":"slave","children":[]}]},{"name":"test_role","children":[]},{"name":"test_sub_role","children":[]}]}'
 				fi
 			else
-				if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+				if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 					#
 					# no-Service / Role / not expand
 					#
@@ -773,21 +717,20 @@ create_dummy_response()
 			fi
 
 		else
-			if [ "X${_DUMMY_URL_PATH_SECOND_PART}" = "X" ]; then
+			if [ -z "${_DUMMY_URL_PATH_SECOND_PART}" ]; then
 				#
 				# List(/v1/list/<service>)
 				#
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 
-			elif [ "X${_DUMMY_URL_PATH_SECOND_PART}" = "Xresource" ]; then
+			elif [ "${_DUMMY_URL_PATH_SECOND_PART}" = "resource" ]; then
 				#
 				# List(/v1/list/<service>/resource/...)
 				#
 				_DUMMY_URL_PATH_THIRD_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $3}')
 
-				if [ "X${_DUMMY_URL_PATH_THIRD_PART}" = "X" ]; then
-					if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+				if [ -z "${_DUMMY_URL_PATH_THIRD_PART}" ]; then
+					if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 						#
 						# Service / no-Resource / not expand
 						#
@@ -799,7 +742,7 @@ create_dummy_response()
 						_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"children":[]}'
 					fi
 				else
-					if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+					if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 						#
 						# Service / Resource / not expand
 						#
@@ -812,14 +755,14 @@ create_dummy_response()
 					fi
 				fi
 
-			elif [ "X${_DUMMY_URL_PATH_SECOND_PART}" = "Xpolicy" ]; then
+			elif [ "${_DUMMY_URL_PATH_SECOND_PART}" = "policy" ]; then
 				#
 				# List(/v1/list/<service>/policy/...)
 				#
 				_DUMMY_URL_PATH_THIRD_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $3}')
 
-				if [ "X${_DUMMY_URL_PATH_THIRD_PART}" = "X" ]; then
-					if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+				if [ -z "${_DUMMY_URL_PATH_THIRD_PART}" ]; then
+					if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 						#
 						# Service / no-Policy / not expand
 						#
@@ -831,7 +774,7 @@ create_dummy_response()
 						_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"children":[]}'
 					fi
 				else
-					if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+					if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 						#
 						# Service / Policy / not expand
 						#
@@ -844,14 +787,14 @@ create_dummy_response()
 					fi
 				fi
 
-			elif [ "X${_DUMMY_URL_PATH_SECOND_PART}" = "Xrole" ]; then
+			elif [ "${_DUMMY_URL_PATH_SECOND_PART}" = "role" ]; then
 				#
 				# List(/v1/list/<service>/role/...)
 				#
 				_DUMMY_URL_PATH_THIRD_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $3}')
 
-				if [ "X${_DUMMY_URL_PATH_THIRD_PART}" = "X" ]; then
-					if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+				if [ -z "${_DUMMY_URL_PATH_THIRD_PART}" ]; then
+					if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 						#
 						# Service / no-Role / not expand
 						#
@@ -863,7 +806,7 @@ create_dummy_response()
 						_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"children":[]}'
 					fi
 				else
-					if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+					if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 						#
 						# Service / Role / not expand
 						#
@@ -877,13 +820,11 @@ create_dummy_response()
 				fi
 
 			else
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Url path is wrong(${_DUMMY_URL_PATH})."
 				return 1
 			fi
 		fi
-		# shellcheck disable=SC2034
 		K2HR3CLI_REQUEST_EXIT_CODE=200
 		pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
@@ -894,12 +835,11 @@ create_dummy_response()
 		#
 		# Role
 		#
-		if [ "X${_DUMMY_URL_PATH}" = "X/v1/role" ]; then
+		if [ -n "${_DUMMY_URL_PATH}" ] && [ "${_DUMMY_URL_PATH}" = "/v1/role" ]; then
 			#
 			# Create Role(/v1/role)
 			#
-			if [ "X${_DUMMY_METHOD}" != "XPUT" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_DUMMY_METHOD}" ] || [ "${_DUMMY_METHOD}" != "PUT" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not allowed Method(${_DUMMY_METHOD})."
 				return 1
@@ -908,9 +848,7 @@ create_dummy_response()
 			#
 			# Scoped token
 			#
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
-				# shellcheck disable=SC2034
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				return 1
 			fi
@@ -921,20 +859,18 @@ create_dummy_response()
 			_UTIL_TMP_ROLENAME=$(util_search_urlarg "name" "${_DUMMY_URL_ARGS}")
 			_UTIL_TMP_POLICIES=$(util_search_urlarg "policies" "${_DUMMY_URL_ARGS}")
 			_UTIL_TMP_ALIAS=$(util_search_urlarg "alias" "${_DUMMY_URL_ARGS}")
-			if [ "X${_UTIL_TMP_ROLENAME}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_UTIL_TMP_ROLENAME}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not found role name."
 				return 1
 			fi
-			if [ "X${_UTIL_TMP_POLICIES}" = "X" ]; then
+			if [ -z "${_UTIL_TMP_POLICIES}" ]; then
 				prn_dbg "Not found policies(optional)."
 			fi
-			if [ "X${_UTIL_TMP_ALIAS}" = "X" ]; then
+			if [ -z "${_UTIL_TMP_ALIAS}" ]; then
 				prn_dbg "Not found alias(optional)."
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=201
 			_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -943,17 +879,14 @@ create_dummy_response()
 			#
 			# Show Role Token list(/v1/role/token/list/...)
 			#
-			_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-			if [ $? -ne 0 ]; then
-				# shellcheck disable=SC2034
+			if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				return 1
 			fi
 
 			_DUMMY_URL_PATH_AFTER_PART=$(pecho -n "${_DUMMY_URL_PATH}" | sed -e 's#/v1/role/token/##g')
 			_DUMMY_URL_PATH_FIRST_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $1}')
-			if [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_DUMMY_URL_PATH_FIRST_PART}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Url first path is empty(${_DUMMY_URL_PATH})."
 				return 1
@@ -965,20 +898,19 @@ create_dummy_response()
 			_UTIL_TMP_EXPAND=$(util_search_urlarg "expand" "${_DUMMY_URL_ARGS}")
 			prn_dbg "(create_dummy_response) all url args(${_DUMMY_URL_ARGS}) => expand(${_UTIL_TMP_EXPAND})"
 			_UTIL_TMP_EXPAND=$(to_upper "${_UTIL_TMP_EXPAND}")
-			if [ "X${_UTIL_TMP_EXPAND}" = "XTRUE" ]; then
+			if [ -n "${_UTIL_TMP_EXPAND}" ] && [ "${_UTIL_TMP_EXPAND}" = "TRUE" ]; then
 				_UTIL_TMP_EXPAND=1
-			elif [ "X${_UTIL_TMP_EXPAND}" = "XFALSE" ]; then
+			elif [ -n "${_UTIL_TMP_EXPAND}" ] && [ "${_UTIL_TMP_EXPAND}" = "FALSE" ]; then
 				_UTIL_TMP_EXPAND=0
-			elif [ "X${_UTIL_TMP_EXPAND}" = "X" ]; then
+			elif [ -z "${_UTIL_TMP_EXPAND}" ]; then
 				_UTIL_TMP_EXPAND=0
 			else
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "\"expand\" URL argument value is wrong.(${_DUMMY_URL_ARGS})."
 				return 1
 			fi
 
-			if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+			if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 				#
 				# Not expand
 				#
@@ -991,7 +923,6 @@ create_dummy_response()
 				_UTIL_NOW_TIME="2030-01-01T00:00+0000"
 				_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":\"succeed\",\"tokens\":{\"TEST_TOKEN_ROLE_TEST1\":{\"date\":\"${_UTIL_NOW_TIME}\",\"expire\":\"${_UTIL_NOW_TIME}\",\"user\":\"TEST\",\"hostname\":\"localhost\",\"ip\":\"\",\"port\":80,\"cuk\":\"TEST_CUK\",\"registerpath\":\"TEST_REGISTERPATH_ROLE_TOKEN1\"},\"TEST_TOKEN_ROLE_TEST2\":{\"date\":\"${_UTIL_NOW_TIME}\",\"expire\":\"${_UTIL_NOW_TIME}\",\"user\":\"TEST\",\"hostname\":\"localhost2\",\"ip\":\"\",\"port\":8000,\"cuk\":\"TEST_CUK2\",\"registerpath\":\"TEST_REGISTERPATH_ROLE_TOKEN2\"}}}"
 			fi
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=200
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
@@ -1001,20 +932,17 @@ create_dummy_response()
 			#
 			_DUMMY_URL_PATH_AFTER_PART=$(pecho -n "${_DUMMY_URL_PATH}" | sed -e 's#/v1/role/token/##g')
 			_DUMMY_URL_PATH_FIRST_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $1}')
-			if [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_DUMMY_URL_PATH_FIRST_PART}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Url first path is empty(${_DUMMY_URL_PATH})."
 				return 1
 			fi
 
-			if [ "X${_DUMMY_METHOD}" = "XGET" ]; then
+			if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "GET" ]; then
 				#
 				# Create Token
 				#
-				_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-				if [ $? -ne 0 ]; then
-					# shellcheck disable=SC2034
+				if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					return 1
 				fi
@@ -1025,34 +953,28 @@ create_dummy_response()
 				_UTIL_TMP_EXPIRE=$(util_search_urlarg "expire" "${_DUMMY_URL_ARGS}")
 				prn_dbg "(create_dummy_response) all url args(${_DUMMY_URL_ARGS}) => expire(${_UTIL_TMP_EXPIRE})"
 				if ! is_positive_number "${_UTIL_TMP_EXPIRE}" >/dev/null 2>&1; then
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "\"expire\" URL argument value is wrong.(${_DUMMY_URL_ARGS})."
 					return 1
 				fi
 
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=200
 				_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null,\"token\":\"TEST_TOKEN_ROLE_${_DUMMY_URL_PATH_FIRST_PART}_EXPIRE_${_UTIL_TMP_EXPIRE}\",\"registerpath\":\"TEST_REGISTERPATH_ROLE_${_DUMMY_URL_PATH_FIRST_PART}_EXPIRE_${_UTIL_TMP_EXPIRE}\"}"
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-			elif [ "X${_DUMMY_METHOD}" = "XDELETE" ]; then
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "DELETE" ]; then
 				#
 				# Delete Token
 				#
-				_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-				if [ $? -ne 0 ]; then
-					# shellcheck disable=SC2034
+				if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					return 1
 				fi
 
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=204
 				pecho "" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
 			else
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not allowed Method(${_DUMMY_METHOD})."
 				return 1
@@ -1064,20 +986,17 @@ create_dummy_response()
 			#
 			_DUMMY_URL_PATH_AFTER_PART=$(pecho -n "${_DUMMY_URL_PATH}" | sed -e 's#/v1/role/##g')
 			_DUMMY_URL_PATH_FIRST_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $1}')
-			if [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_DUMMY_URL_PATH_FIRST_PART}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Url first path is empty(${_DUMMY_URL_PATH})."
 				return 1
 			fi
 
-			if [ "X${_DUMMY_METHOD}" = "XGET" ]; then
+			if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "GET" ]; then
 				#
 				# Show Role
 				#
-				_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-				if [ $? -ne 0 ]; then
-					# shellcheck disable=SC2034
+				if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					return 1
 				fi
@@ -1088,35 +1007,31 @@ create_dummy_response()
 				_UTIL_TMP_EXPAND=$(util_search_urlarg "expand" "${_DUMMY_URL_ARGS}")
 				prn_dbg "(create_dummy_response) all url args(${_DUMMY_URL_ARGS}) => expand(${_UTIL_TMP_EXPAND})"
 				_UTIL_TMP_EXPAND=$(to_upper "${_UTIL_TMP_EXPAND}")
-				if [ "X${_UTIL_TMP_EXPAND}" = "XTRUE" ]; then
+				if [ -n "${_UTIL_TMP_EXPAND}" ] && [ "${_UTIL_TMP_EXPAND}" = "TRUE" ]; then
 					_UTIL_TMP_EXPAND=1
-				elif [ "X${_UTIL_TMP_EXPAND}" = "XFALSE" ]; then
+				elif [ -n "${_UTIL_TMP_EXPAND}" ] && [ "${_UTIL_TMP_EXPAND}" = "FALSE" ]; then
 					_UTIL_TMP_EXPAND=0
-				elif [ "X${_UTIL_TMP_EXPAND}" = "X" ]; then
+				elif [ -z "${_UTIL_TMP_EXPAND}" ]; then
 					_UTIL_TMP_EXPAND=0
 				else
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "\"expand\" URL argument value is wrong.(${_DUMMY_URL_ARGS})."
 					return 1
 				fi
 
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=200
-				if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+				if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 					_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"role":{"policies":["yrn:yahoo:::demo:policy:test_policy"],"aliases":["yrn:yahoo:::demo:role:test_sub_role"],"hosts":{"hostnames":["localhost * TEST_CUK"],"ips":["127.0.0.1 * TEST_CUK2"]}}}'
 				else
 					_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"role":{"policies":["yrn:yahoo:::demo:policy:test_sub_policy","yrn:yahoo:::demo:policy:test_policy"]}}'
 				fi
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-			elif [ "X${_DUMMY_METHOD}" = "XPUT" ]; then
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "PUT" ]; then
 				#
 				# Add Host
 				#
-				_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-				if [ $? -ne 0 ]; then
-					# shellcheck disable=SC2034
+				if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					return 1
 				fi
@@ -1127,44 +1042,35 @@ create_dummy_response()
 				_UTIL_TMP_HOST=$(util_search_urlarg "host" "${_DUMMY_URL_ARGS}")
 				_UTIL_TMP_PORT=$(util_search_urlarg "port" "${_DUMMY_URL_ARGS}")
 				_UTIL_TMP_CUK=$(util_search_urlarg "cuk" "${_DUMMY_URL_ARGS}")
-				# shellcheck disable=SC2034
 				_UTIL_TMP_EXTRA=$(util_search_urlarg "extra" "${_DUMMY_URL_ARGS}")
-				# shellcheck disable=SC2034
 				_UTIL_TMP_TAG=$(util_search_urlarg "tag" "${_DUMMY_URL_ARGS}")
-				if [ "X${_UTIL_TMP_HOST}" = "X" ]; then
-					# shellcheck disable=SC2034
+				if [ -z "${_UTIL_TMP_HOST}" ]; then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "\"host\" URL argument value is empty."
 					return 1
 				fi
 
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=201
 				_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-			elif [ "X${_DUMMY_METHOD}" = "XHEAD" ]; then
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "HEAD" ]; then
 				#
 				# Check Role Token
 				#
-				_UTIL_TMP_TOKENVAL=$(util_search_roletoken "$@")
-				if [ $? -ne 0 ]; then
-					# shellcheck disable=SC2034
+				if ! _UTIL_TMP_TOKENVAL=$(util_search_roletoken "$@"); then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					return 1
 				fi
 
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=204
 				pecho "" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-			elif [ "X${_DUMMY_METHOD}" = "XDELETE" ]; then
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "DELETE" ]; then
 				#
 				# URL arguments
 				#
-				_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-				if [ $? -ne 0 ]; then
-					# shellcheck disable=SC2034
+				if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					return 1
 				fi
@@ -1173,11 +1079,10 @@ create_dummy_response()
 				_UTIL_TMP_PORT=$(util_search_urlarg "port" "${_DUMMY_URL_ARGS}")
 				_UTIL_TMP_CUK=$(util_search_urlarg "cuk" "${_DUMMY_URL_ARGS}")
 
-				if [ "X${_UTIL_TMP_HOST}" = "X" ] && [ "X${_UTIL_TMP_PORT}" = "X" ] && [ "X${_UTIL_TMP_CUK}" = "X" ]; then
+				if [ -z "${_UTIL_TMP_HOST}" ] && [ -z "${_UTIL_TMP_PORT}" ] && [ -z "${_UTIL_TMP_CUK}" ]; then
 					#
 					# Delete Role
 					#
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=204
 					pecho "" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
@@ -1185,21 +1090,18 @@ create_dummy_response()
 					#
 					# Delete Host
 					#
-					if [ "X${_UTIL_TMP_HOST}" = "X" ]; then
-						# shellcheck disable=SC2034
+					if [ -z "${_UTIL_TMP_HOST}" ]; then
 						K2HR3CLI_REQUEST_EXIT_CODE=400
 						prn_err "\"host\" URL argument value is empty."
 						return 1
 					fi
 
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=204
 					pecho "" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 				fi
 			fi
 
 		else
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Unknown URL(${_DUMMY_URL_PATH})."
 			return 2
@@ -1212,18 +1114,16 @@ create_dummy_response()
 		#
 		# Resource
 		#
-		_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			return 1
 		fi
 
-		if [ "X${_DUMMY_URL_PATH}" = "X/v1/resource" ]; then
+		if [ -n "${_DUMMY_URL_PATH}" ] && [ "${_DUMMY_URL_PATH}" = "/v1/resource" ]; then
 			#
 			# Create Resource(/v1/resource)
 			#
-			if [ "X${_DUMMY_METHOD}" = "XPUT" ]; then
+			if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "PUT" ]; then
 				#
 				# PUT: Url arguments
 				#
@@ -1233,72 +1133,67 @@ create_dummy_response()
 				_UTIL_TMP_KEYS=$(util_search_urlarg "keys" "${_DUMMY_URL_ARGS}")
 				_UTIL_TMP_ALIAS=$(util_search_urlarg "alias" "${_DUMMY_URL_ARGS}")
 
-				if [ "X${_UTIL_TMP_RESOURCENAME}" = "X" ]; then
-					# shellcheck disable=SC2034
+				if [ -z "${_UTIL_TMP_RESOURCENAME}" ]; then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "Not found role name."
 					return 1
 				fi
 
 				_UTIL_TMP_TYPE=$(to_upper "${_UTIL_TMP_TYPE}")
-				if [ "X${_UTIL_TMP_TYPE}" = "X" ]; then
+				if [ -z "${_UTIL_TMP_TYPE}" ]; then
 					prn_dbg "\"type\" url argument is empty(not update data)."
-				elif [ "X${_UTIL_TMP_TYPE}" = "XNULL" ]; then
+				elif [ "${_UTIL_TMP_TYPE}" = "NULL" ]; then
 					prn_dbg "\"type\" url argument is null(not update data)."
-				elif [ "X${_UTIL_TMP_TYPE}" = "XSTRING" ]; then
+				elif [ "${_UTIL_TMP_TYPE}" = "STRING" ]; then
 					prn_dbg "\"type\" url argument is string."
-				elif [ "X${_UTIL_TMP_TYPE}" = "XOBJECT" ]; then
+				elif [ "${_UTIL_TMP_TYPE}" = "OBJECT" ]; then
 					prn_dbg "\"type\" url argument is object."
 				fi
 
 				_UTIL_TMP_KEYS=$(to_upper "${_UTIL_TMP_DATA}")
-				if [ "X${_UTIL_TMP_DATA}" = "XNULL" ]; then
+				if [ -n "${_UTIL_TMP_DATA}" ] && [ "${_UTIL_TMP_DATA}" = "NULL" ]; then
 					prn_dbg "\"data\" url argument is null(not update data)."
-				elif [ "X${_UTIL_TMP_DATA}" = "X" ]; then
+				elif [ -z "${_UTIL_TMP_DATA}" ]; then
 					prn_dbg "\"data\" url argument is empty(not update date)."
 				fi
 
 				_UTIL_TMP_KEYS=$(to_upper "${_UTIL_TMP_KEYS}")
-				if [ "X${_UTIL_TMP_KEYS}" = "X" ]; then
+				if [ -z "${_UTIL_TMP_KEYS}" ]; then
 					prn_dbg "\"keys\" url argument is empty(not update kesy)."
-				elif [ "X${_UTIL_TMP_KEYS}" = "XNULL" ]; then
+				elif [ "${_UTIL_TMP_KEYS}" = "NULL" ]; then
 					prn_dbg "\"keys\" url argument is null(not update keys)."
 				fi
 
-				if [ "X${_UTIL_TMP_ALIAS}" = "X" ]; then
+				if [ -z "${_UTIL_TMP_ALIAS}" ]; then
 					prn_dbg "Not found alias(optional)."
 				fi
 
-			elif [ "X${_DUMMY_METHOD}" = "XPOST" ]; then
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "POST" ]; then
 				#
 				# POST: Url arguments
 				#
-				if [ "X${_DUMMY_BODY_FILE}" != "X" ] && [ "X${_DUMMY_BODY_STRING}" != "X" ]; then
-					# shellcheck disable=SC2034
+				if [ -n "${_DUMMY_BODY_FILE}" ] && [ -n "${_DUMMY_BODY_STRING}" ]; then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "Both post body file and data are specified."
 					return 1
-				elif [ "X${_DUMMY_BODY_FILE}" = "X" ] && [ "X${_DUMMY_BODY_STRING}" = "X" ]; then
-					# shellcheck disable=SC2034
+				elif [ -z "${_DUMMY_BODY_FILE}" ] && [ -z "${_DUMMY_BODY_STRING}" ]; then
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "Both post body file and data is not specified."
 					return 1
 				fi
 
 			else
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not allowed Method(${_DUMMY_METHOD})."
 				return 1
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=201
 			_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
 		elif compare_part_string "${_DUMMY_URL_PATH}" "/v1/resource/" >/dev/null 2>&1; then
-			if [ "X${_DUMMY_METHOD}" = "XGET" ]; then
+			if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "GET" ]; then
 				#
 				# Show Resource(/v1/resource/...)
 				#
@@ -1307,35 +1202,33 @@ create_dummy_response()
 				# URL argument
 				#
 				_UTIL_TMP_SERVICE=$(util_search_urlarg "service" "${_DUMMY_URL_ARGS}")
-				if [ "X${_UTIL_TMP_SERVICE}" = "X" ]; then
+				if [ -z "${_UTIL_TMP_SERVICE}" ]; then
 					prn_dbg "\"service\" url argument is empty."
 				fi
 				_UTIL_TMP_EXPAND=$(util_search_urlarg "expand" "${_DUMMY_URL_ARGS}")
 				prn_dbg "(create_dummy_response) all url args(${_DUMMY_URL_ARGS}) => expand(${_UTIL_TMP_EXPAND})"
 				_UTIL_TMP_EXPAND=$(to_upper "${_UTIL_TMP_EXPAND}")
-				if [ "X${_UTIL_TMP_EXPAND}" = "XTRUE" ]; then
+				if [ -n "${_UTIL_TMP_EXPAND}" ] && [ "${_UTIL_TMP_EXPAND}" = "TRUE" ]; then
 					_UTIL_TMP_EXPAND=1
-				elif [ "X${_UTIL_TMP_EXPAND}" = "XFALSE" ]; then
+				elif [ -n "${_UTIL_TMP_EXPAND}" ] && [ "${_UTIL_TMP_EXPAND}" = "FALSE" ]; then
 					_UTIL_TMP_EXPAND=0
-				elif [ "X${_UTIL_TMP_EXPAND}" = "X" ]; then
+				elif [ -z "${_UTIL_TMP_EXPAND}" ]; then
 					_UTIL_TMP_EXPAND=0
 				else
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "\"expand\" URL argument value is wrong.(${_DUMMY_URL_ARGS})."
 					return 1
 				fi
 
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=200
-				if [ "X${_UTIL_TMP_SERVICE}" = "X" ]; then
-					if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+				if [ -z "${_UTIL_TMP_SERVICE}" ]; then
+					if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 						_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"resource":{"string":null,"object":{"data1":"value1","data2":"value2"},"keys":{"key1":"value1","key2":"value2"},"expire":null,"aliases":["yrn:yahoo:::test_tenant:resource:test_resource_sub"]}}'
 					else
 						_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"resource":{"string":"test_sub_resource_string","object":{"data1":"value1","data2":"value2"},"keys":{"key1":"value1","key2":"value2"},"expire":null}}'
 					fi
 				else
-					if [ ${_UTIL_TMP_EXPAND} -eq 0 ]; then
+					if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
 						_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"resource":{"string":"","object":null,"keys":null,"expire":null,"aliases":[]}}'
 					else
 						_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"resource":{"string":"","object":null,"keys":null,"expire":null}}'
@@ -1343,8 +1236,7 @@ create_dummy_response()
 				fi
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-
-			elif [ "X${_DUMMY_METHOD}" = "XDELETE" ]; then
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "DELETE" ]; then
 				#
 				# Delete Resource(/v1/resource/...)
 				#
@@ -1357,58 +1249,52 @@ create_dummy_response()
 				_UTIL_TMP_ALIASES=$(util_search_urlarg "aliases" "${_DUMMY_URL_ARGS}")
 
 				_UTIL_TMP_TYPE=$(to_upper "${_UTIL_TMP_TYPE}")
-				if [ "X${_UTIL_TMP_TYPE}" = "X" ]; then
+				if [ -z "${_UTIL_TMP_TYPE}" ]; then
 					prn_dbg "\"type\" url argument is empty(not update data)."
-				elif [ "X${_UTIL_TMP_TYPE}" = "XNULL" ]; then
+				elif [ "${_UTIL_TMP_TYPE}" = "NULL" ]; then
 					prn_dbg "\"type\" url argument is null(not update data)."
-				elif [ "X${_UTIL_TMP_TYPE}" = "XSTRING" ]; then
+				elif [ "${_UTIL_TMP_TYPE}" = "STRING" ]; then
 					prn_dbg "\"type\" url argument is string."
-				elif [ "X${_UTIL_TMP_TYPE}" = "XOBJECT" ]; then
+				elif [ "${_UTIL_TMP_TYPE}" = "OBJECT" ]; then
 					prn_dbg "\"type\" url argument is object."
-				elif [ "X${_UTIL_TMP_TYPE}" = "XKEYS" ]; then
+				elif [ "${_UTIL_TMP_TYPE}" = "KEYS" ]; then
 					prn_dbg "\"type\" url argument is keys."
-				elif [ "X${_UTIL_TMP_TYPE}" = "XALIASES" ]; then
+				elif [ "${_UTIL_TMP_TYPE}" = "ALIASES" ]; then
 					prn_dbg "\"type\" url argument is aliases."
-				elif [ "X${_UTIL_TMP_TYPE}" = "XANYTYPE" ]; then
+				elif [ "${_UTIL_TMP_TYPE}" = "ANYTYPE" ]; then
 					prn_dbg "\"type\" url argument is anytype."
 				else
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "\"type\" URL argument has unknown value(${_UTIL_TMP_TYPE})."
 					return 1
 				fi
 
-				if [ "X${_UTIL_TMP_KEYNAMES}" != "X" ]; then
-					if [ "X${_UTIL_TMP_TYPE}" != "XKEYS" ]; then
-						# shellcheck disable=SC2034
+				if [ -n "${_UTIL_TMP_KEYNAMES}" ]; then
+					if [ -z "${_UTIL_TMP_TYPE}" ] || [ "${_UTIL_TMP_TYPE}" != "KEYS" ]; then
 						K2HR3CLI_REQUEST_EXIT_CODE=400
 						prn_err "\"type\" URL argument is not \"keys\", but specified \"keys\" argument(${_UTIL_TMP_KEYNAMES})."
 						return 1
 					fi
 				fi
 
-				if [ "X${_UTIL_TMP_ALIASES}" != "X" ]; then
-					if [ "X${_UTIL_TMP_TYPE}" != "XALIASES" ]; then
-						# shellcheck disable=SC2034
+				if [ -n "${_UTIL_TMP_ALIASES}" ]; then
+					if [ -z "${_UTIL_TMP_TYPE}" ] || [ "${_UTIL_TMP_TYPE}" != "ALIASES" ]; then
 						K2HR3CLI_REQUEST_EXIT_CODE=400
 						prn_err "\"type\" URL argument is not \"aliases\", but specified \"aliases\" argument(${_UTIL_TMP_ALIASES})."
 						return 1
 					fi
 				fi
 
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=204
 				pecho "" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
 			else
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not allowed Method(${_DUMMY_METHOD})."
 				return 1
 			fi
 
 		else
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Unknown URL(${_DUMMY_URL_PATH})."
 			return 2
@@ -1421,19 +1307,16 @@ create_dummy_response()
 		#
 		# Policy
 		#
-		_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			return 1
 		fi
 
-		if [ "X${_DUMMY_URL_PATH}" = "X/v1/policy" ]; then
+		if [ -n "${_DUMMY_URL_PATH}" ] && [ "${_DUMMY_URL_PATH}" = "/v1/policy" ]; then
 			#
 			# Create Policy(/v1/policy)
 			#
-			if [ "X${_DUMMY_METHOD}" != "XPUT" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_DUMMY_METHOD}" ] || [ "${_DUMMY_METHOD}" != "PUT" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not allowed Method(${_DUMMY_METHOD})."
 				return 1
@@ -1448,50 +1331,47 @@ create_dummy_response()
 			_UTIL_TMP_RESOURCE=$(util_search_urlarg "resource" "${_DUMMY_URL_ARGS}")
 			_UTIL_TMP_ALIAS=$(util_search_urlarg "alias" "${_DUMMY_URL_ARGS}")
 
-			if [ "X${_UTIL_TMP_POLICYNAME}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_UTIL_TMP_POLICYNAME}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not found policy name."
 				return 1
 			fi
 
 			_UTIL_TMP_EFFECT=$(to_upper "${_UTIL_TMP_EFFECT}")
-			if [ "X${_UTIL_TMP_EFFECT}" = "XALLOW" ]; then
+			if [ -n "${_UTIL_TMP_EFFECT}" ] && [ "${_UTIL_TMP_EFFECT}" = "ALLOW" ]; then
 				prn_dbg "\"effect\" url argument is allow."
-			elif [ "X${_UTIL_TMP_EFFECT}" = "XDENY" ]; then
+			elif [ -n "${_UTIL_TMP_EFFECT}" ] && [ "${_UTIL_TMP_EFFECT}" = "DENY" ]; then
 				prn_dbg "\"type\" url argument is deny."
 			else
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "\"effect\" URL argument has unknown value or empty(${_UTIL_TMP_EFFECT})."
 				return 1
 			fi
 
-			if [ "X${_UTIL_TMP_ACTION}" != "X" ]; then
+			if [ -n "${_UTIL_TMP_ACTION}" ]; then
 				prn_dbg "\"action\" URL argument is \"${_UTIL_TMP_ACTION}\"."
 			else
 				prn_dbg "\"action\" URL argument is empty."
 			fi
 
-			if [ "X${_UTIL_TMP_RESOURCE}" != "X" ]; then
+			if [ -n "${_UTIL_TMP_RESOURCE}" ]; then
 				prn_dbg "\"resource\" URL argument is \"${_UTIL_TMP_RESOURCE}\"."
 			else
 				prn_dbg "\"resource\" URL argument is empty."
 			fi
 
-			if [ "X${_UTIL_TMP_ALIAS}" != "X" ]; then
+			if [ -n "${_UTIL_TMP_ALIAS}" ]; then
 				prn_dbg "\"alias\" URL argument is \"${_UTIL_TMP_ALIAS}\"."
 			else
 				prn_dbg "\"alias\" URL argument is empty."
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=201
 			_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
 		elif compare_part_string "${_DUMMY_URL_PATH}" "/v1/policy/" >/dev/null 2>&1; then
-			if [ "X${_DUMMY_METHOD}" = "XGET" ]; then
+			if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "GET" ]; then
 				#
 				# Show Policy(/v1/policy/...)
 				#
@@ -1500,37 +1380,32 @@ create_dummy_response()
 				# URL argument
 				#
 				_UTIL_TMP_SERVICE=$(util_search_urlarg "service" "${_DUMMY_URL_ARGS}")
-				if [ "X${_UTIL_TMP_SERVICE}" = "X" ]; then
+				if [ -z "${_UTIL_TMP_SERVICE}" ]; then
 					prn_dbg "\"service\" url argument is empty."
 				fi
 
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=200
-				if [ "X${_UTIL_TMP_SERVICE}" = "X" ]; then
+				if [ -z "${_UTIL_TMP_SERVICE}" ]; then
 					_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"policy":{"effect":"allow","action":["yrn:yahoo::::action:read","yrn:yahoo::::action:write"],"resource":["yrn:yahoo:::test_tenant:resource:test_resource1","yrn:yahoo:::test_tenant:resource:test_resource2"],"condition":[],"reference":0,"alias":["yrn:yahoo:::test_tenant:policy:test_sub_policy"]}}'
 				else
 					_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"policy":{"effect":"allow","action":["yrn:yahoo::::action:read"],"resource":["yrn:yahoo:test_service::test_tenant:resource:test_service_resouce_string"],"condition":[],"reference":0,"alias":[]}}'
 				fi
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-
-			elif [ "X${_DUMMY_METHOD}" = "XDELETE" ]; then
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "DELETE" ]; then
 				#
 				# Delete Policy(/v1/policy/...)
 				#
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=204
 				pecho "" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
 			else
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not allowed Method(${_DUMMY_METHOD})."
 				return 1
 			fi
 
 		else
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Unknown URL(${_DUMMY_URL_PATH})."
 			return 2
@@ -1543,19 +1418,16 @@ create_dummy_response()
 		#
 		# Service
 		#
-		_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			return 1
 		fi
 
-		if [ "X${_DUMMY_URL_PATH}" = "X/v1/service" ]; then
+		if [ -n "${_DUMMY_URL_PATH}" ] && [ "${_DUMMY_URL_PATH}" = "/v1/service" ]; then
 			#
 			# Create Service, Delete Service Tenant(/v1/service)
 			#
-			if [ "X${_DUMMY_METHOD}" != "XPUT" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_DUMMY_METHOD}" ] || [ "${_DUMMY_METHOD}" != "PUT" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not allowed Method(${_DUMMY_METHOD})."
 				return 1
@@ -1567,17 +1439,15 @@ create_dummy_response()
 			_UTIL_TMP_SERVICENAME=$(util_search_urlarg "name" "${_DUMMY_URL_ARGS}")
 			_UTIL_TMP_VERIFY=$(util_search_urlarg "verify" "${_DUMMY_URL_ARGS}")
 
-			if [ "X${_UTIL_TMP_SERVICENAME}" = "X" ]; then
-				# shellcheck disable=SC2034
+			if [ -z "${_UTIL_TMP_SERVICENAME}" ]; then
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not found policy name."
 				return 1
 			fi
-			if [ "X${_UTIL_TMP_VERIFY}" != "X" ]; then
+			if [ -n "${_UTIL_TMP_VERIFY}" ]; then
 				prn_dbg "\"verify\" URL argument is \"${_UTIL_TMP_VERIFY}\"."
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=201
 			_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
@@ -1586,24 +1456,22 @@ create_dummy_response()
 			#
 			# Show/Delete Service, Add/Check Service Tenant(/v1/service/...)
 			#
-			if [ "X${_DUMMY_METHOD}" = "XGET" ]; then
+			if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "GET" ]; then
 				#
 				# Show Service(/v1/policy/...)
 				#
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=200
 				_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"service":{"name":"test_service","owner":"test_tenant","verify":[{"name":"test_service_resouce_string","type":"string","data":null}],"tenant":["yrn:yahoo:::test_tenant","yrn:yahoo:::test_service_member","yrn:yahoo:::test_service_member1"]}}'
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-			elif [ "X${_DUMMY_METHOD}" = "XDELETE" ]; then
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "DELETE" ]; then
 				#
 				# Delete Service, Delete tenant member service(/v1/service/...)
 				#
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=204
 				pecho "" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-			elif [ "X${_DUMMY_METHOD}" = "XPUT" ]; then
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "PUT" ]; then
 				#
 				# Add Service Tenant(/v1/service/...)
 				#
@@ -1614,22 +1482,21 @@ create_dummy_response()
 				_UTIL_TMP_TENANT=$(util_search_urlarg "tenant" "${_DUMMY_URL_ARGS}")
 				_UTIL_TMP_CLEAR_TENANT=$(util_search_urlarg "clear_tenant" "${_DUMMY_URL_ARGS}")
 
-				if [ "X${_UTIL_TMP_TENANT}" != "X" ]; then
+				if [ -n "${_UTIL_TMP_TENANT}" ]; then
 					prn_dbg "\"verify\" URL argument is \"${_UTIL_TMP_TENANT}\"."
 				fi
 				_UTIL_TMP_CLEAR_TENANT=$(to_upper "${_UTIL_TMP_CLEAR_TENANT}")
-				if [ "X${_UTIL_TMP_CLEAR_TENANT}" = "XTRUE" ]; then
+				if [ -n "${_UTIL_TMP_CLEAR_TENANT}" ] && [ "${_UTIL_TMP_CLEAR_TENANT}" = "TRUE" ]; then
 					prn_dbg "\"clear_tenant\" URL argument is true."
-				elif [ "X${_UTIL_TMP_CLEAR_TENANT}" = "XFALSE" ]; then
+				elif [ -n "${_UTIL_TMP_CLEAR_TENANT}" ] && [ "${_UTIL_TMP_CLEAR_TENANT}" = "FALSE" ]; then
 					prn_dbg "\"clear_tenant\" URL argument is false."
 				fi
 
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=201
 				_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
 				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-			elif [ "X${_DUMMY_METHOD}" = "XHEAD" ]; then
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "HEAD" ]; then
 				#
 				# Check Service Tenant(/v1/service/...)
 				#
@@ -1639,28 +1506,24 @@ create_dummy_response()
 				#
 				_UTIL_TMP_TENANT=$(util_search_urlarg "tenant" "${_DUMMY_URL_ARGS}")
 
-				if [ "X${_UTIL_TMP_TENANT}" != "X" ]; then
+				if [ -n "${_UTIL_TMP_TENANT}" ]; then
 					prn_dbg "\"verify\" URL argument is \"${_UTIL_TMP_TENANT}\"."
 				else
-					# shellcheck disable=SC2034
 					K2HR3CLI_REQUEST_EXIT_CODE=400
 					prn_err "\"tenant\" URL argument is empty. This is not an error by nature, but it is an error because it is a function that the CLI does not provide."
 					return 1
 				fi
 
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=204
 				pecho "" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
 			else
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "Not allowed Method(${_DUMMY_METHOD})."
 				return 1
 			fi
 
 		else
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Unknown URL(${_DUMMY_URL_PATH})."
 			return 2
@@ -1673,23 +1536,20 @@ create_dummy_response()
 		#
 		# ACR
 		#
-		_UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@")
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			return 1
 		fi
 
-		if [ "X${_DUMMY_METHOD}" = "XPUT" ]; then
+		if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "PUT" ]; then
 			#
 			# Add ACR(/v1/acr/...)
 			#
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=201
 			_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-		elif [ "X${_DUMMY_METHOD}" = "XGET" ]; then
+		elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "GET" ]; then
 			#
 			# Show ACR(/v1/acr/...) Tenant/Resource
 			#
@@ -1705,39 +1565,35 @@ create_dummy_response()
 			_UTIL_TMP_SROLE=$(util_search_urlarg "srole" "${_DUMMY_URL_ARGS}")
 			_UTIL_TMP_SCUK=$(util_search_urlarg "scuk" "${_DUMMY_URL_ARGS}")
 
-			if [ "X${_UTIL_TMP_CIP}" = "X" ] && [ "X${_UTIL_TMP_CPORT}" = "X" ] && [ "X${_UTIL_TMP_CROLE}" = "X" ] && [ "X${_UTIL_TMP_CCUK}" = "X" ] && [ "X${_UTIL_TMP_SPORT}" = "X" ] && [ "X${_UTIL_TMP_SROLE}" = "X" ] && [ "X${_UTIL_TMP_SCUK}" = "X" ]; then
+			if [ -z "${_UTIL_TMP_CIP}" ] && [ -z "${_UTIL_TMP_CPORT}" ] && [ -z "${_UTIL_TMP_CROLE}" ] && [ -z "${_UTIL_TMP_CCUK}" ] && [ -z "${_UTIL_TMP_SPORT}" ] && [ -z "${_UTIL_TMP_SROLE}" ] && [ -z "${_UTIL_TMP_SCUK}" ]; then
 				#
 				# Show ACR Tenant
 				#
 				_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"tokeninfo":{"user":"test","tenant":"test_tenant","service":"test_service"}}'
 
-			elif [ "X${_UTIL_TMP_CIP}" != "X" ] && [ "X${_UTIL_TMP_CPORT}" != "X" ] && [ "X${_UTIL_TMP_CROLE}" != "X" ] && [ "X${_UTIL_TMP_CCUK}" != "X" ] && [ "X${_UTIL_TMP_SPORT}" != "X" ] && [ "X${_UTIL_TMP_SROLE}" != "X" ] && [ "X${_UTIL_TMP_SCUK}" != "X" ]; then
+			elif [ -n "${_UTIL_TMP_CIP}" ] && [ -n "${_UTIL_TMP_CPORT}" ] && [ -n "${_UTIL_TMP_CROLE}" ] && [ -n "${_UTIL_TMP_CCUK}" ] && [ -n "${_UTIL_TMP_SPORT}" ] && [ -n "${_UTIL_TMP_SROLE}" ] && [ -n "${_UTIL_TMP_SCUK}" ]; then
 				#
 				# Show ACR Resource
 				#
 				_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"response":[{"name":"acr_resource","expire":0,"type":"string","data":"test_acr_resource_datae","keys":{"acr_key1":"acr_val1","acr_key2":"acr_val2"}}]}'
 
 			else
-				# shellcheck disable=SC2034
 				K2HR3CLI_REQUEST_EXIT_CODE=400
 				prn_err "The required parameters have not been specified(cip, cport, crole, ccuk, sport, srole, scuk)."
 				return 1
 			fi
 
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=200
 			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
-		elif [ "X${_DUMMY_METHOD}" = "XDELETE" ]; then
+		elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "DELETE" ]; then
 			#
 			# Delete ACR(/v1/acr/...)
 			#
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=204
 			pecho "" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
 
 		else
-			# shellcheck disable=SC2034
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Not allowed Method(${_DUMMY_METHOD})."
 			return 1
@@ -1752,8 +1608,7 @@ create_dummy_response()
 		#
 		_DUMMY_URL_PATH_AFTER_PART=$(pecho -n "${_DUMMY_URL_PATH}" | sed -e 's#/v1/userdata/##g')
 		_DUMMY_URL_PATH_FIRST_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $1}')
-		if [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "X" ]; then
-			# shellcheck disable=SC2034
+		if [ -z "${_DUMMY_URL_PATH_FIRST_PART}" ]; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Url first path is empty(${_DUMMY_URL_PATH})."
 			return 1
@@ -1762,15 +1617,11 @@ create_dummy_response()
 		#
 		# Make result zip file
 		#
-		util_create_zip_file
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! util_create_zip_file; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			return 1
 		fi
-		cp "${_UTIL_TMP_ZIP_FILE}" "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! cp "${_UTIL_TMP_ZIP_FILE}" "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Faild tp copy result file from temporary zip file."
 			rm -f "${_UTIL_TMP_ZIP_FILE}"
@@ -1778,7 +1629,6 @@ create_dummy_response()
 		fi
 		rm -f "${_UTIL_TMP_ZIP_FILE}"
 
-		# shellcheck disable=SC2034
 		K2HR3CLI_REQUEST_EXIT_CODE=200
 
 	#------------------------------------------------------
@@ -1791,14 +1641,12 @@ create_dummy_response()
 		_DUMMY_URL_PATH_AFTER_PART=$(pecho -n "${_DUMMY_URL_PATH}" | sed -e 's#/v1/userdata/##g')
 		_DUMMY_URL_PATH_FIRST_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $1}')
 		_DUMMY_URL_PATH_SECOND_PART=$(pecho -n "${_DUMMY_URL_PATH_AFTER_PART}" | sed -e 's#/# #g' | awk '{print $2}')
-		if [ "X${_DUMMY_URL_PATH_FIRST_PART}" = "X" ]; then
-			# shellcheck disable=SC2034
+		if [ -z "${_DUMMY_URL_PATH_FIRST_PART}" ]; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Url first path is empty(${_DUMMY_URL_PATH})."
 			return 1
 		fi
-		if [ "X${_DUMMY_URL_PATH_SECOND_PART}" = "X" ]; then
-			# shellcheck disable=SC2034
+		if [ -z "${_DUMMY_URL_PATH_SECOND_PART}" ]; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Url second path is empty(${_DUMMY_URL_PATH})."
 			return 1
@@ -1808,8 +1656,7 @@ create_dummy_response()
 		# Check User-Agent header
 		#
 		_UTIL_TMP_HEAD_VALUE=$(util_search_header "User-Agent" "$@")
-		if [ "X${_UTIL_TMP_HEAD_VALUE}" = "X" ]; then
-			# shellcheck disable=SC2034
+		if [ -z "${_UTIL_TMP_HEAD_VALUE}" ]; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "\"User-Agent\" header is not existed."
 			return 1
@@ -1818,15 +1665,11 @@ create_dummy_response()
 		#
 		# Make result zip file
 		#
-		util_create_zip_file
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! util_create_zip_file; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			return 1
 		fi
-		cp "${_UTIL_TMP_ZIP_FILE}" "${K2HR3CLI_REQUEST_RESULT_FILE}"
-		if [ $? -ne 0 ]; then
-			# shellcheck disable=SC2034
+		if ! cp "${_UTIL_TMP_ZIP_FILE}" "${K2HR3CLI_REQUEST_RESULT_FILE}"; then
 			K2HR3CLI_REQUEST_EXIT_CODE=400
 			prn_err "Faild tp copy result file from temporary zip file."
 			rm -f "${_UTIL_TMP_ZIP_FILE}"
@@ -1834,11 +1677,9 @@ create_dummy_response()
 		fi
 		rm -f "${_UTIL_TMP_ZIP_FILE}"
 
-		# shellcheck disable=SC2034
 		K2HR3CLI_REQUEST_EXIT_CODE=200
 
 	else
-		# shellcheck disable=SC2034
 		K2HR3CLI_REQUEST_EXIT_CODE=400
 		prn_err "Unknown URL(${_DUMMY_URL_PATH})."
 		return 2
