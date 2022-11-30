@@ -69,13 +69,13 @@ shellcheck:
 	@if type shellcheck > /dev/null 2>&1; then \
 		echo "*** Check all files with ShellCheck"; \
 		if [ -n "$(SHELLCHECK_FILES_NO_SH)" ]; then \
-			$(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_IGN_OPT) $(SHELLCHECK_FILES_NO_SH) || exit 1; \
+			LC_ALL=C.UTF-8 $(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_IGN_OPT) $(SHELLCHECK_FILES_NO_SH) || exit 1; \
 		fi; \
 		if [ -n "$(SHELLCHECK_FILES_SH)" ]; then \
-			$(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_IGN_OPT) $(SHELLCHECK_FILES_SH) || exit 1; \
+			LC_ALL=C.UTF-8 $(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_IGN_OPT) $(SHELLCHECK_FILES_SH) || exit 1; \
 		fi; \
 		if [ -n "$(SHELLCHECK_FILES_INCLUDE_SH)" ]; then \
-			$(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_INCLUDE_IGN_OPT) $(SHELLCHECK_FILES_INCLUDE_SH) || exit 1; \
+			LC_ALL=C.UTF-8 $(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_INCLUDE_IGN_OPT) $(SHELLCHECK_FILES_INCLUDE_SH) || exit 1; \
 		fi; \
 		echo "   -> No error was detected."; \
 		echo ""; \
