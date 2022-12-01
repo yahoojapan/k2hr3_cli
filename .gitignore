@@ -30,6 +30,9 @@ configure
 install-sh
 missing
 test-driver
+compile
+configure.scan
+configure~
 
 #
 # automakes
