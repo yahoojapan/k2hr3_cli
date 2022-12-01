@@ -998,6 +998,9 @@ jsonparser_dump_key_parsed_file()
 		rm -f "${_JP_PAERSED_FORM_FILE}"
 		return 1
 	fi
+	# [NOTE]
+	# Since the condition becomes complicated, use "X"(temporary word).
+	#
 	if [ "X${_JP_DUMP_SINGLE_LINE}" != "X1" ] && [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
 		pecho '' >> "${_JP_PAERSED_FORM_FILE}"
 	fi
