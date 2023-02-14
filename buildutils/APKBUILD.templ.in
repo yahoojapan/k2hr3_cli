@@ -1,0 +1,168 @@
+#
+# K2HR3 Utilities - Command Line Interface
+#
+# Copyright 2022 Yahoo Japan Corporation.
+#
+# K2HR3 is K2hdkc based Resource and Roles and policy Rules, gathers
+# common management information for the cloud.
+# K2HR3 can dynamically manage information as "who", "what", "operate".
+# These are stored as roles, resources, policies in K2hdkc, and the
+# client system can dynamically read and modify these information.
+#
+# For the full copyright and license information, please view
+# the license file that was distributed with this source code.
+#
+# AUTHOR:   Takeshi Nakatani
+# CREATE:   Wed, 8 Feb 2023
+# REVISION:
+#
+
+#---------------------------------------------------------------
+# Local varibales as antpickax template
+#---------------------------------------------------------------
+#
+# Set variables by configure
+#
+_git_domain="@GIT_DOMAIN@"
+_organization_name="@GIT_ORG@"
+_repository_name="@GIT_REPO@"
+
+#
+# Set variables by apk_build.sh
+#
+_package_revision=%%BUILD_NUMBER%%
+_configure_option=%%CONFIGUREOPT%%
+_source_archive_url=%%SOURCE_ARCHIVE_URL%%
+
+#---------------------------------------------------------------
+# Main variables for APKBUILD
+#---------------------------------------------------------------
+# Contributor: @DEV_NAME@ <@DEV_EMAIL@>
+# Maintainer: @DEV_NAME@ <@DEV_EMAIL@>
+
+# [NOTE]
+# The $_organization_name is "k2hr3_cli", but the $pkgname
+# should be "k2hr3-cli", so adjust with this variable.
+#
+pkgname="k2hr3-cli"
+pkgver=@PKG_VERSION@
+pkgrel=$_package_revision
+pkgdesc="@SHORTDESC@"
+
+url="https://k2hr3.antpick.ax/"
+arch="x86_64"
+license="MIT"
+
+depends="
+	curl
+"
+depends_dev=""
+makedepends="
+	$depends_dev
+	autoconf
+	automake
+	musl-locales
+	procps
+"
+
+install=""
+subpackages="
+	$pkgname-doc
+"
+
+source="$pkgname-$pkgver.tar.gz%%SOURCE_ARCHIVE_URL%%"
+
+builddir="$srcdir/$pkgname-$pkgver"
+
+#---------------------------------------------------------------
+# Build functions for APKBUILD
+#---------------------------------------------------------------
+prepare() {
+	default_prepare
+	# this function can be omitted if no extra steps are needed
+}
+
+unpack() {
+	default_unpack
+
+	# [NOTE]
+	# A github release archive is unzipped as a directory with the
+	# repository name(k2hr3_cli) and version number.
+	# In this case, change the directory name to the package name
+	# (k2hr3-cli) instead of the repository name.
+	#
+	if [ -d "$_repository_name-$pkgver" ]; then
+		mv "$_repository_name-$pkgver" "$pkgname-$pkgver"
+	fi
+}
+
+build() {
+	if [ ! -f configure ]; then
+		./autogen.sh
+	fi
+	./configure --prefix=/usr $_configure_option
+	make build
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	install -Dm 0555 src/k2hr3                           "$pkgdir"/usr/bin/k2hr3
+	install -Dm 0444 src/libexec/common/CREDIT           "$pkgdir"/usr/libexec/k2hr3/common/CREDIT
+	install -Dm 0444 src/libexec/common/VERSION          "$pkgdir"/usr/libexec/k2hr3/common/VERSION
+	install -Dm 0444 src/libexec/common/k2hr3.config     "$pkgdir"/usr/libexec/k2hr3/common/k2hr3.config
+	install -Dm 0444 src/libexec/common/configuration.sh "$pkgdir"/usr/libexec/k2hr3/common/configuration.sh
+	install -Dm 0444 src/libexec/common/depends.sh       "$pkgdir"/usr/libexec/k2hr3/common/depends.sh
+	install -Dm 0444 src/libexec/common/help.sh          "$pkgdir"/usr/libexec/k2hr3/common/help.sh
+	install -Dm 0444 src/libexec/common/interactive.sh   "$pkgdir"/usr/libexec/k2hr3/common/interactive.sh
+	install -Dm 0444 src/libexec/common/jsonparser.sh    "$pkgdir"/usr/libexec/k2hr3/common/jsonparser.sh
+	install -Dm 0444 src/libexec/common/message.sh       "$pkgdir"/usr/libexec/k2hr3/common/message.sh
+	install -Dm 0444 src/libexec/common/modelist.sh      "$pkgdir"/usr/libexec/k2hr3/common/modelist.sh
+	install -Dm 0444 src/libexec/common/option.sh        "$pkgdir"/usr/libexec/k2hr3/common/option.sh
+	install -Dm 0444 src/libexec/common/request.sh       "$pkgdir"/usr/libexec/k2hr3/common/request.sh
+	install -Dm 0444 src/libexec/common/requestutil.sh   "$pkgdir"/usr/libexec/k2hr3/common/requestutil.sh
+	install -Dm 0444 src/libexec/common/strings.sh       "$pkgdir"/usr/libexec/k2hr3/common/strings.sh
+	install -Dm 0444 src/libexec/config/help.sh          "$pkgdir"/usr/libexec/k2hr3/config/help.sh
+	install -Dm 0444 src/libexec/config/summary.sh       "$pkgdir"/usr/libexec/k2hr3/config/summary.sh
+	install -Dm 0444 src/libexec/config/command.sh       "$pkgdir"/usr/libexec/k2hr3/config/command.sh
+	install -Dm 0444 src/libexec/acr/help.sh             "$pkgdir"/usr/libexec/k2hr3/acr/help.sh
+	install -Dm 0444 src/libexec/acr/summary.sh          "$pkgdir"/usr/libexec/k2hr3/acr/summary.sh
+	install -Dm 0444 src/libexec/acr/command.sh          "$pkgdir"/usr/libexec/k2hr3/acr/command.sh
+	install -Dm 0444 src/libexec/extdata/help.sh         "$pkgdir"/usr/libexec/k2hr3/extdata/help.sh
+	install -Dm 0444 src/libexec/extdata/summary.sh      "$pkgdir"/usr/libexec/k2hr3/extdata/summary.sh
+	install -Dm 0444 src/libexec/extdata/command.sh      "$pkgdir"/usr/libexec/k2hr3/extdata/command.sh
+	install -Dm 0444 src/libexec/list/help.sh            "$pkgdir"/usr/libexec/k2hr3/list/help.sh
+	install -Dm 0444 src/libexec/list/summary.sh         "$pkgdir"/usr/libexec/k2hr3/list/summary.sh
+	install -Dm 0444 src/libexec/list/command.sh         "$pkgdir"/usr/libexec/k2hr3/list/command.sh
+	install -Dm 0444 src/libexec/policy/help.sh          "$pkgdir"/usr/libexec/k2hr3/policy/help.sh
+	install -Dm 0444 src/libexec/policy/summary.sh       "$pkgdir"/usr/libexec/k2hr3/policy/summary.sh
+	install -Dm 0444 src/libexec/policy/command.sh       "$pkgdir"/usr/libexec/k2hr3/policy/command.sh
+	install -Dm 0444 src/libexec/resource/help.sh        "$pkgdir"/usr/libexec/k2hr3/resource/help.sh
+	install -Dm 0444 src/libexec/resource/summary.sh     "$pkgdir"/usr/libexec/k2hr3/resource/summary.sh
+	install -Dm 0444 src/libexec/resource/command.sh     "$pkgdir"/usr/libexec/k2hr3/resource/command.sh
+	install -Dm 0444 src/libexec/role/help.sh            "$pkgdir"/usr/libexec/k2hr3/role/help.sh
+	install -Dm 0444 src/libexec/role/summary.sh         "$pkgdir"/usr/libexec/k2hr3/role/summary.sh
+	install -Dm 0444 src/libexec/role/command.sh         "$pkgdir"/usr/libexec/k2hr3/role/command.sh
+	install -Dm 0444 src/libexec/service/help.sh         "$pkgdir"/usr/libexec/k2hr3/service/help.sh
+	install -Dm 0444 src/libexec/service/summary.sh      "$pkgdir"/usr/libexec/k2hr3/service/summary.sh
+	install -Dm 0444 src/libexec/service/command.sh      "$pkgdir"/usr/libexec/k2hr3/service/command.sh
+	install -Dm 0444 src/libexec/token/help.sh           "$pkgdir"/usr/libexec/k2hr3/token/help.sh
+	install -Dm 0444 src/libexec/token/summary.sh        "$pkgdir"/usr/libexec/k2hr3/token/summary.sh
+	install -Dm 0444 src/libexec/token/command.sh        "$pkgdir"/usr/libexec/k2hr3/token/command.sh
+	install -Dm 0444 src/libexec/token/library.sh        "$pkgdir"/usr/libexec/k2hr3/token/library.sh
+	install -Dm 0444 src/libexec/userdata/help.sh        "$pkgdir"/usr/libexec/k2hr3/userdata/help.sh
+	install -Dm 0444 src/libexec/userdata/summary.sh     "$pkgdir"/usr/libexec/k2hr3/userdata/summary.sh
+	install -Dm 0444 src/libexec/userdata/command.sh     "$pkgdir"/usr/libexec/k2hr3/userdata/command.sh
+	install -Dm 0444 src/libexec/version/help.sh         "$pkgdir"/usr/libexec/k2hr3/version/help.sh
+	install -Dm 0444 src/libexec/version/summary.sh      "$pkgdir"/usr/libexec/k2hr3/version/summary.sh
+	install -Dm 0444 src/libexec/version/command.sh      "$pkgdir"/usr/libexec/k2hr3/version/command.sh
+	install -Dm 0644 src/libexec/common/k2hr3.config     "$pkgdir"/etc/antpickax/k2hr3.config
+}
+
+# [NOTE]
+# Subsequent lines print the checksum of the source archive.
+#

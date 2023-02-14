@@ -270,6 +270,8 @@ select_credential_type_for_unscopedtoken()
 			return 0
 		fi
 	fi
+
+	# shellcheck disable=SC2317
 	return 3
 }
 
