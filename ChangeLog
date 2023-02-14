@@ -1,3 +1,23 @@
+k2hr3-cli (1.0.5) unstable; urgency=low
+
+  * Changed CI OSs and added Alpine OS - #24
+  * Updated header and footer in comment lines - #23
+  * Updated issue/pullrequest templates and README.md - #22
+  * Added comments and updated .gitignore - #21
+  * Reviewed ShellCheck processing in Makefile.am - #20
+  * Reviewed ShellCheck processing and fixed bugs - #19
+  * Eliminated unnecessary copies in build_helper.sh - #18
+  * Updated ostypevars.sh for removing shellcheck pkg - #17
+  * Updated github actions process and support os, and fixed bugs - #16
+  * Updated debian_build.sh for grep parameter and updated configure.ac - #15
+  * Updated common build scripts - #14
+  * Updated buld tools(Makefile.am) - #13
+  * Separated the shellcheck process in the build process - #12
+  * Updated Antpickax common scripts and tools under the buildutils directory - #11
+  * Enabled external customization of variables in configure.ac - #10
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Tue, 14 Feb 2023 16:41:38 +0900
+
 k2hr3-cli (1.0.4) unstable; urgency=low
 
   * Supported OpenID Connect (OIDC) authorization for K2HR3 - #8
