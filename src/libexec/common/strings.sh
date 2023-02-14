@@ -51,6 +51,7 @@ fi
 pecho()
 {
 	if [ -n "$1" ] && [ "$1" = "-e" ]; then
+		shift
 		if [ "${_K2HR3_CLI_ECHO_EXP}" -eq 1 ]; then
 			# shellcheck disable=SC2039,SC3037
 			echo -e "$*"

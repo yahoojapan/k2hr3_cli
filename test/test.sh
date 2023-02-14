@@ -71,18 +71,6 @@ if [ -f "${TESTDIR}/${UTIL_TESTFILE}" ]; then
 fi
 
 #---------------------------------------------------------------------
-# Functions
-#---------------------------------------------------------------------
-func_usage()
-{
-	echo ""
-	echo "Usage: ${TESTMAINBIN} [option...]"
-	echo "	     --update(-u)   update the test result comparison file with the current test result."
-	echo "	     --help(-h)     print help."
-	echo ""
-}
-
-#---------------------------------------------------------------------
 # Test all
 #---------------------------------------------------------------------
 #

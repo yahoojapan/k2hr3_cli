@@ -118,7 +118,8 @@ AC_CONFIG_FILES([Makefile
 				buildutils/control
 				buildutils/copyright
 				buildutils/rules
-				buildutils/k2hr3-cli.spec])
+				buildutils/k2hr3-cli.spec
+				buildutils/APKBUILD.templ])
 
 AC_OUTPUT
 

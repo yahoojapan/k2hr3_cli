@@ -197,7 +197,12 @@ jsonparser_parse_json_element()
 			# [NOTE]
 			#	awk result : '<key found position> <found key> <string before key> <string after key>'
 			#
-			_JP_ELEMENT_PARSED_TMP=$(pecho -n "${_JP_ELEMENT_REMAINING}" | awk 'match($0, /[{}\[\]"]/){print RSTART, substr($0, RSTART, 1), "\"" substr($0, 1, RSTART - 1) "\"", "\"" substr($0, RSTART + 1) "\""}')
+			# [NOTICE]
+			# The following finds '[', ']', '{', '}' and '"' in string.
+			# Note that in order to search for ']' in the regular expression of the match function,
+			# it must be written at the beginning of "[ ... ]", otherwise it will not work properly.
+			#
+			_JP_ELEMENT_PARSED_TMP=$(pecho -n "${_JP_ELEMENT_REMAINING}" | awk 'match($0, /[]{}"\[]/){print RSTART, substr($0, RSTART, 1), "\"" substr($0, 1, RSTART - 1) "\"", "\"" substr($0, RSTART + 1) "\""}')
 			if [ -z "${_JP_ELEMENT_PARSED_TMP}" ]; then
 				prn_dbg "(jsonparser_parse_json_element) ${_JP_ELEMENT_PATH} path is object, but end word of it is not found."
 				return 1
@@ -328,7 +333,12 @@ jsonparser_parse_json_element()
 			# [NOTE]
 			#	awk result : '<key found position> <found key> <string before key> <string after key>'
 			#
-			_JP_ELEMENT_PARSED_TMP=$(pecho -n "${_JP_ELEMENT_REMAINING}" | awk 'match($0, /[{}\[\]"]/){print RSTART, substr($0, RSTART, 1), "\"" substr($0, 1, RSTART - 1) "\"", "\"" substr($0, RSTART + 1) "\""}')
+			# [NOTICE]
+			# The following finds '[', ']', '{', '}' and '"' in string.
+			# Note that in order to search for ']' in the regular expression of the match function,
+			# it must be written at the beginning of "[ ... ]", otherwise it will not work properly.
+			#
+			_JP_ELEMENT_PARSED_TMP=$(pecho -n "${_JP_ELEMENT_REMAINING}" | awk 'match($0, /[]{}"\[]/){print RSTART, substr($0, RSTART, 1), "\"" substr($0, 1, RSTART - 1) "\"", "\"" substr($0, RSTART + 1) "\""}')
 			if [ -z "${_JP_ELEMENT_PARSED_TMP}" ]; then
 				prn_dbg "(jsonparser_parse_json_element) ${_JP_ELEMENT_PATH} path is array, but end word of it is not found."
 				return 1
@@ -439,7 +449,12 @@ jsonparser_parse_json_element()
 		# [NOTE]
 		#	result of following awk comand : "<found word position> <found separator word> <string of before separator> <string of after separator>"
 		#
-		_JP_ELEMENT_PARSED_TMP=$(pecho -n "${_JP_ELEMENT_REMAINING}" | awk 'match($0, /[,}\]]/){print RSTART, substr($0, RSTART, 1), "\"" substr($0, 1, RSTART - 1) "\"", "\"" substr($0, RSTART + 1) "\""}')
+		# [NOTICE]
+		# The following finds '[', ']', '{', '}' and '"' in string.
+		# Note that in order to search for ']' in the regular expression of the match function,
+		# it must be written at the beginning of "[ ... ]", otherwise it will not work properly.
+		#
+		_JP_ELEMENT_PARSED_TMP=$(pecho -n "${_JP_ELEMENT_REMAINING}" | awk 'match($0, /[],}]/){print RSTART, substr($0, RSTART, 1), "\"" substr($0, 1, RSTART - 1) "\"", "\"" substr($0, RSTART + 1) "\""}')
 		if [ -z "${_JP_ELEMENT_PARSED_TMP}" ]; then
 			_JP_ELEMENT_CONTENT_STR=$(pecho -n "${_JP_ELEMENT_START_WORD}${_JP_ELEMENT_REMAINING}" | tr '[:upper:]' '[:lower:]')
 			_JP_ELEMENT_REMAINING=""
