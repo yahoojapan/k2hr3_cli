@@ -1,3 +1,9 @@
+k2hr3-cli (1.0.6) unstable; urgency=low
+
+  * Added alpine_build.sh to buildutils/Makefile.am - #26
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Wed, 15 Feb 2023 15:07:33 +0900
+
 k2hr3-cli (1.0.5) unstable; urgency=low
 
   * Changed CI OSs and added Alpine OS - #24
