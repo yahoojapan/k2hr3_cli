@@ -1,3 +1,9 @@
+k2hr3-cli (1.0.7) unstable; urgency=low
+
+  * Added K2HR3CLI_GLOBAL_CONFIG_NOTUSE for plugin packages - #28
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Thu, 16 Feb 2023 10:04:55 +0900
+
 k2hr3-cli (1.0.6) unstable; urgency=low
 
   * Added alpine_build.sh to buildutils/Makefile.am - #26
