@@ -849,12 +849,21 @@ update_config_vars()
 #
 # Load global configuration file
 #
-if [ -f "${K2HR3CLI_GLOBAL_CONFIG}" ]; then
-	if ! check_backquote_in_file "${K2HR3CLI_GLOBAL_CONFIG}"; then
-		prn_warn "${K2HR3CLI_GLOBAL_CONFIG} configuration file has back quote for shell executable charactor, then skip it loading."
-	else
-		prn_info "Loaded ${K2HR3CLI_GLOBAL_CONFIG} configuration file."
-		. "${K2HR3CLI_GLOBAL_CONFIG}"
+# [NOTE]
+# To avoid loading "/etc/antpickax/k2hr3.config" by setting the 
+# K2HR3CLI_GLOBAL_CONFIG_NOTUSE environment variable.
+# (ex. "K2HR3CLI_GLOBAL_CONFIG_NOTUSE=1")
+# This variable is intended for use in building the plugin package.
+# So this is an internal variable and not documented.
+#
+if [ -z "${K2HR3CLI_GLOBAL_CONFIG_NOTUSE}" ]; then
+	if [ -f "${K2HR3CLI_GLOBAL_CONFIG}" ]; then
+		if ! check_backquote_in_file "${K2HR3CLI_GLOBAL_CONFIG}"; then
+			prn_warn "${K2HR3CLI_GLOBAL_CONFIG} configuration file has back quote for shell executable charactor, then skip it loading."
+		else
+			prn_info "Loaded ${K2HR3CLI_GLOBAL_CONFIG} configuration file."
+			. "${K2HR3CLI_GLOBAL_CONFIG}"
+		fi
 	fi
 fi
 
