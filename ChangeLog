@@ -1,3 +1,9 @@
+k2hr3-cli (1.0.8) unstable; urgency=low
+
+  * Updated building/packaging scripts - #30
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Mon, 06 Mar 2023 14:48:17 +0900
+
 k2hr3-cli (1.0.7) unstable; urgency=low
 
   * Added K2HR3CLI_GLOBAL_CONFIG_NOTUSE for plugin packages - #28
