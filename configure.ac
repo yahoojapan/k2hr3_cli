@@ -109,6 +109,7 @@ AC_CONFIG_FILES([Makefile
 				src/libexec/resource/Makefile
 				src/libexec/role/Makefile
 				src/libexec/service/Makefile
+				src/libexec/tenant/Makefile
 				src/libexec/token/Makefile
 				src/libexec/userdata/Makefile
 				src/libexec/version/Makefile
