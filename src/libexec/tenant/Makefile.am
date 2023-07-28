@@ -1,7 +1,7 @@
 #
 # K2HR3 Utilities - Command Line Interface
 #
-# Copyright 2021 Yahoo Japan Corporation.
+# Copyright 2023 Yahoo Japan Corporation.
 #
 # K2HR3 is K2hdkc based Resource and Roles and policy Rules, gathers
 # common management information for the cloud.
@@ -13,24 +13,13 @@
 # the license file that was distributed with this source code.
 #
 # AUTHOR:   Takeshi Nakatani
-# CREATE:   Mon Feb 15 2021
+# CREATE:   Thu Jul 27 2023
 # REVISION:
 #
 
-SUBDIRS =	common \
-			common \
-			config \
-			acr \
-			extdata \
-			list \
-			policy \
-			resource \
-			role \
-			service \
-			tenant \
-			token \
-			userdata \
-			version
+EXTRA_DIST =	help.sh \
+				summary.sh \
+				command.sh
 
 #
 # Local variables:

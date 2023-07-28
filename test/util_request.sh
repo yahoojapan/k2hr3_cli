@@ -1530,6 +1530,182 @@ create_dummy_response()
 		fi
 
 	#------------------------------------------------------
+	# Tenant
+	#------------------------------------------------------
+	elif compare_part_string "${_DUMMY_URL_PATH}" "/v1/tenant" >/dev/null 2>&1; then
+		#
+		# Tenant
+		#
+		if ! _UTIL_TMP_TOKENVAL=$(util_search_usertoken "$@"); then
+			K2HR3CLI_REQUEST_EXIT_CODE=400
+			return 1
+		fi
+
+		if [ -n "${_DUMMY_URL_PATH}" ] && [ "${_DUMMY_URL_PATH}" = "/v1/tenant" ]; then
+			if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "PUT" ]; then
+				#
+				# Create Tenant(/v1/tenant)
+				#
+
+				#
+				# Url arguments
+				#
+				_UTIL_TMP_TENANTNAME=$(util_search_urlarg "name" "${_DUMMY_URL_ARGS}")
+				_UTIL_TMP_DISPLAY=$(util_search_urlarg "display" "${_DUMMY_URL_ARGS}")
+				_UTIL_TMP_DESCRIPTION=$(util_search_urlarg "desc" "${_DUMMY_URL_ARGS}")
+				_UTIL_TMP_USERS=$(util_search_urlarg "users" "${_DUMMY_URL_ARGS}")
+
+				if [ -z "${_UTIL_TMP_TENANTNAME}" ]; then
+					K2HR3CLI_REQUEST_EXIT_CODE=400
+					prn_err "Not found tenant name."
+					return 1
+				fi
+				if [ -n "${_UTIL_TMP_DISPLAY}" ]; then
+					prn_dbg "\"display\" url argument is \"${_UTIL_TMP_DISPLAY}\"."
+				else
+					prn_dbg "\"display\" url argument is empty."
+				fi
+				if [ -n "${_UTIL_TMP_DESCRIPTION}" ]; then
+					prn_dbg "\"desc\" url argument is \"${_UTIL_TMP_DESCRIPTION}\"."
+				else
+					prn_dbg "\"desc\" url argument is empty."
+				fi
+				if [ -n "${_UTIL_TMP_USERS}" ]; then
+					prn_dbg "\"users\" url argument is \"${_UTIL_TMP_USERS}\"."
+				else
+					prn_dbg "\"users\" url argument is empty."
+				fi
+
+				K2HR3CLI_REQUEST_EXIT_CODE=201
+				_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
+				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
+
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "GET" ]; then
+				#
+				# Show Tenant List(/v1/tenant)
+				#
+
+				#
+				# Url arguments
+				#
+				_UTIL_TMP_EXPAND=$(util_search_urlarg "expand" "${_DUMMY_URL_ARGS}")
+				prn_dbg "(create_dummy_response) all url args(${_DUMMY_URL_ARGS}) => expand(${_UTIL_TMP_EXPAND})"
+				_UTIL_TMP_EXPAND=$(to_upper "${_UTIL_TMP_EXPAND}")
+				if [ -n "${_UTIL_TMP_EXPAND}" ] && [ "${_UTIL_TMP_EXPAND}" = "TRUE" ]; then
+					_UTIL_TMP_EXPAND=1
+				elif [ -n "${_UTIL_TMP_EXPAND}" ] && [ "${_UTIL_TMP_EXPAND}" = "FALSE" ]; then
+					_UTIL_TMP_EXPAND=0
+				elif [ -z "${_UTIL_TMP_EXPAND}" ]; then
+					_UTIL_TMP_EXPAND=0
+				else
+					K2HR3CLI_REQUEST_EXIT_CODE=400
+					prn_err "\"expand\" URL argument value is wrong.(${_DUMMY_URL_ARGS})."
+					return 1
+				fi
+
+				K2HR3CLI_REQUEST_EXIT_CODE=200
+				if [ "${_UTIL_TMP_EXPAND}" -eq 0 ]; then
+					_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"tenants":[{"name":"local_tenant_0","id":"local-tenant-0-d","desc":"LocalTenant0forTest","display":"TestLocalTenant0","user":["test","test1","test2"]},{"name":"local_tenant_1","id":"local-tenant-1-d","desc":"LocalTenant1forTest","display":"TestLocalTenant1","user":["test","test1","test2"]}]}'
+				else
+					_UTIL_RESPONSE_CONTENT='{"result":true,"message":null,"tenants":["local_tenant_0","local_tenant_1"]}'
+				fi
+				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
+
+			else
+				K2HR3CLI_REQUEST_EXIT_CODE=400
+				prn_err "Not allowed Method(${_DUMMY_METHOD})."
+				return 1
+			fi
+			pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
+
+		elif compare_part_string "${_DUMMY_URL_PATH}" "/v1/tenant/" >/dev/null 2>&1; then
+			if [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "PUT" ]; then
+				#
+				# Update Tenant(/v1/tenant/...)
+				#
+				_DUMMY_URL_PATH_AFTER_PART=$(pecho -n "${_DUMMY_URL_PATH}" | sed -e 's#/v1/tenant/##g')
+				if [ -z "${_DUMMY_URL_PATH_AFTER_PART}" ]; then
+					K2HR3CLI_REQUEST_EXIT_CODE=400
+					prn_err "Not found tenant name."
+					return 1
+				fi
+
+				#
+				# Url arguments
+				#
+				_UTIL_TMP_TENANTID=$(util_search_urlarg "id" "${_DUMMY_URL_ARGS}")
+				_UTIL_TMP_DISPLAY=$(util_search_urlarg "display" "${_DUMMY_URL_ARGS}")
+				_UTIL_TMP_DESCRIPTION=$(util_search_urlarg "desc" "${_DUMMY_URL_ARGS}")
+				_UTIL_TMP_USERS=$(util_search_urlarg "users" "${_DUMMY_URL_ARGS}")
+
+				if [ -z "${_UTIL_TMP_TENANTID}" ]; then
+					K2HR3CLI_REQUEST_EXIT_CODE=400
+					prn_err "Not found tenant id."
+					return 1
+				fi
+				if [ -n "${_UTIL_TMP_DISPLAY}" ]; then
+					prn_dbg "\"display\" url argument is \"${_UTIL_TMP_DISPLAY}\"."
+				else
+					prn_dbg "\"display\" url argument is empty."
+				fi
+				if [ -n "${_UTIL_TMP_DESCRIPTION}" ]; then
+					prn_dbg "\"desc\" url argument is \"${_UTIL_TMP_DESCRIPTION}\"."
+				else
+					prn_dbg "\"desc\" url argument is empty."
+				fi
+				if [ -n "${_UTIL_TMP_USERS}" ]; then
+					prn_dbg "\"users\" url argument is \"${_UTIL_TMP_USERS}\"."
+				else
+					prn_dbg "\"users\" url argument is empty."
+				fi
+
+				K2HR3CLI_REQUEST_EXIT_CODE=200
+				_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null}"
+				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
+
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "GET" ]; then
+				#
+				# Show Tenant(/v1/tenant/...)
+				#
+				_DUMMY_URL_PATH_AFTER_PART=$(pecho -n "${_DUMMY_URL_PATH}" | sed -e 's#/v1/tenant/##g')
+				if [ -z "${_DUMMY_URL_PATH_AFTER_PART}" ]; then
+					K2HR3CLI_REQUEST_EXIT_CODE=400
+					prn_err "Not found tenant name."
+					return 1
+				fi
+				_UTIL_TMP_TENANTNAME=${_DUMMY_URL_PATH_AFTER_PART}
+
+				K2HR3CLI_REQUEST_EXIT_CODE=200
+				_UTIL_RESPONSE_CONTENT="{\"result\":true,\"message\":null,\"tenant\":{\"name\":\"${_UTIL_TMP_TENANTNAME}\",\"id\":\"local-tenant-0-d\",\"desc\":\"LocalTenant0forTest\",\"display\":\"TestLocalTenant0\",\"user\":[\"test\",\"test1\",\"test2\"]}}"
+				pecho "${_UTIL_RESPONSE_CONTENT}" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
+
+			elif [ -n "${_DUMMY_METHOD}" ] && [ "${_DUMMY_METHOD}" = "DELETE" ]; then
+				#
+				# Delete Tenant(/v1/tenant/...)
+				#
+				_DUMMY_URL_PATH_AFTER_PART=$(pecho -n "${_DUMMY_URL_PATH}" | sed -e 's#/v1/tenant/##g')
+				if [ -z "${_DUMMY_URL_PATH_AFTER_PART}" ]; then
+					K2HR3CLI_REQUEST_EXIT_CODE=400
+					prn_err "Not found tenant name."
+					return 1
+				fi
+
+				K2HR3CLI_REQUEST_EXIT_CODE=204
+				pecho "" > "${K2HR3CLI_REQUEST_RESULT_FILE}"
+
+			else
+				K2HR3CLI_REQUEST_EXIT_CODE=400
+				prn_err "Not allowed Method(${_DUMMY_METHOD})."
+				return 1
+			fi
+
+		else
+			K2HR3CLI_REQUEST_EXIT_CODE=400
+			prn_err "Unknown URL(${_DUMMY_URL_PATH})."
+			return 2
+		fi
+
+	#------------------------------------------------------
 	# ACR
 	#------------------------------------------------------
 	elif compare_part_string "${_DUMMY_URL_PATH}" "/v1/acr/" >/dev/null 2>&1; then

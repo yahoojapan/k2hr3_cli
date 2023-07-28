@@ -1,0 +1,15 @@
+TEST CASE : (1) Normal : Create tenant
+Succeed : Create "test_local_tenant" Tenant
+
+TEST CASE : (2) Normal : Update tenant
+Succeed : Update "test_local_tenant" Tenant
+
+TEST CASE : (3) Normal : Get tenant list without expanding
+[{"name":"local_tenant_0","id":"local-tenant-0-d","desc":"LocalTenant0forTest","display":"TestLocalTenant0","user":["test","test1","test2"]},{"name":"local_tenant_1","id":"local-tenant-1-d","desc":"LocalTenant1forTest","display":"TestLocalTenant1","user":["test","test1","test2"]}]
+TEST CASE : (4) Normal : Get tenant list with expanding
+["local_tenant_0","local_tenant_1"]
+TEST CASE : (5) Normal : Get tenant with tenant name
+{"name":"test_local_tenant","id":"local-tenant-0-d","desc":"LocalTenant0forTest","display":"TestLocalTenant0","user":["test","test1","test2"]}
+TEST CASE : (6) Normal : Delete tenant
+Succeed : Delete "test_local_tenant" Tenant
+

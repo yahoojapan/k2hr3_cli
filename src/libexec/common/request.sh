@@ -46,6 +46,7 @@ K2HR3CLI_REQUEST_DEBUG_FILE="/tmp/.${BINNAME}_$$_curl.debug"
 #	-w "%{http_code}\n"			: always specified to get the exit code.
 #	-o <output temporary file>	: he response body outputs to a temporary file.
 #								  this file will be deleted after processing.
+#	-k							: if K2HR3CLI_OPT_CURLINSECURE=1(--curlinsecure(-ci)), this option is granted.
 #	-X <method>					: specified method(GET/PUT/POST/HEAD/DELETE)
 #	-H <headers>				: instructs to specify the header.(not has space)
 #								  specify "Content-Type: application/json" in most cases.
@@ -247,6 +248,16 @@ raw_request()
 	fi
 
 	#
+	# -k option
+	#
+	_REQUEST_OPTION_INSECURE=""
+	if [ -n "${K2HR3CLI_OPT_CURLINSECURE}" ]; then
+		if [ "${K2HR3CLI_OPT_CURLINSECURE}" -eq 1 ]; then
+			_REQUEST_OPTION_INSECURE="-k"
+		fi
+	fi
+
+	#
 	# --dump-header option
 	#
 	_REQUEST_OPTION_RESHEADER=
@@ -281,7 +292,7 @@ raw_request()
 	#
 	# Send request by curl
 	#
-	K2HR3CLI_REQUEST_EXIT_CODE=$(/bin/sh -c "curl ${_REQUEST_OPTION_SILENT} ${_REQUEST_OPTION_DBG} ${_REQUEST_OPTION_RESHEADER} ${_REQUEST_OPTION_EXITCODE} ${_REQUEST_OPTION_RESULT_FILE} ${_REQUEST_OPTION_HEADERS} ${_REQUEST_OPTION_DBG_FILE} ${_REQUEST_OPTION_BODY} ${_REQUEST_OPTION_METHOD} ${_REQUEST_URI}${_REQUEST_OPTION_PATH}")
+	K2HR3CLI_REQUEST_EXIT_CODE=$(/bin/sh -c "curl ${_REQUEST_OPTION_SILENT} ${_REQUEST_OPTION_INSECURE} ${_REQUEST_OPTION_DBG} ${_REQUEST_OPTION_RESHEADER} ${_REQUEST_OPTION_EXITCODE} ${_REQUEST_OPTION_RESULT_FILE} ${_REQUEST_OPTION_HEADERS} ${_REQUEST_OPTION_DBG_FILE} ${_REQUEST_OPTION_BODY} ${_REQUEST_OPTION_METHOD} ${_REQUEST_URI}${_REQUEST_OPTION_PATH}")
 	K2HR3CLI_REQUEST_CURL_EXITCODE=$?
 
 	#

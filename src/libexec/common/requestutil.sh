@@ -789,6 +789,94 @@ requtil_urlarg_acr_scuk_param()
 }
 
 #
+# Added tenant id argements
+#
+# $1		: base string
+# $?		: result
+# Output	: result string
+#
+requtil_urlarg_tenant_id_param()
+{
+	_REQUTIL_BASE_STR="$1"
+	if [ -n "${K2HR3CLI_OPT_TENANTID}" ]; then
+		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_TENANTID}")
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
+			_REQUTIL_BASE_STR="?id=${_REQUTIL_OPT_STR_TMP}"
+		else
+			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&id=${_REQUTIL_OPT_STR_TMP}"
+		fi
+	fi
+	pecho -n "${_REQUTIL_BASE_STR}"
+	return 0
+}
+
+#
+# Added tenant display argements
+#
+# $1		: base string
+# $?		: result
+# Output	: result string
+#
+requtil_urlarg_tenant_display_param()
+{
+	_REQUTIL_BASE_STR="$1"
+	if [ -n "${K2HR3CLI_OPT_DISPLAY}" ]; then
+		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_DISPLAY}")
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
+			_REQUTIL_BASE_STR="?display=${_REQUTIL_OPT_STR_TMP}"
+		else
+			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&display=${_REQUTIL_OPT_STR_TMP}"
+		fi
+	fi
+	pecho -n "${_REQUTIL_BASE_STR}"
+	return 0
+}
+
+#
+# Added tenant description argements
+#
+# $1		: base string
+# $?		: result
+# Output	: result string
+#
+requtil_urlarg_tenant_description_param()
+{
+	_REQUTIL_BASE_STR="$1"
+	if [ -n "${K2HR3CLI_OPT_DESCRIPTION}" ]; then
+		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_DESCRIPTION}")
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
+			_REQUTIL_BASE_STR="?desc=${_REQUTIL_OPT_STR_TMP}"
+		else
+			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&desc=${_REQUTIL_OPT_STR_TMP}"
+		fi
+	fi
+	pecho -n "${_REQUTIL_BASE_STR}"
+	return 0
+}
+
+#
+# Added tenant users argements
+#
+# $1		: base string
+# $?		: result
+# Output	: result string
+#
+requtil_urlarg_tenant_users_param()
+{
+	_REQUTIL_BASE_STR="$1"
+	if [ -n "${K2HR3CLI_OPT_USERS}" ]; then
+		_REQUTIL_OPT_STR_TMP=$(k2hr3cli_urlencode "${K2HR3CLI_OPT_USERS}")
+		if [ -z "${_REQUTIL_BASE_STR}" ]; then
+			_REQUTIL_BASE_STR="?users=${_REQUTIL_OPT_STR_TMP}"
+		else
+			_REQUTIL_BASE_STR="${_REQUTIL_BASE_STR}&users=${_REQUTIL_OPT_STR_TMP}"
+		fi
+	fi
+	pecho -n "${_REQUTIL_BASE_STR}"
+	return 0
+}
+
+#
 # Local variables:
 # tab-width: 4
 # c-basic-offset: 4

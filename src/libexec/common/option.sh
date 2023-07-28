@@ -59,6 +59,9 @@ K2HR3CLI_COMMON_OPT_JSON_LONG="--json"
 K2HR3CLI_COMMON_OPT_CURLDBG_SHORT="-cd"
 K2HR3CLI_COMMON_OPT_CURLDBG_LONG="--curldebug"
 
+K2HR3CLI_COMMON_OPT_CURLINSECURE_SHORT="-ci"
+K2HR3CLI_COMMON_OPT_CURLINSECURE_LONG="--curlinsecure"
+
 K2HR3CLI_COMMON_OPT_CURLBODY_SHORT="-cb"
 K2HR3CLI_COMMON_OPT_CURLBODY_LONG="--curlbody"
 
@@ -127,6 +130,10 @@ K2HR3CLI_COMMAND_OPT_SPORT_LONG="--sport"
 K2HR3CLI_COMMAND_OPT_SROLE_LONG="--srole"
 K2HR3CLI_COMMAND_OPT_SCUK_LONG="--scuk"
 K2HR3CLI_COMMAND_OPT_OUTPUT_LONG="--output"
+K2HR3CLI_COMMAND_OPT_TENANTID_LONG="--tenantid"
+K2HR3CLI_COMMAND_OPT_DISPLAY_LONG="--display"
+K2HR3CLI_COMMAND_OPT_DESCRIPTION_LONG="--description"
+K2HR3CLI_COMMAND_OPT_USERS_LONG="--users"
 
 #
 # Set variables for options
@@ -138,6 +145,7 @@ K2HR3CLI_COMMAND_OPT_OUTPUT_LONG="--output"
 #	K2HR3CLI_OPT_NOCOLOR		: not use color in message(see. message.sh)
 #	K2HR3CLI_OPT_JSON			: output result formatted by json
 #	K2HR3CLI_OPT_CURLDBG		: use curl debug option for debugging
+#	K2HR3CLI_OPT_CURLINSECURE	: use curl insecure option for self-signed certification
 #	K2HR3CLI_OPT_CURLBODY		: use curl debug option(body) for debugging
 #	K2HR3CLI_OPT_SAVE			: save spacial value(token etc) to configuration file
 #	K2HR3CLI_OPT_SAVE_PASS		: save passphrase value to configuration file(need with --saveconfig option)
@@ -170,6 +178,11 @@ K2HR3CLI_COMMAND_OPT_OUTPUT_LONG="--output"
 #	K2HR3CLI_OPT_SROLE			: srole parameter for ACR
 #	K2HR3CLI_OPT_SCUK			: scuk parameter for ACR
 #	K2HR3CLI_OPT_OUTPUT			: output file path for userdata/extdata
+#	K2HR3CLI_OPT_TENANTID		: tenant id parameter
+#	K2HR3CLI_OPT_DISPLAY		: tenant display parameter
+#	K2HR3CLI_OPT_DESCRIPTION	: tenant description parameter
+#	K2HR3CLI_OPT_USERS			: tenant's user list parameter
+
 #
 # Set global variables for options
 #	Some variables are allowed in configuration and can be loaded from
@@ -414,6 +427,7 @@ parse_mode_option()
 #	K2HR3CLI_OPT_NOCOLOR		: --nocolor(-nc)
 #	K2HR3CLI_OPT_JSON			: --json(-j)
 #	K2HR3CLI_OPT_CURLDBG		: --curldebug(-cd)
+#	K2HR3CLI_OPT_CURLINSECURE	: --curlinsecure(-ci)
 #	K2HR3CLI_OPT_CURLBODY		: --curlbody(-cb)
 #	K2HR3CLI_OPT_SAVE			: --saveconfig(-s)
 #	K2HR3CLI_OPT_SAVE_PASS		: --savepassphrase(-sp)
@@ -446,6 +460,11 @@ parse_mode_option()
 #	K2HR3CLI_OPT_SROLE  		: --srole
 #	K2HR3CLI_OPT_SCUK   		: --scuk
 #	K2HR3CLI_OPT_OUTPUT   		: --output
+#	K2HR3CLI_OPT_TENANTID		: --tenantid
+#	K2HR3CLI_OPT_DISPLAY		: --display
+#	K2HR3CLI_OPT_DESCRIPTION	: --description
+#	K2HR3CLI_OPT_USERS			: --users
+
 #
 #	K2HR3CLI_MSGLEVEL			: --messagelevel(-m)
 #	K2HR3CLI_API_URI			: --apiuri(-a)
@@ -504,6 +523,10 @@ parse_common_option()
 	_OPT_TMP_SROLE=
 	_OPT_TMP_SCUK=
 	_OPT_TMP_OUTPUT=
+	_OPT_TMP_TENANTID=
+	_OPT_TMP_DISPLAY=
+	_OPT_TMP_DESCRIPTION=
+	_OPT_TMP_USERS=
 
 	K2HR3CLI_OPTION_PARSER_REST=""
 	while [ $# -gt 0 ]; do
@@ -575,6 +598,13 @@ parse_common_option()
 				return 1
 			fi
 			K2HR3CLI_OPT_CURLDBG=1
+
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_CURLINSECURE_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_CURLINSECURE_LONG}" ]; then
+			if [ -n "${K2HR3CLI_OPT_CURLINSECURE}" ]; then
+				prn_err "already specified ${K2HR3CLI_COMMON_OPT_CURLINSECURE_LONG}(${K2HR3CLI_COMMON_OPT_CURLINSECURE_SHORT}) option."
+				return 1
+			fi
+			K2HR3CLI_OPT_CURLINSECURE=1
 
 		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_CURLBODY_SHORT}" ] || [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMON_OPT_CURLBODY_LONG}" ]; then
 			if [ -n "${K2HR3CLI_OPT_CURLBODY}" ]; then
@@ -1072,6 +1102,54 @@ parse_common_option()
 			fi
 			_OPT_TMP_OUTPUT="${_OPT_TMP_OUTPUT_TMP}"
 
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_TENANTID_LONG}" ]; then
+			if [ -n "${_OPT_TMP_TENANTID}" ]; then
+				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_TENANTID_LONG} option."
+				return 1
+			fi
+			shift
+			if [ $# -le 0 ]; then
+				prn_err "${K2HR3CLI_COMMAND_OPT_TENANTID_LONG} option needs parameter."
+				return 1
+			fi
+			_OPT_TMP_TENANTID=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
+
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_DISPLAY_LONG}" ]; then
+			if [ -n "${_OPT_TMP_DISPLAY}" ]; then
+				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_DISPLAY_LONG} option."
+				return 1
+			fi
+			shift
+			if [ $# -le 0 ]; then
+				prn_err "${K2HR3CLI_COMMAND_OPT_DISPLAY_LONG} option needs parameter."
+				return 1
+			fi
+			_OPT_TMP_DISPLAY=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
+
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_DESCRIPTION_LONG}" ]; then
+			if [ -n "${_OPT_TMP_DESCRIPTION}" ]; then
+				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_DESCRIPTION_LONG} option."
+				return 1
+			fi
+			shift
+			if [ $# -le 0 ]; then
+				prn_err "${K2HR3CLI_COMMAND_OPT_DESCRIPTION_LONG} option needs parameter."
+				return 1
+			fi
+			_OPT_TMP_DESCRIPTION=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
+
+		elif [ "${_OPTION_TMP}" = "${K2HR3CLI_COMMAND_OPT_USERS_LONG}" ]; then
+			if [ -n "${_OPT_TMP_USERS}" ]; then
+				prn_err "already specified ${K2HR3CLI_COMMAND_OPT_USERS_LONG} option."
+				return 1
+			fi
+			shift
+			if [ $# -le 0 ]; then
+				prn_err "${K2HR3CLI_COMMAND_OPT_USERS_LONG} option needs parameter."
+				return 1
+			fi
+			_OPT_TMP_USERS=$(cut_special_words "$1" | sed -e 's/%20/ /g' -e 's/%25/%/g')
+
 		else
 			if [ -z "${K2HR3CLI_OPTION_PARSER_REST}" ]; then
 				K2HR3CLI_OPTION_PARSER_REST="$1"
@@ -1215,6 +1293,18 @@ parse_common_option()
 	fi
 	if [ -n "${_OPT_TMP_OUTPUT}" ]; then
 		K2HR3CLI_OPT_OUTPUT=${_OPT_TMP_OUTPUT}
+	fi
+	if [ -n "${_OPT_TMP_TENANTID}" ]; then
+		K2HR3CLI_OPT_TENANTID=${_OPT_TMP_TENANTID}
+	fi
+	if [ -n "${_OPT_TMP_DISPLAY}" ]; then
+		K2HR3CLI_OPT_DISPLAY=${_OPT_TMP_DISPLAY}
+	fi
+	if [ -n "${_OPT_TMP_DESCRIPTION}" ]; then
+		K2HR3CLI_OPT_DESCRIPTION=${_OPT_TMP_DESCRIPTION}
+	fi
+	if [ -n "${_OPT_TMP_USERS}" ]; then
+		K2HR3CLI_OPT_USERS=${_OPT_TMP_USERS}
 	fi
 
 	#
