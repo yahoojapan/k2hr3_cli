@@ -1,3 +1,10 @@
+k2hr3-cli (1.0.10) unstable; urgency=low
+
+  * Updated tool scripts and support OSs - #35
+  * Fixed .gitignore to exclude APKBUILD.templ - #34
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Fri, 01 Sep 2023 12:36:31 +0900
+
 k2hr3-cli (1.0.9) unstable; urgency=low
 
   * Added tenant sub command for K2HR3 TENANT API - #32
