@@ -1,3 +1,9 @@
+k2hr3-cli (1.0.12) unstable; urgency=low
+
+  * Updated build_helper.sh for fixing a bug and installing ruby - #39
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Mon, 20 Nov 2023 11:05:17 +0900
+
 k2hr3-cli (1.0.11) unstable; urgency=low
 
   * Changed support OS (fedora and ubuntu) and updated tool - #37
