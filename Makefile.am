@@ -66,16 +66,17 @@ SHELLCHECK_FILES_SH			= `grep -ril '^\#!/bin/sh' . | grep '\.sh' | grep -v '\.sh
 SHELLCHECK_FILES_INCLUDE_SH	= `grep -Lir '^\#!/bin/sh' . | grep '\.sh' | grep -v '\.sh\.' | grep -v '/\.git/' | grep -v '/rpmbuild/' | grep -v '/debian_build/' | grep -v '/autom4te.cache/' | grep -v '/m4/' | tr '\n' ' '`
 
 shellcheck:
-	@if type shellcheck > /dev/null 2>&1; then \
+	@set -e; \
+	if type shellcheck > /dev/null 2>&1; then \
 		echo "*** Check all files with ShellCheck"; \
 		if [ -n "$(SHELLCHECK_FILES_NO_SH)" ]; then \
-			LC_ALL=C.UTF-8 $(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_IGN_OPT) $(SHELLCHECK_FILES_NO_SH) || exit 1; \
+			LC_ALL=C.UTF-8 $(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_IGN_OPT) $(SHELLCHECK_FILES_NO_SH); \
 		fi; \
 		if [ -n "$(SHELLCHECK_FILES_SH)" ]; then \
-			LC_ALL=C.UTF-8 $(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_IGN_OPT) $(SHELLCHECK_FILES_SH) || exit 1; \
+			LC_ALL=C.UTF-8 $(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_IGN_OPT) $(SHELLCHECK_FILES_SH); \
 		fi; \
 		if [ -n "$(SHELLCHECK_FILES_INCLUDE_SH)" ]; then \
-			LC_ALL=C.UTF-8 $(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_INCLUDE_IGN_OPT) $(SHELLCHECK_FILES_INCLUDE_SH) || exit 1; \
+			LC_ALL=C.UTF-8 $(SHELLCHECK_CMD) $(SHELLCHECK_BASE_OPT) $(SHELLCHECK_INCLUDE_IGN_OPT) $(SHELLCHECK_FILES_INCLUDE_SH); \
 		fi; \
 		echo "   -> No error was detected."; \
 		echo ""; \
