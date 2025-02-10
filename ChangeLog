@@ -1,3 +1,9 @@
+k2hr3-cli (1.0.15) unstable; urgency=low
+
+  * Changed support OSes and Fixed scripts, etc - #45
+
+ -- Takeshi Nakatani <ggtakec@gmail.com>  Mon, 10 Feb 2025 09:42:14 +0900
+
 k2hr3-cli (1.0.14) unstable; urgency=low
 
   * Changed supported OS and modified some codes - #43
