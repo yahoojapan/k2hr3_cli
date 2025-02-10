@@ -171,7 +171,7 @@ if [ -z "${K2HR3_RUN_MAIN_PROCESS}" ] || [ "${K2HR3_RUN_MAIN_PROCESS}" != "1" ];
 	while [ "${_UTIL_TMP_OPT_COUNT}" -gt 0 ]; do
 		_UTIL_TMP_OPT_VALUE=$(eval pecho -n '$'${_UTIL_TMP_OPT_POS})
 
-		if [ -n "${_UTIL_TMP_OPT_VALUE}" ] && { [ "${_UTIL_TMP_OPT_VALUE}" = "--update" ] || [ "${_UTIL_TMP_OPT_VALUE}" = "--UPDATE" ] || [ "${_UTIL_TMP_OPT_VALUE}" = "-u" ] || [ "${_UTIL_TMP_OPT_VALUE}" = "-U" ]; }; then
+		if echo "${_UTIL_TMP_OPT_VALUE}" | grep -q -i -e "^-u$" -e "^--update$"; then
 			if [ "${_UNIT_UPDATE_LOG}" -ne 0 ]; then
 				echo "${CRED}[ERROR] Already set ${_UTIL_TMP_OPT_VALUE} option.${CDEF}"
 				exit 1
