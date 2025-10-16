@@ -478,7 +478,7 @@ elif [ "${K2HR3CLI_SUBCOMMAND}" = "${_TOKEN_COMMAND_SUB_SHOW}" ]; then
 			# [NOTE]
 			# Since the condition becomes complicated, use "X"(temporary word).
 			#
-			if [ "X${JSONPARSER_FIND_VAL_TYPE}" != "X${JP_TYPE_STR}" ] || [ "X${_TOKEN_TENANT_SHOW_TMP}" != "X${_TOKEN_TENANT_SHOW_TMP2}" ]; then
+			if [ -z "${JSONPARSER_FIND_VAL_TYPE}" ] || [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_STR}" ] || [ -z "${_TOKEN_TENANT_SHOW_TMP}" ] || [ "${_TOKEN_TENANT_SHOW_TMP}" != "${_TOKEN_TENANT_SHOW_TMP2}" ]; then
 				prn_err "Failed to get tenant list : \"user\" element is not \"false\"."
 				rm -f "${JP_PAERSED_FILE}"
 				exit 1

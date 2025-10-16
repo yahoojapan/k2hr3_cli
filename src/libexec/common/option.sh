@@ -280,8 +280,8 @@ get_option2_value()
 		# [NOTE]
 		# Since the condition becomes complicated, use "X"(temporary word).
 		#
-		if [ "X${_OPTION_TMP}" = "X${_OPTION_KEYWORD1}" ] || [ "X${_OPTION_TMP}" = "X${_OPTION_KEYWORD2}" ]; then
-			if [ "X${_OPTION_TMP}" = "X${_OPTION_KEYWORD1}" ]; then
+		if { [ -n "${_OPTION_TMP}" ] && [ -n "${_OPTION_KEYWORD1}" ] && [ "${_OPTION_TMP}" = "${_OPTION_KEYWORD1}" ]; } || { [ -n "${_OPTION_TMP}" ] && [ -n "${_OPTION_KEYWORD2}" ] && [ "${_OPTION_TMP}" = "${_OPTION_KEYWORD2}" ]; }; then
+			if [ "${_OPTION_TMP}" = "${_OPTION_KEYWORD1}" ]; then
 				_OPTION_KEYWORD_TMP=${_OPTION_KEYWORD1}
 			else
 				_OPTION_KEYWORD_TMP=${_OPTION_KEYWORD2}

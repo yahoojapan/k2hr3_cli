@@ -1016,7 +1016,7 @@ jsonparser_dump_key_parsed_file()
 	# [NOTE]
 	# Since the condition becomes complicated, use "X"(temporary word).
 	#
-	if [ "X${_JP_DUMP_SINGLE_LINE}" != "X1" ] && [ "X${K2HR3CLI_OPT_JSON}" = "X1" ]; then
+	if { [ -z "${_JP_DUMP_SINGLE_LINE}" ] || [ "${_JP_DUMP_SINGLE_LINE}" -ne 1 ]; } && [ -n "${K2HR3CLI_OPT_JSON}" ] && [ "${K2HR3CLI_OPT_JSON}" -eq 1 ]; then
 		pecho '' >> "${_JP_PAERSED_FORM_FILE}"
 	fi
 	cat "${_JP_PAERSED_FORM_FILE}"
