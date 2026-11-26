@@ -427,7 +427,7 @@ complement_unscoped_token()
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
 	fi
-	if [ -z "${JSONPARSER_FIND_VAL_TYPE}" ] || [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_STR}" ] || [ -z "${JSONPARSER_FIND_STR_VAL}" ]; then
+	if [ -z "${JSONPARSER_FIND_VAL_TYPE}" ] || [ "${JSONPARSER_FIND_VAL_TYPE}" != "${JP_TYPE_STR}" ] || [ -z "${JSONPARSER_FIND_STR_VAL}" ] || ! is_safe_config_var_value "${JSONPARSER_FIND_STR_VAL}"; then
 		prn_err "Failed to get K2HR3 unscoped token : \"token\" element is not string or empty."
 		rm -f "${JP_PAERSED_FILE}"
 		return 1
@@ -442,6 +442,13 @@ complement_unscoped_token()
 
 	#
 	# Set save configuration variable names
+	#
+	# [NOTE]
+	# In cases where the UnscopedToken is stored, it is persisted.
+	# If an UnscopedToken becomes invalid (ex. due to expiration), it is simply re-acquired,
+	# so this presents no issue.
+	# Furthermore, this mechanism is designed to avoid the need to re-acquire the UnscopedToken
+	# when, for instance, executing a sequence of commands.
 	#
 	if [ "${_TOKEN_UPSCOPED_TOKEN_BASE}" -eq 0 ]; then
 		add_config_update_var "K2HR3CLI_USER"

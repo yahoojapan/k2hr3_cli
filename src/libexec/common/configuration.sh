@@ -293,6 +293,11 @@ config_search_key()
 		pecho -n ""
 		return 0
 	fi
+	if ! is_safe_config_var_name "$2"; then
+		prn_dbg "(config_search_key) Key name is invalid."
+		pecho -n ""
+		return 0
+	fi
 	_CONFIG_SEARCH_CONF_FILE="$1"
 	_CONFIG_SEARCH_KEY_NAME="$2"
 
@@ -352,6 +357,11 @@ config_get_keyvalue()
 		pecho -n ""
 		return 1
 	fi
+	if ! is_safe_config_var_name "$2"; then
+		prn_dbg "(config_get_keyvalue) Key name is invalid."
+		pecho -n ""
+		return 1
+	fi
 	_CONFIG_GET_CONF_FILE="$1"
 	_CONFIG_GET_KEY_NAME="$2"
 
@@ -370,6 +380,11 @@ config_get_keyvalue()
 	#
 	if ! _CONFIG_KEY_FOUND=$(pecho -n "${_CONFIG_GET_KEY_LINE}" | sed "s/^[[:space:]]*${_CONFIG_GET_KEY_NAME}[[:space:]]*=[[:space:]]*//g" 2>/dev/null); then
 		prn_dbg "(config_get_keyvalue) Could not get the value from key(${_CONFIG_GET_KEY_NAME}) in configuration file(${_CONFIG_GET_CONF_FILE})."
+		pecho -n ""
+		return 1
+	fi
+	if ! is_safe_config_var_value "${_CONFIG_KEY_FOUND}"; then
+		prn_dbg "(config_get_keyvalue) value of key(${_CONFIG_GET_KEY_NAME}) is invalid."
 		pecho -n ""
 		return 1
 	fi
@@ -409,6 +424,10 @@ config_modify_key()
 		prn_dbg "(config_modify_key) Key name is empty."
 		return 1
 	fi
+	if ! is_safe_config_var_name "$2"; then
+		prn_dbg "(config_modify_key) Key name is invalid."
+		return 1
+	fi
 
 	_CONFIG_MODIFY_CONF_FILE="$1"
 	_CONFIG_MODIFY_KEY_NAME="$2"
@@ -427,6 +446,10 @@ config_modify_key()
 		fi
 	fi
 	if [ $# -ge 5 ]; then
+		if ! is_safe_config_var_value "$5"; then
+			prn_dbg "(config_modify_key) value is invalid."
+			return 1
+		fi
 		_CONFIG_MODIFY_VALUE="$5"
 	else
 		_CONFIG_MODIFY_VALUE=""
@@ -464,7 +487,7 @@ config_modify_key()
 			#
 			# replace key
 			#
-			if ! sed "${_CONFIG_MODIFY_BACKUP_OPT}" -e "s|^[[:space:]]*${_CONFIG_MODIFY_KEY_NAME}[[:space:]]*=.*$|${_CONFIG_MODIFY_KEY_NAME}=${_CONFIG_MODIFY_VALUE}|g" "${_CONFIG_MODIFY_CONF_FILE}" >/dev/null 2>&1; then
+			if ! sed "${_CONFIG_MODIFY_BACKUP_OPT}" -e "s|^[[:space:]]*${_CONFIG_MODIFY_KEY_NAME}[[:space:]]*=.*$|${_CONFIG_MODIFY_KEY_NAME}=\"${_CONFIG_MODIFY_VALUE}\"|g" "${_CONFIG_MODIFY_CONF_FILE}" >/dev/null 2>&1; then
 				prn_dbg "(config_modify_key) Failed replace key(${_CONFIG_MODIFY_KEY_NAME}) value(${_CONFIG_MODIFY_LOGGING_VALUE}) in configuration file(${_CONFIG_MODIFY_CONF_FILE})"
 				return 1
 			fi
@@ -515,7 +538,7 @@ config_modify_key()
 			# Add new key and value line
 			#
 			pecho "" >> "${_CONFIG_MODIFY_CONF_FILE}"
-			pecho "${_CONFIG_MODIFY_KEY_NAME}=${_CONFIG_MODIFY_VALUE}" >> "${_CONFIG_MODIFY_CONF_FILE}"
+			pecho "${_CONFIG_MODIFY_KEY_NAME}=\"${_CONFIG_MODIFY_VALUE}\"" >> "${_CONFIG_MODIFY_CONF_FILE}"
 			prn_dbg "(config_modify_key) Added key(${_CONFIG_MODIFY_KEY_NAME}) value(${_CONFIG_MODIFY_LOGGING_VALUE}) in configuration file(${_CONFIG_MODIFY_CONF_FILE})"
 		fi
 	fi
@@ -545,12 +568,23 @@ config_set_key()
 		prn_dbg "(config_set_key) Key name is empty."
 		return 1
 	fi
-	if [ ! -f "$1" ]; then
+	if ! is_safe_config_var_name "$2"; then
+		prn_dbg "(config_set_key) Key name is invalid."
+		return 1
+	fi
+	if ! is_safe_config_var_value "$3"; then
+		prn_dbg "(config_set_key) value is invalid."
+		return 1
+	fi
+	if [ ! -e "$1" ]; then
 		if ! touch "$1" >/dev/null 2>&1; then
 			prn_dbg "(config_set_key) Configuration file($1) is not existed, and failed to create new file."
 			return 1
 		fi
 		prn_dbg "(config_set_key) Configuration file($1) is not existed, so create new file"
+	elif [ ! -f "$1" ] || [ -L "$1" ]; then
+		prn_dbg "(config_set_key) Configuration file path($1) is not regular file(directory, symbolic link, etc)."
+		return 1
 	fi
 
 	#
@@ -591,6 +625,14 @@ config_default_set_key()
 	fi
 	if [ -z "$1" ]; then
 		prn_dbg "(config_default_modify_key) Key name is empty."
+		return 1
+	fi
+	if ! is_safe_config_var_name "$1"; then
+		prn_dbg "(config_default_modify_key) Key name is invalid."
+		return 1
+	fi
+	if ! is_safe_config_var_value "$2"; then
+		prn_dbg "(config_default_modify_key) value is invalid."
 		return 1
 	fi
 
@@ -635,8 +677,12 @@ config_unset_key()
 		prn_dbg "(config_unset_key) Key name is empty."
 		return 1
 	fi
-	if [ ! -f "$1" ]; then
-		prn_dbg "(config_unset_key) Configuration file($1) is not existed, so nothing to remove."
+	if ! is_safe_config_var_name "$2"; then
+		prn_dbg "(config_unset_key) Key name is invalid."
+		return 1
+	fi
+	if [ ! -f "$1" ] || [ -L "$1" ]; then
+		prn_dbg "(config_unset_key) Configuration file($1) is not existed or not regular file, so nothing to remove."
 		return 1
 	fi
 
@@ -711,8 +757,12 @@ config_remove_key()
 		prn_dbg "(config_remove_key) Key name is empty."
 		return 1
 	fi
-	if [ ! -f "$1" ]; then
-		prn_dbg "(config_remove_key) Configuration file($1) is not existed, so nothing to remove."
+	if ! is_safe_config_var_name "$2"; then
+		prn_dbg "(config_remove_key) Key name is invalid."
+		return 1
+	fi
+	if [ ! -f "$1" ] || [ -L "$1" ]; then
+		prn_dbg "(config_remove_key) Configuration file($1) is not existed or not regular file, so nothing to remove."
 		return 1
 	fi
 
@@ -758,7 +808,7 @@ config_remove_key()
 #
 add_config_update_var()
 {
-	if [ -z "$1" ]; then
+	if ! is_safe_config_var_name "$1"; then
 		return 1
 	fi
 	if [ -z "${K2HR3CLI_UPDATED_CONFIG_VARS}" ]; then
@@ -788,7 +838,7 @@ add_config_update_var()
 #
 delete_config_update_var()
 {
-	if [ -z "$1" ]; then
+	if ! is_safe_config_var_name "$1"; then
 		return 1
 	fi
 	if [ -z "${K2HR3CLI_UPDATED_CONFIG_VARS}" ]; then
@@ -830,7 +880,7 @@ update_config_vars()
 	fi
 
 	for _UPDATED_CONFIG_ONE_VAR in ${K2HR3CLI_UPDATED_CONFIG_VARS}; do
-		_UPDATED_CONFIG_ONE_VAR_VAL=$(eval pecho -n '$'"${_UPDATED_CONFIG_ONE_VAR}")
+		_UPDATED_CONFIG_ONE_VAR_VAL=$(eval pecho -n '"${'"${_UPDATED_CONFIG_ONE_VAR}"'}"')
 
 		if [ -n "${_CONFIG_SET_CONFIG_FILE}" ]; then
 			config_set_key "${_CONFIG_SET_CONFIG_FILE}" "${_UPDATED_CONFIG_ONE_VAR}" "${_UPDATED_CONFIG_ONE_VAR_VAL}"
@@ -858,7 +908,7 @@ update_config_vars()
 #
 if [ -z "${K2HR3CLI_GLOBAL_CONFIG_NOTUSE}" ]; then
 	if [ -f "${K2HR3CLI_GLOBAL_CONFIG}" ]; then
-		if ! check_backquote_in_file "${K2HR3CLI_GLOBAL_CONFIG}"; then
+		if ! is_safe_config_file "${K2HR3CLI_GLOBAL_CONFIG}"; then
 			prn_warn "${K2HR3CLI_GLOBAL_CONFIG} configuration file has back quote for shell executable charactor, then skip it loading."
 		else
 			prn_info "Loaded ${K2HR3CLI_GLOBAL_CONFIG} configuration file."
@@ -874,10 +924,10 @@ if [ -n "${K2HR3CLI_OPT_CONFIG}" ]; then
 	#
 	# Custom configuration file
 	#
-	if [ ! -f "${K2HR3CLI_OPT_CONFIG}" ]; then
-		prn_warn "${K2HR3CLI_OPT_CONFIG} configuration file is specified, but the file is not found."
+	if [ ! -f "${K2HR3CLI_OPT_CONFIG}" ] || [ -L "${K2HR3CLI_OPT_CONFIG}" ]; then
+		prn_warn "${K2HR3CLI_OPT_CONFIG} configuration file is specified, but the file is not found or not regular file."
 	else
-		if ! check_backquote_in_file "${K2HR3CLI_OPT_CONFIG}"; then
+		if ! is_safe_config_file "${K2HR3CLI_OPT_CONFIG}"; then
 			prn_warn "${K2HR3CLI_OPT_CONFIG} configuration file has back quote for shell executable charactor, then skip it loading."
 		else
 			prn_dbg "Loaded ${K2HR3CLI_OPT_CONFIG} configuration file."
@@ -891,7 +941,7 @@ elif [ -n "${K2HR3CLI_CUSTOM_CONFIG}" ]; then
 	if [ ! -f "${K2HR3CLI_CUSTOM_CONFIG}" ]; then
 		prn_warn "${K2HR3CLI_CUSTOM_CONFIG} configuration file is specified, but the file is not found."
 	else
-		if ! check_backquote_in_file "${K2HR3CLI_CUSTOM_CONFIG}"; then
+		if ! is_safe_config_file "${K2HR3CLI_CUSTOM_CONFIG}"; then
 			prn_warn "${K2HR3CLI_CUSTOM_CONFIG} configuration file has back quote for shell executable charactor, then skip it loading."
 		else
 			prn_info "Loaded ${K2HR3CLI_CUSTOM_CONFIG} configuration file."
@@ -907,7 +957,7 @@ else
 	#
 	if _CONFIG_DEFAULT_USER_FILE=$(config_get_default_user_path); then
 		if [ -f "${_CONFIG_DEFAULT_USER_FILE}" ]; then
-			if ! check_backquote_in_file "${_CONFIG_DEFAULT_USER_FILE}"; then
+			if ! is_safe_config_file "${_CONFIG_DEFAULT_USER_FILE}"; then
 				prn_warn "${_CONFIG_DEFAULT_USER_FILE} configuration file has back quote for shell executable charactor, then skip it loading."
 			else
 				prn_info "Loaded ${_CONFIG_DEFAULT_USER_FILE} configuration file."

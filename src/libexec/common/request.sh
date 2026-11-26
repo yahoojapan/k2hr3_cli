@@ -26,9 +26,21 @@
 #	K2HR3CLI_REQUEST_RESULT_FILE	: file of result content by request
 #	K2HR3CLI_REQUEST_DEBUG_FILE		: file of curl debug by request
 #
-K2HR3CLI_REQUEST_RESULT_FILE="/tmp/.${BINNAME}_$$_curl.result"
-K2HR3CLI_REQUEST_RESHEADER_FILE="/tmp/.${BINNAME}_$$_curl.header"
-K2HR3CLI_REQUEST_DEBUG_FILE="/tmp/.${BINNAME}_$$_curl.debug"
+K2HR3CLI_REQUEST_RESULT_FILE=$(mktemp "/tmp/.${BINNAME}_$$_XXXXXXXX_curl.result") || return 1
+K2HR3CLI_REQUEST_REQHEADER_FILE=$(mktemp "/tmp/.${BINNAME}_$$_XXXXXXXX_curl.reqheader") || return 1
+K2HR3CLI_REQUEST_RESHEADER_FILE=$(mktemp "/tmp/.${BINNAME}_$$_XXXXXXXX_curl.resheader") || return 1
+K2HR3CLI_REQUEST_DEBUG_FILE=$(mktemp "/tmp/.${BINNAME}_$$_XXXXXXXX_curl.debug") || return 1
+
+#
+# Variables for request limits
+#
+# [NOTE]
+# While it might be worth allowing these values to be overridden via
+# configuration in the future, for now, they are hardcoded.
+#
+_REQUEST_CONNECT_TIMEOUT=60
+_REQUEST_MAX_TIME=600
+_REQUEST_MAX_BYTES=$((256 * 1024 * 1024))
 
 #--------------------------------------------------------------
 # Utilities
@@ -185,13 +197,18 @@ raw_request()
 	#
 	# Body data(string)
 	#
+	# [NOTE]
+	# Instead of specifying the body directly in the --data-binary option, pipe the body content into curl.
+	#
+	_REQUEST_OPTION_PIPE_BODY=""
 	_REQUEST_OPTION_BODY=""
 	if [ -n "$3" ]; then
 		if [ "${_REQUEST_OPTION_METHOD_NAME}" != "POST" ]; then
 			prn_err "Internal Error : Body data was specified other than the POST method($1)."
 			return 2
 		fi
-		_REQUEST_OPTION_BODY="-d '$3'"
+		_REQUEST_OPTION_PIPE_BODY="$3"
+		_REQUEST_OPTION_BODY="--data-binary @-"
 	fi
 
 	#
@@ -216,26 +233,33 @@ raw_request()
 	#
 	# Content-type header
 	#
-	if [ -n "$5" ] && [ "$5" = "1" ]; then
-		_REQUEST_OPTION_HEADERS="-H 'Content-Type: application/json'"
-	else
-		_REQUEST_OPTION_HEADERS=""
-	fi
+	_REQUEST_OPTION_HEADERS="-H @${K2HR3CLI_REQUEST_REQHEADER_FILE}"
 
-	#
-	# Other headers
-	#
-	shift 5
-	while [ $# -gt 0 ]; do
-		if [ -n "$1" ]; then
-			_REQUEST_OPTION_HEADER_TMP=$(pecho -n "$1" | sed -e 's/:/: /' -e 's/\\s/ /g')
-			if [ -n "${_REQUEST_OPTION_HEADERS}" ]; then
-				_REQUEST_OPTION_HEADERS="${_REQUEST_OPTION_HEADERS} "
-			fi
-			_REQUEST_OPTION_HEADERS="${_REQUEST_OPTION_HEADERS}-H '${_REQUEST_OPTION_HEADER_TMP}'"
+	if [ -f "${K2HR3CLI_REQUEST_REQHEADER_FILE}" ]; then
+		if ! rm "${K2HR3CLI_REQUEST_REQHEADER_FILE}" >/dev/null 2>&1; then
+			prn_err "${K2HR3CLI_REQUEST_REQHEADER_FILE} is existed and could not remove it."
+			return 1
 		fi
-		shift
-	done
+	fi
+	touch "${K2HR3CLI_REQUEST_REQHEADER_FILE}"
+	chmod 0600 "${K2HR3CLI_REQUEST_REQHEADER_FILE}"
+
+	{
+		if [ -n "$5" ] && [ "$5" = "1" ]; then
+			pecho "Content-Type: application/json"
+		fi
+
+		#
+		# Other headers
+		#
+		shift 5
+		while [ $# -gt 0 ]; do
+			if [ -n "$1" ]; then
+				pecho "$1" | sed -e 's/:/: /' -e 's/\\s/ /g'
+			fi
+			shift
+		done
+	} > "${K2HR3CLI_REQUEST_REQHEADER_FILE}" 2>/dev/null
 
 	#
 	# -v option
@@ -266,23 +290,31 @@ raw_request()
 	fi
 
 	#
+	# timeout and max file size
+	#
+	_REQUEST_OPTION_LIMITS="--connect-timeout ${_REQUEST_CONNECT_TIMEOUT} --max-time ${_REQUEST_MAX_TIME} --max-filesize ${_REQUEST_MAX_BYTES}"
+
+	#
 	# Remove result/response header/debug file and clear exit code
 	#
 	if [ -f "${K2HR3CLI_REQUEST_RESULT_FILE}" ]; then
 		if ! rm "${K2HR3CLI_REQUEST_RESULT_FILE}" >/dev/null 2>&1; then
 			prn_err "${K2HR3CLI_REQUEST_RESULT_FILE} is existed and could not remove it."
+			rm -f "${K2HR3CLI_REQUEST_REQHEADER_FILE}" 2>/dev/null
 			return 1
 		fi
 	fi
 	if [ -f "${K2HR3CLI_REQUEST_DEBUG_FILE}" ]; then
 		if ! rm "${K2HR3CLI_REQUEST_DEBUG_FILE}" >/dev/null 2>&1; then
 			prn_err "${K2HR3CLI_REQUEST_DEBUG_FILE} is existed and could not remove it."
+			rm -f "${K2HR3CLI_REQUEST_REQHEADER_FILE}" 2>/dev/null
 			return 1
 		fi
 	fi
 	if [ -f "${K2HR3CLI_REQUEST_RESHEADER_FILE}" ]; then
 		if ! rm "${K2HR3CLI_REQUEST_RESHEADER_FILE}" >/dev/null 2>&1; then
 			prn_err "${K2HR3CLI_REQUEST_RESHEADER_FILE} is existed and could not remove it."
+			rm -f "${K2HR3CLI_REQUEST_REQHEADER_FILE}" 2>/dev/null
 			return 1
 		fi
 	fi
@@ -292,7 +324,13 @@ raw_request()
 	#
 	# Send request by curl
 	#
-	K2HR3CLI_REQUEST_EXIT_CODE=$(/bin/sh -c "curl ${_REQUEST_OPTION_SILENT} ${_REQUEST_OPTION_INSECURE} ${_REQUEST_OPTION_DBG} ${_REQUEST_OPTION_RESHEADER} ${_REQUEST_OPTION_EXITCODE} ${_REQUEST_OPTION_RESULT_FILE} ${_REQUEST_OPTION_HEADERS} ${_REQUEST_OPTION_DBG_FILE} ${_REQUEST_OPTION_BODY} ${_REQUEST_OPTION_METHOD} ${_REQUEST_URI}${_REQUEST_OPTION_PATH}")
+	if [ -n "${_REQUEST_OPTION_PIPE_BODY}" ]; then
+		K2HR3CLI_REQUEST_EXIT_CODE=$(/bin/sh -c "printf '%s' '${_REQUEST_OPTION_PIPE_BODY}' | curl ${_REQUEST_OPTION_SILENT} ${_REQUEST_OPTION_INSECURE} ${_REQUEST_OPTION_LIMITS} ${_REQUEST_OPTION_DBG} ${_REQUEST_OPTION_RESHEADER} ${_REQUEST_OPTION_EXITCODE} ${_REQUEST_OPTION_RESULT_FILE} ${_REQUEST_OPTION_HEADERS} ${_REQUEST_OPTION_DBG_FILE} ${_REQUEST_OPTION_BODY} ${_REQUEST_OPTION_METHOD} ${_REQUEST_URI}${_REQUEST_OPTION_PATH}")
+	else
+		K2HR3CLI_REQUEST_EXIT_CODE=$(/bin/sh -c "curl ${_REQUEST_OPTION_SILENT} ${_REQUEST_OPTION_INSECURE} ${_REQUEST_OPTION_LIMITS} ${_REQUEST_OPTION_DBG} ${_REQUEST_OPTION_RESHEADER} ${_REQUEST_OPTION_EXITCODE} ${_REQUEST_OPTION_RESULT_FILE} ${_REQUEST_OPTION_HEADERS} ${_REQUEST_OPTION_DBG_FILE} ${_REQUEST_OPTION_BODY} ${_REQUEST_OPTION_METHOD} ${_REQUEST_URI}${_REQUEST_OPTION_PATH}")
+	fi
+	rm -f "${K2HR3CLI_REQUEST_REQHEADER_FILE}" 2>/dev/null
+
 	K2HR3CLI_REQUEST_CURL_EXITCODE=$?
 
 	#

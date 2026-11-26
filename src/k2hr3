@@ -325,6 +325,10 @@ elif [ -n "${K2HR3CLI_MODE}" ]; then
 	#
 	# Save configuration if needs
 	#
+	# [NOTE]
+	# This is called because there are cases where updates to variables
+	# may occur(such as with UnscopedToken).
+	#
 	update_config_vars
 
 else

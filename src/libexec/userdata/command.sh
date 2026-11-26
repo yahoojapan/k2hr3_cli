@@ -20,8 +20,8 @@
 #--------------------------------------------------------------
 # Variables
 #--------------------------------------------------------------
-_USERDATA_UNZIP_TMP_FILE="/tmp/.${BINNAME}_$$_userdata.result"
-_USERDATA_ZIP_TMP_FILE="${_USERDATA_UNZIP_TMP_FILE}.gz"
+_USERDATA_ZIP_MAX_FILESIZE=$((256 * 1024 * 1024))
+_USERDATA_UNZIP_MAX_FILESIZE=$((512 * 1024 * 1024))
 
 #--------------------------------------------------------------
 # Parse arguments
@@ -66,6 +66,10 @@ _USERDATA_REQUEST_RESULT=$?
 #
 # Check result
 #
+if [ ! -f "${K2HR3CLI_REQUEST_RESULT_FILE}" ] || [ -L "${K2HR3CLI_REQUEST_RESULT_FILE}" ]; then
+	rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
+	return 1
+fi
 if ! requtil_check_result "${_USERDATA_REQUEST_RESULT}" "${K2HR3CLI_REQUEST_EXIT_CODE}" "${K2HR3CLI_REQUEST_RESULT_FILE}" "200" 1; then
 	rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 	exit 1
@@ -78,23 +82,45 @@ if [ -z "${K2HR3CLI_OPT_OUTPUT}" ]; then
 	#
 	# Copy result to temporary file
 	#
+	_RESULT_GZIP_FILESIZE=$(wc -c < "${K2HR3CLI_REQUEST_RESULT_FILE}" | tr -d '[:space:]')
+	if [ -z "${_RESULT_GZIP_FILESIZE}" ] || [ "${_RESULT_GZIP_FILESIZE}" -gt "${_USERDATA_ZIP_MAX_FILESIZE}" ]; then
+		prn_err 'Gzip response size exceeds limit(%s bytes)\n' "${_USERDATA_ZIP_MAX_FILESIZE}" >&2
+		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
+		exit 1
+	fi
+
+	_USERDATA_UNZIP_TMP_FILE=$(mktemp "/tmp/.${BINNAME}_$$_XXXXXXXX_userdata.result") || return 1
+	_USERDATA_ZIP_TMP_FILE="${_USERDATA_UNZIP_TMP_FILE}.gz"
+	_USERDATA_READ_LIMIT=$((_USERDATA_UNZIP_MAX_FILESIZE + 1))
+
 	if ! cp "${K2HR3CLI_REQUEST_RESULT_FILE}" "${_USERDATA_ZIP_TMP_FILE}"; then
 		prn_err "The command succeeded, but failed to output the result to a temporary file. Please check the output file path, permissions, etc."
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
 	fi
-	if ! gzip -f -d "${_USERDATA_ZIP_TMP_FILE}"; then
+	if ! gzip -dc "${_USERDATA_ZIP_TMP_FILE}" 2>/dev/null | head -c "${_USERDATA_READ_LIMIT}" > "${_USERDATA_UNZIP_TMP_FILE}" 2>/dev/null; then
 		prn_err "Failed to unzip a temporary result file."
 		rm -f "${_USERDATA_ZIP_TMP_FILE}"
+		rm -f "${_USERDATA_UNZIP_TMP_FILE}"
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
 	fi
-	if [ ! -f "${_USERDATA_UNZIP_TMP_FILE}" ]; then
+	if [ ! -f "${_USERDATA_UNZIP_TMP_FILE}" ] || [ -L "${_USERDATA_UNZIP_TMP_FILE}" ]; then
 		prn_err "Failed to unzip a temporary result file."
 		rm -f "${_USERDATA_ZIP_TMP_FILE}"
+		rm -f "${_USERDATA_UNZIP_TMP_FILE}"
 		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
 		exit 1
 	fi
+	_USERDATA_UNZIP_TMP_FILESIZE=$(wc -c < "${_USERDATA_UNZIP_TMP_FILE}" | tr -d '[:space:]')
+	if [ -z "${_USERDATA_UNZIP_TMP_FILESIZE}" ] || [ "${_USERDATA_UNZIP_TMP_FILESIZE}" -gt "${_USERDATA_UNZIP_MAX_FILESIZE}" ]; then
+		prn_err "Unzip temporary file size is over limit."
+		rm -f "${_USERDATA_ZIP_TMP_FILE}"
+		rm -f "${_USERDATA_UNZIP_TMP_FILE}"
+		rm -f "${K2HR3CLI_REQUEST_RESULT_FILE}"
+		exit 1
+	fi
+
 	#
 	# Print unzip contents
 	#
