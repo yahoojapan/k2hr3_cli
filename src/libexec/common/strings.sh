@@ -75,19 +75,119 @@ pecho()
 }
 
 #
-# Check back quote for shell executable charactor in file
+# Check string for config variable name
+#
+# $1		: string(allow empty)
+# $?		: result
+#
+is_safe_config_var_name()
+{
+	case "$1" in
+		'' | [!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_]* | *[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
+			return 1
+			;;
+		*)
+			return 0
+			;;
+	esac
+}
+
+#
+# Check string for config variables
+#
+# $1		: string(allow empty)
+# $?		: result
+#
+is_safe_config_var_value()
+{
+	case "$1" in
+		*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_./:@=+\ -]*)
+			return 1
+			;;
+		*)
+			return 0
+			;;
+	esac
+}
+
+#
+# Check invalid key and value format(and comment) in configuration file
 #
 # $1	: file
 # $?	: result
 #
-check_backquote_in_file()
+is_safe_config_file()
 {
-	if [ -f "$1" ]; then
-		return 0
-	fi
-	if sed 's/#.*$//g' "$1" 2>/dev/null | grep -q '`'; then
+	if [ -z "$1" ]; then
+		# wrong parameter
 		return 1
 	fi
+	if [ ! -e "$1" ] && [ ! -L "$1" ]; then
+		# file is not existed
+		return 0
+	fi
+	if [ ! -f "$1" ] || [ -L "$1" ]; then
+		# file is not regular file
+		return 1
+	fi
+	_TARGET_CONF_FILE="$1"
+
+	# Loop
+	while IFS= read -r _one_line || [ -n "${_one_line}" ]; do
+		# trim
+		_one_line=$(printf '%s\n' "${_one_line}" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+
+		# skip empty and comment line
+		case "${_one_line}" in
+			'' | '#'*)	continue ;;
+		esac
+
+		# check "=" keyword
+		case "${_one_line}" in
+			*'='*)	;;
+			*)		return 1 ;;
+		esac
+
+		# parse key and value
+		_key_in_line=$(printf '%s\n' "${_one_line}" | sed 's/=.*$//')
+		_val_in_line=$(printf '%s\n' "${_one_line}" | sed 's/^[^=]*=//')
+
+		# check key name
+		if ! is_safe_config_var_name "${_key_in_line}"; then
+			return 1
+		fi
+
+		# cut quate in value
+		case "${_val_in_line}" in
+			\"*\")
+				# cut both edge double quate
+				_val_in_line=$(printf '%s\n' "${_val_in_line}" | sed 's/^"//; s/"$//')
+				# check double quate in rest value
+				case "${_val_in_line}" in
+					*\"*) return 1 ;;
+				esac
+				;;
+
+			\'*\')
+				# cut both edge single quate
+				_val_in_line=$(printf '%s\n' "${_val_in_line}" | sed "s/^'//; s/'$//")
+				# check single quate in rest value
+				case "${_val_in_line}" in
+					*\'*) return 1 ;;
+				esac
+				;;
+			\"* | *\" | \'* | *\')
+				# one quate in value
+				return 1
+				;;
+		esac
+
+		# check rest value
+		if ! is_safe_config_var_value "${_val_in_line}"; then
+			return 1
+		fi
+	done < "${_TARGET_CONF_FILE}"
+
 	return 0
 }
 
